@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>Aster Oid</title>
   <style>
     body {
@@ -17,6 +17,7 @@
       display: block;
       margin: 0 auto;
       background: #0b0e20;
+      transition: transform 1s ease-out; /* Smooth zoom-out */
     }
     .intro {
       position: absolute;
@@ -65,18 +66,25 @@
     const introMusic = document.getElementById("intro-music");
 
     let introActive = true;
+    let gameActive = false;
 
-    // Start muziek bij laden
-    window.addEventListener("load", () => {
-      if (introMusic) {
+    // Controleer of audio geladen is
+    introMusic.oncanplaythrough = () => {
+      console.log('Audio is loaded and ready to play');
+    };
+    introMusic.onerror = () => {
+      console.error('Failed to load audio file:', introMusic.src);
+    };
+
+    // Start muziek bij eerste interactie
+    function playMusic() {
+      if (introMusic && introMusic.paused) {
         introMusic.volume = 0.7;
-        introMusic.play().catch(() => {
-          // fallback voor browsers die autoplay blokkeren
-          window.addEventListener("pointerdown", () => introMusic.play(), { once: true });
-          window.addEventListener("keydown", () => introMusic.play(), { once: true });
+        introMusic.play().catch(err => {
+          console.warn('Autoplay blocked by browser:', err);
         });
       }
-    });
+    }
 
     // Fade out functie
     function fadeOutAudio(audio, duration = 800) {
@@ -96,32 +104,165 @@
 
     function startGame() {
       if (introActive) {
-        // muziek uitfaden
+        // Muziek uitfaden
         fadeOutAudio(introMusic, 600);
 
-        // intro verbergen
-        introEl.classList.add("is-hidden");
-        introActive = false;
-
-        // hier roep je je game logica aan, bv. initGame()
-        initGame();
+        // Zoom-out animatie
+        canvas.style.transform = 'scale(0.5)'; // Start groot, zoom uit naar normaal
+        setTimeout(() => {
+          introEl.classList.add("is-hidden");
+          introActive = false;
+          gameActive = true;
+          initGame(); // Start de game
+        }, 1000); // Wacht 1 seconde voor de animatie
       }
+    }
+
+    // Game logica
+    const G = 2600;
+    const FLAP_VY = -850;
+    const MAX_DROP = 1200;
+    let PIPE_GAP = 290;
+    const PIPE_W = 120;
+    let PIPE_SPACING = 420;
+    let SCROLL_SPEED = 180;
+    const ACCEL = 0;
+    const MARGIN_TOP = 60;
+    const AST = { r: 28, x: 100, y: 300 };
+
+    let score = 0, best = +(localStorage.getItem('flappy-asteroid-best') || 0);
+    let tPrev = 0, speed = SCROLL_SPEED, canFlap = true;
+    let pipes = [];
+    let coins = [];
+    let explosions = [];
+    let currentStage = 1;
+    let pipesPassed = 0;
+    let logosCollected = 0;
+
+    const player = {
+      x: AST.x, y: AST.y, r: AST.r,
+      vy: 0,
+      rot: 0,
+      alive: true,
+      flap() {
+        if (!canFlap) return;
+        this.vy = FLAP_VY;
+        canFlap = false;
+        setTimeout(() => canFlap = true, 150);
+      },
+      update(dt) {
+        this.vy = Math.min(this.vy + G * dt, MAX_DROP);
+        this.y += this.vy * dt;
+        this.rot = Math.max(-0.6, Math.min(0.9, this.vy / 900));
+      },
+      draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.rot);
+        ctx.beginPath();
+        ctx.arc(0, 0, this.r, 0, Math.PI * 2);
+        ctx.fillStyle = '#b57f3a';
+        ctx.fill();
+        ctx.restore();
+      }
+    };
+
+    function resetPipes() {
+      pipes = [];
+      coins = [];
+      explosions = [];
+      pipesPassed = 0;
+      for (let i = 0; i < 4; i++) addObstacle(i);
+    }
+
+    function addObstacle(i) {
+      const lastX = pipes.length ? pipes[pipes.length - 1].x : canvas.width + 300;
+      const x = lastX + PIPE_SPACING;
+      const gapY = MARGIN_TOP + Math.random() * (canvas.height - 2 * MARGIN_TOP - PIPE_GAP);
+      pipes.push({ x, gapY, passed: false });
+    }
+
+    function update(dt) {
+      if (!gameActive) return;
+
+      if (pipesPassed >= 10 && currentStage < 10) {
+        currentStage++;
+        speed += 10;
+        pipesPassed = 0;
+        resetPipes();
+      }
+
+      speed += ACCEL * dt * 100;
+      player.update(dt);
+      const move = speed * dt;
+      for (let p of pipes) p.x -= move;
+
+      for (let i = 0; i < pipes.length; i++) {
+        let p = pipes[i];
+        if (!p.passed && player.x > p.x + PIPE_W / 2) {
+          p.passed = true;
+          score++;
+          pipesPassed++;
+        }
+        if (p.x + PIPE_W < 0) {
+          pipes.shift();
+          addObstacle();
+        }
+      }
+
+      if (player.y - player.r < 0 || player.y + player.r > canvas.height) gameOver();
+      for (let p of pipes) {
+        if (player.x + player.r > p.x && player.x - player.r < p.x + PIPE_W) {
+          if (player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP) gameOver();
+        }
+      }
+    }
+
+    function draw() {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      ctx.fillStyle = '#0b0e20';
+      ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+      for (let p of pipes) {
+        ctx.fillStyle = '#2a2f3e';
+        ctx.fillRect(p.x, 0, PIPE_W, p.gapY);
+        ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_W, canvas.height - (p.gapY + PIPE_GAP));
+      }
+
+      player.draw();
+    }
+
+    function gameOver() {
+      gameActive = false;
+      // Hier kun je extra logica toevoegen, zoals leaderboard
+    }
+
+    function initGame() {
+      resetPipes();
+      gameActive = true;
+      function loop(ts) {
+        if (gameActive) {
+          const dt = (tPrev ? (ts - tPrev) / 1000 : 0.016);
+          tPrev = ts;
+          update(dt);
+          draw();
+        }
+        requestAnimationFrame(loop);
+      }
+      requestAnimationFrame(loop);
     }
 
     // Event listeners
-    startBtn.addEventListener("click", startGame);
+    startBtn.addEventListener("click", () => {
+      playMusic();
+      startGame();
+    });
     window.addEventListener("keydown", (e) => {
       if (e.code === "Space") {
+        playMusic();
         startGame();
       }
     });
-
-    // Dummy game om te testen
-    function initGame() {
-      ctx.fillStyle = "white";
-      ctx.font = "20px Arial";
-      ctx.fillText("Game running...", 120, 300);
-    }
   </script>
 </body>
 </html>
