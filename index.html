@@ -31,7 +31,6 @@
     .subtitle{opacity:.75}
     .toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}
     @supports not (backdrop-filter: blur(6px)) { .panel { background: rgba(8,12,22,.8); } }
-    /* Ik laat h1 in START verbergen via JS; in DEAD tonen we 'Game Over' */
   </style>
 </head>
 <body>
@@ -68,13 +67,25 @@
   window.addEventListener('pointerdown', startMusic);
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
 
-  /* --- sprite --- */
+  /* --- speler-sprite --- */
   const SPRITE_SRC = 'assets/cz-droid.png';
-  const spriteImg = new Image();
-  spriteImg.src = SPRITE_SRC;
+  const spriteImg = new Image(); spriteImg.src = SPRITE_SRC;
+
+  /* --- LOGO PNGs (voeg hier jouw bestanden toe) --- */
+  const LOGO_FILES = [
+    // Zet je eigen bestandsnamen hier. Voorbeeld:
+    'assets/logo1.png',
+    'assets/logo2.png',
+    'assets/logo3.png',
+    'assets/logo4.png',
+  ];
+  const logoImages = LOGO_FILES.map(src => { const im = new Image(); im.src = src; return im; });
+  const getRandomLoadedLogo = () => {
+    const loaded = logoImages.filter(im => im.complete && im.naturalWidth);
+    return loaded.length ? loaded[Math.floor(Math.random()*loaded.length)] : null;
+  };
 
   const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
-  const W0 = canvas.width, H0 = canvas.height;
   function resize(){ const r = canvas.getBoundingClientRect(); canvas.width=Math.round(r.width*DPR); canvas.height=Math.round(r.height*DPR); }
   resize(); window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t=setTimeout(resize,100); });
 
@@ -105,7 +116,6 @@
     ui.hint.style.display  = isStartOrDead ? '' : 'none';
     ui.startBtn.style.display = isStartOrDead ? '' : 'none';
     ui.scorePanel.hidden = state!=='playing' && state!=='dead';
-    // Alleen in START willen we géén "ASTER OID" tekst; in DEAD juist wel "Game Over"
     if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
   }
 
@@ -129,7 +139,6 @@
         const dw=iw*scale, dh=ih*scale;
         ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);
       } else {
-        // fallback cirkel
         ctx.fillStyle='#ffcc6e'; ctx.beginPath(); ctx.arc(0,0,(diamPx*DPR)/2,0,Math.PI*2); ctx.fill();
       }
       ctx.restore();
@@ -137,9 +146,9 @@
     draw(){ this.drawAt(this.x, this.y, this.r*2); }
   };
 
-  // --- obstakels & items ---
+  // --- obstakels & LOGO's ---
   const pipes=[], coins=[], explosions=[];
-  const LOGO_CHANCE=0.2, LOGO_SIZE=20, LOGO_GAP=100, LOGO_SCORE_BONUS=5;
+  const LOGO_CHANCE=0.2, LOGO_SIZE=22, LOGO_GAP=100, LOGO_SCORE_BONUS=5;
 
   function resetPipes(){ pipes.length=0; coins.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
   function addObstacle(){
@@ -147,7 +156,11 @@
     const x = lastX + PIPE_SPACING;
     if (Math.random()<LOGO_CHANCE){
       const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - LOGO_GAP);
-      coins.push({x, y:gapY+LOGO_GAP/2, r:LOGO_SIZE, collected:false}); PIPE_SPACING += LOGO_GAP;
+      coins.push({
+        x, y:gapY+LOGO_GAP/2, r:LOGO_SIZE, collected:false,
+        img:getRandomLoadedLogo(), wobbleSeed:Math.random()*Math.PI*2
+      });
+      PIPE_SPACING += LOGO_GAP;
     } else {
       const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
       pipes.push({x, gapY, passed:false}); PIPE_SPACING=420;
@@ -165,67 +178,74 @@
   }
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); } if(e.code==='KeyR') restart();});
   window.addEventListener('pointerdown', e => { if (e.target===canvas) boost(); });
-  ui.startBtn.addEventListener('click', boost);
+  document.getElementById('startBtn').addEventListener('click', boost);
 
-  document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; ui.pauseToast.hidden=!paused; });
+  document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
 
   // --- state transitions ---
   function beginIntro(){
-    // startframe: groot midden in beeld
     const cx = (canvas.width/DPR)*0.5;
     const cy = (canvas.height/DPR)*0.42;
-    const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45; // ~45% van korte zijde
+    const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;
     intro.from = { x:cx, y:cy, diam:bigDiam };
     intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };
-    intro.active = true; intro.t0 = performance.now();
-    state='intro';
-    // verberg titeltekst tijdens intro
+    intro.active = true; intro.t0 = performance.now(); state='intro';
     ui.titleH1.style.display='none';
     ui.startBtn.style.display='none';
   }
-
   function startGame(){
     state='playing'; score=0; speed=SCROLL_SPEED; tPrev=0; currentStage=1;
-    player.x=AST.x; player.y=AST.y; player.vy=0;
+    player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;
     PIPE_GAP=290; logosCollected=0; ui.logosCollected.textContent=0; resetPipes(); setUI();
   }
   function gameOver(){
     state='dead';
     best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
     ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
-    ui.hint.textContent='Press R or click to play again'; ui.startBtn.textContent='Restart'; setUI();
+    ui.hint.textContent='Press SPACE or click to restart'; ui.startBtn.textContent='Restart'; setUI();
   }
-  function restart(){ ui.titleH1.textContent='ASTER OID'; ui.startBtn.textContent='Start'; state='start'; setUI(); }
+  function restart(){
+    state='start';
+    speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
+    pipes.length = 0; coins.length = 0; explosions.length = 0; pipesPassed = 0;
+    ui.titleH1.textContent='ASTER OID';
+    ui.startBtn.textContent='Start';
+    setUI();
+  }
 
   // --- update ---
   function update(dt){
-    if (state==='intro'){
-      // niets fysisch updaten; zoom gebeurt in draw()
-      return;
-    }
-    // Stages per 10 pipes
-    if (pipesPassed>=10 && currentStage<10){
-      currentStage++; speed = SCROLL_SPEED + (currentStage-1)*10; pipesPassed=0; resetPipes();
-    }
-    speed += ACCEL*dt*100;
-    player.update(dt);
-    const move = speed*dt;
-    for(const p of pipes){ p.x -= move; }
-    for(let i=0;i<pipes.length;i++){
-      const p=pipes[i];
-      if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }
-      if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
-    }
-    for(let i=0;i<coins.length;i++){
-      const c=coins[i]; c.x -= move;
-      const dx=player.x-c.x, dy=player.y-c.y, d=Math.hypot(dx,dy);
-      if(d<player.r+c.r && !c.collected){ c.collected=true; score+=LOGO_SCORE_BONUS; logosCollected++; ui.logosCollected.textContent=logosCollected; ui.score.textContent=score; addExplosion(c.x,c.y); }
-      if(c.x+c.r<-80){ coins.splice(i,1); i--; }
-    }
-    if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
-    for(const p of pipes){
-      const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
-      if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
+    if (state==='intro') return;
+
+    if (state==='playing'){
+      if (pipesPassed>=10 && currentStage<10){
+        currentStage++; speed = SCROLL_SPEED + (currentStage-1)*10; pipesPassed=0; resetPipes();
+      }
+      speed += ACCEL*dt*100;
+      player.update(dt);
+      const move = speed*dt;
+
+      for(const p of pipes){ p.x -= move; }
+      for(let i=0;i<pipes.length;i++){
+        const p=pipes[i];
+        if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }
+        if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
+      }
+
+      for(let i=0;i<coins.length;i++){
+        const c=coins[i]; c.x -= move;
+        const dx=player.x-c.x, dy=player.y-c.y, d=Math.hypot(dx,dy);
+        if(d<player.r+c.r && !c.collected){
+          c.collected=true; score+=LOGO_SCORE_BONUS; logosCollected++; ui.logosCollected.textContent=logosCollected; ui.score.textContent=score; addExplosion(c.x,c.y);
+        }
+        if(c.x+c.r<-80){ coins.splice(i,1); i--; }
+      }
+
+      if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
+      for(const p of pipes){
+        const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
+        if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
+      }
     }
   }
 
@@ -236,7 +256,7 @@
 
     // sterren
     for(const s of stars){
-      const bgSpeed = (state==='start' || state==='intro') ? 30 : speed; // rustig in start/intro
+      const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;
       s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
       if(s.x < -2){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*0.7; }
       ctx.globalAlpha=0.5 + s.z*0.5;
@@ -244,7 +264,7 @@
     }
     ctx.globalAlpha=1;
 
-    // Obstakels alleen tekenen in spel (niet in start/intro)
+    // obstakels en LOGO's
     if (state==='playing' || state==='dead'){
       for(const p of pipes){
         const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;
@@ -254,27 +274,53 @@
         ctx.beginPath(); ctx.moveTo(x,gy); ctx.lineTo(x,gy+gh); ctx.stroke();
         ctx.beginPath(); ctx.moveTo(x+w,gy); ctx.lineTo(x+w,gy+gh); ctx.stroke();
       }
-      // logos
-      for(const c of coins){ if(!c.collected){ ctx.save(); ctx.translate(c.x*DPR,c.y*DPR); ctx.beginPath(); ctx.moveTo(-c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR,c.r*DPR); ctx.lineTo(-c.r*DPR,c.r*DPR); ctx.closePath(); ctx.fillStyle='#f0f'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore(); } }
+
+      // LOGO-tekening (PNG met aspect-ratio + subtiele bob)
+      const t = performance.now() * 0.002;
+      for(const c of coins){
+        if(c.collected) continue;
+        ctx.save();
+        const wobble = Math.sin(t + (c.wobbleSeed||0)) * 3; // px bob
+        ctx.translate(c.x*DPR, (c.y + wobble)*DPR);
+
+        if (c.img && c.img.complete && c.img.naturalWidth){
+          const iw=c.img.naturalWidth, ih=c.img.naturalHeight;
+          const target = c.r*2*DPR;
+          const scale = Math.min(target/iw, target/ih);
+          const dw = iw*scale, dh = ih*scale;
+          // kleine glow
+          ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(c.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.drawImage(c.img, -dw/2, -dh/2, dw, dh);
+        } else {
+          // Fallback: oude vorm
+          ctx.beginPath();
+          ctx.moveTo(-c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR,c.r*DPR); ctx.lineTo(-c.r*DPR,c.r*DPR);
+          ctx.closePath(); ctx.fillStyle='#f0f'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2*DPR; ctx.stroke();
+        }
+        ctx.restore();
+      }
+
       // explosies
       const now=performance.now();
-      for(let i=explosions.length-1;i>=0;i--){ const e=explosions[i]; const el=(now-e.startTime)/e.duration;
-        if(el>=1) explosions.splice(i,1); else { const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); } }
+      for(let i=explosions.length-1;i>=0;i--){
+        const e=explosions[i], el=(now-e.startTime)/e.duration;
+        if(el>=1){ explosions.splice(i,1); } else { const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }
+      }
     }
 
-    // speler tekenen
+    // speler
     if (state==='start'){
       const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;
       const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;
       player.drawAt(cx, cy, bigDiam);
     } else if (state==='intro'){
-      const t = Math.min(1, (performance.now()-intro.t0)/intro.dur);
-      const p = easeInOutCubic(t);
+      const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);
+      const p = easeInOutCubic(tt);
       const ix = intro.from.x + (intro.to.x - intro.from.x)*p;
       const iy = intro.from.y + (intro.to.y - intro.from.y)*p;
       const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;
       player.drawAt(ix, iy, id);
-      if (t>=1){ intro.active=false; startGame(); }
+      if (tt>=1){ intro.active=false; startGame(); }
     } else {
       player.draw();
     }
@@ -295,8 +341,7 @@
   function loop(ts){
     if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
     const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
-    if(state==='playing') update(dt); else update(0); // fysica alleen in spel
-    draw(); requestAnimationFrame(loop);
+    update(dt); draw(); requestAnimationFrame(loop);
   }
   setUI(); requestAnimationFrame(loop);
 })();
