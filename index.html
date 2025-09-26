@@ -1,268 +1,465 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aster Oid</title>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>ASTER OID</title>
   <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
+    :root{
+      --bg:#070b14;
+      --fg:#e8f0ff;
+      --accent:#6ee7ff;
+      --muted:#6b7280;
+      --danger:#ff6e6e;
+      --shadow:0 10px 30px rgba(0,0,0,.35);
     }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background: #0b0e20;
-      transition: transform 1s ease-out; /* Smooth zoom-out */
+    html,body{height:100%;margin:0}
+    body{
+      background: radial-gradient(1200px 800px at 70% 20%, rgba(110,231,255,.06), transparent), var(--bg);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, sans-serif;
+      overflow:hidden;
     }
-    .intro {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      background: rgba(0,0,0,0.9);
-      transition: opacity 0.6s ease;
+    #wrap{position:fixed; inset:0; display:grid; place-items:center}
+    canvas{ width: min(100vw, 100vh*0.5625); height: min(100vh, 100vw/0.5625); max-width:100vw; max-height:100vh; box-shadow: var(--shadow); border-radius: 18px; background: transparent; }
+
+    /* HUD */
+    .hud{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;}
+    .panel{pointer-events:auto; position:absolute; top:24px; left:50%; transform:translateX(-50%); background: rgba(8,12,22,.6); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px); padding:10px 14px; border-radius:14px; display:flex; gap:18px; align-items:center}
+    .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
+    .panel .sep{opacity:.3}
+    .btn{
+      pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%);
+      background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
+      border:1px solid rgba(110,231,255,.4); color:var(--fg); font-weight:700; letter-spacing:.3px;
+      padding:12px 18px; border-radius:14px; box-shadow: var(--shadow); text-decoration:none;
     }
-    .intro.is-hidden {
-      opacity: 0;
-      pointer-events: none;
+    .hint{position:absolute; bottom:86px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:14px}
+    .title{position:absolute; top:50%; left:50%; transform:translate(-50%, -60%); text-align:center}
+    h1{margin:0 0 6px 0; font-size: clamp(28px, 6vw, 48px)}
+    .subtitle{opacity:.75}
+    @supports not (backdrop-filter: blur(6px)) { .panel { background: rgba(8,12,22,.8); } }
+
+    /* Intro groot hoofd */
+    .intro-face-wrap{
+      pointer-events:auto;
+      position:fixed; inset:0; display:grid; place-items:center;
+      background: radial-gradient(1200px 800px at 70% 20%, rgba(110,231,255,.06), transparent), #050914;
+      z-index: 5;
+      transition: opacity .45s ease;
     }
-    .intro img {
-      width: 300px;
-      animation: head-move 3s infinite alternate ease-in-out;
+    .intro-face-wrap.hide{ opacity:0; pointer-events:none; }
+    .intro-inner{
+      display:grid; place-items:center; text-align:center; gap:18px;
     }
-    @keyframes head-move {
-      0% { transform: rotate(-10deg); }
-      100% { transform: rotate(10deg); }
+    .face{
+      width:min(68vmin, 560px); aspect-ratio:1/1; border-radius:50%;
+      background: url('assets/cz-droid.png') center/cover no-repeat;
+      filter: drop-shadow(0 18px 60px rgba(0,0,0,.55));
+      animation: headLook 5s ease-in-out infinite;
     }
+    @keyframes headLook{
+      0%{ transform: rotate(0deg) translateX(0) scale(1); }
+      25%{ transform: rotate(-6deg) translateX(-8px) scale(1.02); }
+      50%{ transform: rotate(0deg) translateX(0) scale(1); }
+      75%{ transform: rotate(6deg) translateX(8px) scale(1.02); }
+      100%{ transform: rotate(0deg) translateX(0) scale(1); }
+    }
+    .game-name{
+      font-size: clamp(28px, 8vw, 58px); font-weight: 800; letter-spacing: .4px;
+    }
+    .small-hint{color:var(--muted)}
+    .intro-btn{
+      pointer-events:auto; margin-top:8px;
+      background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
+      border:1px solid rgba(110,231,255,.4); color:var(--fg); font-weight:700; letter-spacing:.3px;
+      padding:12px 18px; border-radius:14px; box-shadow: var(--shadow); text-decoration:none;
+    }
+    .toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}
+
+    /* Voor iOS audio prompt */
+    .tapToUnmute{
+      position:fixed; inset:0; display:none; place-items:center; background:rgba(5,9,20,.75); z-index: 50;
+      color:var(--fg); text-align:center; padding:18px;
+    }
+    .tapToUnmute.show{display:grid;}
   </style>
 </head>
 <body>
-  <!-- Audio -->
-  <audio id="intro-music" src="assets/intro.mp3" preload="auto"></audio>
-
-  <!-- Canvas game -->
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
-
-  <!-- Intro scherm -->
-  <div class="intro" id="intro-screen">
-    <img src="assets/cz-droid.png" alt="Big Head"/>
-    <h1>ASTER OID</h1>
-    <p>Tap/Click or press SPACE to boost</p>
-    <button id="start-btn">Start</button>
+  <div id="wrap">
+    <canvas id="game" width="1280" height="720" aria-label="ASTER OID"></canvas>
   </div>
 
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const introEl = document.getElementById("intro-screen");
-    const startBtn = document.getElementById("start-btn");
-    const introMusic = document.getElementById("intro-music");
+  <!-- Intro overlay met groot hoofd -->
+  <div id="introFace" class="intro-face-wrap">
+    <div class="intro-inner">
+      <div class="face" aria-hidden="true"></div>
+      <div class="game-name">ASTER OID</div>
+      <div class="small-hint">Click / tap or press <b>SPACE</b> to begin</div>
+      <button id="startBtnIntro" class="intro-btn">Start</button>
+      <div class="small-hint" style="opacity:.65">Music plays on the intro and stops when the game starts</div>
+    </div>
+  </div>
 
-    let introActive = true;
-    let gameActive = false;
+  <!-- HUD -->
+  <div class="hud" aria-live="polite">
+    <div class="panel" id="scorePanel" hidden>
+      <span class="pill">Score: <span id="score">0</span></span>
+      <span class="sep">•</span>
+      <span class="pill">Best: <span id="best">0</span></span>
+    </div>
+    <div class="title" id="title">
+      <h1>ASTER OID</h1>
+      <div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div>
+    </div>
+    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment.</div>
+    <button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
+    <div class="toast" id="pauseToast" hidden>Game paused (tab not active)</div>
+  </div>
 
-    // Controleer of audio geladen is
-    introMusic.oncanplaythrough = () => {
-      console.log('Audio is loaded and ready to play');
-    };
-    introMusic.onerror = () => {
-      console.error('Failed to load audio file:', introMusic.src);
-    };
+  <!-- Audio -->
+  <audio id="introMusic" src="assets/intro.mp3" preload="auto" loop></audio>
 
-    // Start muziek bij eerste interactie
-    function playMusic() {
-      if (introMusic && introMusic.paused) {
-        introMusic.volume = 0.7;
-        introMusic.play().catch(err => {
-          console.warn('Autoplay blocked by browser:', err);
-        });
-      }
+  <!-- iOS/Autoplay overlay -->
+  <div id="tapAudio" class="tapToUnmute"><div>
+    Tap once to enable sound<br/><br/>
+    <button id="tapEnable" class="intro-btn">Enable sound</button>
+  </div></div>
+
+<script>
+(() => {
+  // ---------- Canvas setup ----------
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d');
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const W0 = canvas.width, H0 = canvas.height;
+
+  let scale = 1;
+  function resize() {
+    const rect = canvas.getBoundingClientRect();
+    canvas.width  = Math.round(rect.width  * DPR);
+    canvas.height = Math.round(rect.height * DPR);
+    scale = canvas.width / W0;
+  }
+  resize();
+  let resizeTimeout;
+  window.addEventListener('resize', () => {
+    clearTimeout(resizeTimeout);
+    resizeTimeout = setTimeout(resize, 100);
+  });
+
+  // ---------- Audio ----------
+  const introMusic = document.getElementById('introMusic');
+  const tapAudio = document.getElementById('tapAudio');
+  const tapEnable = document.getElementById('tapEnable');
+
+  let audioReady = false;
+  async function tryStartIntroMusic() {
+    if (audioReady) return;
+    try {
+      await introMusic.play();
+      audioReady = true;
+      tapAudio.classList.remove('show');
+    } catch(e) {
+      // Browser blokkeert autoplay -> toon tap overlay
+      tapAudio.classList.add('show');
     }
+  }
+  tapEnable.addEventListener('click', async () => {
+    try { await introMusic.play(); audioReady = true; tapAudio.classList.remove('show'); } catch(e){}
+  });
+  // Probeer meteen
+  tryStartIntroMusic();
+  // En start bij eerste interactie als autoplay faalt
+  ['pointerdown','keydown'].forEach(ev => {
+    window.addEventListener(ev, tryStartIntroMusic, {once:true, passive:true});
+  });
 
-    // Fade out functie
-    function fadeOutAudio(audio, duration = 800) {
-      if (!audio) return;
-      let vol = audio.volume;
-      const step = vol / (duration / 50);
-      const fade = setInterval(() => {
-        vol = Math.max(0, vol - step);
-        audio.volume = vol;
-        if (vol <= 0.01) {
-          audio.pause();
-          audio.currentTime = 0;
-          clearInterval(fade);
-        }
-      }, 50);
-    }
+  function stopIntroMusic(){
+    try { introMusic.pause(); introMusic.currentTime = 0; } catch(e){}
+  }
 
-    function startGame() {
-      if (introActive) {
-        // Muziek uitfaden
-        fadeOutAudio(introMusic, 600);
+  // ---------- Game constants ----------
+  const G = 2600;
+  const FLAP_VY = -850;
+  const MAX_DROP = 1200;
+  const PIPE_GAP = 290;
+  const PIPE_W = 120;
+  const PIPE_SPACING = 420;
+  const SCROLL_SPEED = 180;
+  const ACCEL = 0.035;
+  const AST = { r: 28, x: 200, y: 300 };
 
-        // Zoom-out animatie
-        canvas.style.transform = 'scale(0.5)'; // Start groot, zoom uit naar normaal
-        setTimeout(() => {
-          introEl.classList.add("is-hidden");
-          introActive = false;
-          gameActive = true;
-          initGame(); // Start de game
-        }, 1000); // Wacht 1 seconde voor de animatie
-      }
-    }
+  // ---------- Game state ----------
+  let state = 'intro'; // 'intro' | 'playing' | 'dead'
+  let score = 0, best = +(localStorage.getItem('aster-oid-best')||0);
+  let tPrev = 0, speed = SCROLL_SPEED, paused = false;
 
-    // Game logica
-    const G = 2600;
-    const FLAP_VY = -850;
-    const MAX_DROP = 1200;
-    let PIPE_GAP = 290;
-    const PIPE_W = 120;
-    let PIPE_SPACING = 420;
-    let SCROLL_SPEED = 180;
-    const ACCEL = 0;
+  // UI refs
+  const ui = {
+    scorePanel: document.getElementById('scorePanel'),
+    score: document.getElementById('score'),
+    best: document.getElementById('best'),
+    startBtn: document.getElementById('startBtn'),
+    title: document.getElementById('title'),
+    hint: document.getElementById('hint'),
+    pauseToast: document.getElementById('pauseToast'),
+  };
+  ui.best.textContent = best;
+
+  // ---------- Intro groot hoofd + zoom transition ----------
+  const introFace = document.getElementById('introFace');
+  document.getElementById('startBtnIntro').addEventListener('click', () => {
+    beginPlay();
+  });
+
+  function hideIntroOverlay() {
+    if (!introFace) return;
+    introFace.style.pointerEvents = 'none';
+    introFace.classList.add('hide');
+    setTimeout(() => { try{introFace.remove();}catch(e){} }, 450);
+  }
+
+  // ---------- Stars background ----------
+  const stars = Array.from({length: 160}, () => ({
+    x: Math.random()*canvas.width,
+    y: Math.random()*canvas.height,
+    z: 0.3 + Math.random()*0.7,
+    r: 0.6 + Math.random()*1.8,
+  }));
+
+  // ---------- World containers ----------
+  const pipes = [];
+  const coins = [];
+  const explosions = [];
+
+  function addPipe(x) {
     const MARGIN_TOP = 60;
-    const AST = { r: 28, x: 100, y: 300 };
+    const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
+    pipes.push({x, gapY, passed:false});
+  }
 
-    let score = 0, best = +(localStorage.getItem('flappy-asteroid-best') || 0);
-    let tPrev = 0, speed = SCROLL_SPEED, canFlap = true;
-    let pipes = [];
-    let coins = [];
-    let explosions = [];
-    let currentStage = 1;
-    let pipesPassed = 0;
-    let logosCollected = 0;
+  function resetPipes() {
+    pipes.length = 0;
+    coins.length = 0;
+    explosions.length = 0;
+    const count = 6;
+    let x = canvas.width/DPR + 300;
+    for (let i=0;i<count;i++){
+      addPipe(x);
+      x += PIPE_SPACING;
+    }
+  }
 
-    const player = {
-      x: AST.x, y: AST.y, r: AST.r,
-      vy: 0,
-      rot: 0,
-      alive: true,
-      flap() {
-        if (!canFlap) return;
-        this.vy = FLAP_VY;
-        canFlap = false;
-        setTimeout(() => canFlap = true, 150);
-      },
-      update(dt) {
-        this.vy = Math.min(this.vy + G * dt, MAX_DROP);
-        this.y += this.vy * dt;
-        this.rot = Math.max(-0.6, Math.min(0.9, this.vy / 900));
-      },
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rot);
-        ctx.beginPath();
-        ctx.arc(0, 0, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = '#b57f3a';
-        ctx.fill();
-        ctx.restore();
+  // ---------- Player ----------
+  const player = {
+    x: AST.x, y: AST.y, r: AST.r,
+    vy: 0, rot: 0, alive: true,
+    flap(){
+      this.vy = FLAP_VY; flash(0.17);
+    },
+    update(dt){
+      this.vy = Math.min(this.vy + G*dt, MAX_DROP);
+      this.y += this.vy * dt;
+      this.rot = Math.max(-0.6, Math.min(0.9, this.vy/900));
+    },
+    draw(){
+      ctx.save();
+      ctx.translate(this.x*DPR, this.y*DPR);
+      ctx.rotate(this.rot);
+      // teken het gezicht als sprite
+      const img = faceImg;
+      const rr = this.r*DPR*2.2;
+      if (img && img.complete){
+        ctx.drawImage(img, -rr/2, -rr/2, rr, rr);
+      } else {
+        // fallback cirkel
+        ctx.fillStyle = '#ffdfa6';
+        ctx.beginPath(); ctx.arc(0,0, this.r*DPR, 0, Math.PI*2); ctx.fill();
       }
-    };
+      ctx.restore();
+    }
+  };
 
-    function resetPipes() {
-      pipes = [];
-      coins = [];
-      explosions = [];
-      pipesPassed = 0;
-      for (let i = 0; i < 4; i++) addObstacle(i);
+  // laad hoofd
+  const faceImg = new Image();
+  faceImg.src = 'assets/cz-droid.png';
+
+  // ---------- Utilities ----------
+  let flashT = 0;
+  function flash(d) { flashT = Math.max(flashT, d); }
+
+  function setUI(){
+    const isStartOrDead = state === 'intro' || state === 'dead';
+    ui.title.style.display = isStartOrDead ? '' : 'none';
+    ui.hint.style.display = isStartOrDead ? '' : 'none';
+    ui.startBtn.style.display = isStartOrDead ? '' : 'none';
+    ui.scorePanel.hidden = state !== 'playing' && state !== 'dead';
+  }
+
+  // ---------- START ROBUUST SPELEN ----------
+  function beginPlay(){
+    stopIntroMusic();          // muziek uit bij spelen
+    hideIntroOverlay();        // intro overlay weg
+    state = 'playing';         // **belangrijk**
+    score = 0; speed = SCROLL_SPEED; tPrev = 0;
+    player.y = AST.y; player.vy = 0; player.alive = true;
+    resetPipes();
+    setUI();
+  }
+  // ---------- EINDE ROBUUST SPELEN ----------
+
+  // ---------- Input ----------
+  // startknop (HUD)
+  ui.startBtn.addEventListener('click', () => {
+    if (state !== 'playing') beginPlay();
+  });
+
+  // Keyboard
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space'){
+      e.preventDefault();
+      if (state !== 'playing') beginPlay();
+      else player.flap();
+    }
+    if (e.code === 'KeyR' && state==='dead') beginPlay();
+  });
+
+  // Pointer
+  window.addEventListener('pointerdown', e => {
+    if (e.target === canvas){
+      if (state !== 'playing') beginPlay();
+      else player.flap();
+    }
+  });
+
+  // Visibility pause
+  document.addEventListener('visibilitychange', () => {
+    paused = document.hidden;
+    ui.pauseToast.hidden = !paused;
+  });
+
+  // ---------- Update ----------
+  function update(dt){
+    if (state!=='playing') return;
+
+    speed += ACCEL * dt * 100;
+    player.update(dt);
+
+    const move = speed * dt;
+
+    // bewegen
+    for (const p of pipes) p.x -= move;
+    // scoren en recyclen
+    for (let i=0; i<pipes.length; i++){
+      const p = pipes[i];
+      if (!p.passed && player.x > p.x + PIPE_W/2){
+        p.passed = true; score++; ui.score.textContent = score;
+      }
+      if (p.x + PIPE_W < -80){
+        pipes.shift(); // verwijder
+        const lastX = pipes.length ? Math.max(...pipes.map(pp=>pp.x)) : canvas.width/DPR;
+        addPipe((lastX||canvas.width/DPR) + PIPE_SPACING);
+        i--;
+      }
     }
 
-    function addObstacle(i) {
-      const lastX = pipes.length ? pipes[pipes.length - 1].x : canvas.width + 300;
-      const x = lastX + PIPE_SPACING;
-      const gapY = MARGIN_TOP + Math.random() * (canvas.height - 2 * MARGIN_TOP - PIPE_GAP);
-      pipes.push({ x, gapY, passed: false });
+    // boundaries
+    if (player.y - player.r < 0 || player.y + player.r > canvas.height/DPR){
+      return gameOver();
     }
-
-    function update(dt) {
-      if (!gameActive) return;
-
-      if (pipesPassed >= 10 && currentStage < 10) {
-        currentStage++;
-        speed += 10;
-        pipesPassed = 0;
-        resetPipes();
-      }
-
-      speed += ACCEL * dt * 100;
-      player.update(dt);
-      const move = speed * dt;
-      for (let p of pipes) p.x -= move;
-
-      for (let i = 0; i < pipes.length; i++) {
-        let p = pipes[i];
-        if (!p.passed && player.x > p.x + PIPE_W / 2) {
-          p.passed = true;
-          score++;
-          pipesPassed++;
+    // collision pipes
+    for (const p of pipes){
+      const inX = player.x + player.r > p.x && player.x - player.r < p.x + PIPE_W;
+      if (inX){
+        if (player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP){
+          return gameOver();
         }
-        if (p.x + PIPE_W < 0) {
-          pipes.shift();
-          addObstacle();
-        }
-      }
-
-      if (player.y - player.r < 0 || player.y + player.r > canvas.height) gameOver();
-      for (let p of pipes) {
-        if (player.x + player.r > p.x && player.x - player.r < p.x + PIPE_W) {
-          if (player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP) gameOver();
-        }
       }
     }
+  }
 
-    function draw() {
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#0b0e20';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
+  function gameOver(){
+    state = 'dead';
+    best = Math.max(best, score);
+    localStorage.setItem('aster-oid-best', best);
+    ui.best.textContent = best;
+    ui.title.querySelector('h1').textContent = '💥 Game Over';
+    ui.startBtn.textContent = 'Restart';
+    setUI();
+  }
 
-      for (let p of pipes) {
-        ctx.fillStyle = '#2a2f3e';
-        ctx.fillRect(p.x, 0, PIPE_W, p.gapY);
-        ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_W, canvas.height - (p.gapY + PIPE_GAP));
-      }
+  // ---------- Draw ----------
+  function draw(){
+    // achtergrond
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
+    g.addColorStop(0, '#091224'); g.addColorStop(1, '#05070f');
+    ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width,canvas.height);
 
-      player.draw();
+    // sterren
+    for (const s of stars){
+      s.x -= (speed * s.z * 0.08) * (1/60) * DPR;
+      if (s.x < -2){ s.x = canvas.width + Math.random()*40; s.y = Math.random()*canvas.height; s.z = 0.3 + Math.random()*0.7; }
+      ctx.globalAlpha = 0.5 + s.z * 0.5;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r*DPR, 0, Math.PI*2); ctx.fillStyle = '#e8f0ff'; ctx.fill();
+    }
+    ctx.globalAlpha = 1;
+
+    // pipes
+    for (const p of pipes){
+      const x = p.x * DPR; const w = PIPE_W * DPR; const gapY = p.gapY * DPR; const gapH = PIPE_GAP * DPR;
+      drawRockColumn(x, 0, w, gapY, true);
+      drawRockColumn(x, gapY + gapH, w, canvas.height - (gapY + gapH), false);
+      // neon lijntjes
+      ctx.strokeStyle = 'rgba(110,231,255,0.18)'; ctx.lineWidth = 4*DPR;
+      ctx.beginPath(); ctx.moveTo(x, gapY); ctx.lineTo(x, gapY+gapH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+w, gapY); ctx.lineTo(x+w, gapY+gapH); ctx.stroke();
     }
 
-    function gameOver() {
-      gameActive = false;
-      // Hier kun je extra logica toevoegen, zoals leaderboard
-    }
+    // speler
+    player.draw();
 
-    function initGame() {
-      resetPipes();
-      gameActive = true;
-      function loop(ts) {
-        if (gameActive) {
-          const dt = (tPrev ? (ts - tPrev) / 1000 : 0.016);
-          tPrev = ts;
-          update(dt);
-          draw();
-        }
-        requestAnimationFrame(loop);
-      }
-      requestAnimationFrame(loop);
-    }
+    // flash
+    if (flashT>0) { ctx.fillStyle = `rgba(255,255,255,${flashT})`; ctx.fillRect(0,0,canvas.width,canvas.height); flashT = Math.max(0, flashT-0.04); }
+  }
 
-    // Event listeners
-    startBtn.addEventListener("click", () => {
-      playMusic();
-      startGame();
-    });
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") {
-        playMusic();
-        startGame();
-      }
-    });
-  </script>
+  function drawRockColumn(x,y,w,h,fromTop){
+    ctx.save();
+    ctx.beginPath();
+    const step = 32*DPR; const rough = 18*DPR;
+    const start = y; const end = y+h;
+    ctx.moveTo(x, start);
+    for (let yy=start; yy<=end; yy+=step){
+      const off = (Math.sin(yy*0.03)*0.5 + Math.random()*0.5)*rough;
+      ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step, end));
+    }
+    ctx.lineTo(x, end); ctx.closePath();
+    const rock = ctx.createLinearGradient(x,y,x+w,y);
+    rock.addColorStop(0, '#2a2f3e'); rock.addColorStop(1, '#101420');
+    ctx.fillStyle = rock; ctx.fill();
+    ctx.strokeStyle = 'rgba(232,240,255,0.05)'; ctx.lineWidth = 2*DPR; ctx.stroke();
+    ctx.restore();
+  }
+
+  // ---------- Main loop ----------
+  function loop(ts){
+    if (paused){ tPrev = ts; requestAnimationFrame(loop); return; }
+    const dt = Math.min(0.033, (tPrev ? (ts - tPrev)/1000 : 0.016));
+    tPrev = ts;
+    update(dt);
+    draw();
+    requestAnimationFrame(loop);
+  }
+  setUI();
+  requestAnimationFrame(loop);
+
+  // ---------- Safari/iOS focus ----------
+  document.addEventListener('visibilitychange', () => {
+    if (!document.hidden && state==='intro') tryStartIntroMusic();
+  });
+
+})();
+</script>
 </body>
 </html>
