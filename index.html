@@ -1,288 +1,88 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-  <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Aster Oid</title>
-  <style>
-    body {
-      margin: 0;
-      overflow: hidden;
-      background: #000;
-      color: #fff;
-      font-family: sans-serif;
-      text-align: center;
-    }
-    canvas {
-      display: block;
-      margin: 0 auto;
-      background: #0b0e20;
-      transition: transform 2s ease-out; /* 2 seconden zoom-out */
-    }
-    .intro {
-      position: absolute;
-      top: 0; left: 0; right: 0; bottom: 0;
-      display: flex;
-      justify-content: center;
-      align-items: center;
-      flex-direction: column;
-      background: rgba(0,0,0,0.9);
-      transition: opacity 0.6s ease;
-    }
-    .intro.is-hidden {
-      opacity: 0;
-      pointer-events: none;
-    }
-    .intro img {
-      width: 300px;
-      animation: head-move 3s infinite alternate ease-in-out;
-    }
-    @keyframes head-move {
-      0% { transform: rotate(-10deg); }
-      100% { transform: rotate(10deg); }
-    }
-    .countdown {
-      position: absolute;
-      top: 50%;
-      left: 50%;
-      transform: translate(-50%, -50%);
-      font-size: 48px;
-      color: #6ee7ff;
-      opacity: 0;
-      transition: opacity 0.5s;
-    }
-  </style>
-</head>
-<body>
-  <!-- Audio -->
-  <audio id="intro-music" src="assets/intro.mp3" preload="auto"></audio>
+<script>
+(() => {
+  const introOverlay = document.getElementById('introOverlay');
+  const introStart   = document.getElementById('introStart');
+  const introMusic   = document.getElementById('introMusic');
+  const countdown    = document.getElementById('countdown');
+  const countNum     = document.getElementById('countNum');
+  const startBtn     = document.getElementById('startBtn'); // jouw bestaande startknop
 
-  <!-- Canvas game -->
-  <canvas id="gameCanvas" width="400" height="600"></canvas>
+  let musicArmed = false;   // na 1e user gesture mogen we audio starten
+  let zooming    = false;   // guard tegen dubbel starten
 
-  <!-- Intro scherm -->
-  <div class="intro" id="intro-screen">
-    <img src="assets/cz-droid.png" alt="Big Head"/>
-    <h1>ASTER OID</h1>
-    <p>Tap/Click or press SPACE to boost</p>
-    <button id="start-btn">Start</button>
-  </div>
-
-  <!-- Countdown -->
-  <div id="countdown" class="countdown"></div>
-
-  <script>
-    const canvas = document.getElementById("gameCanvas");
-    const ctx = canvas.getContext("2d");
-    const introEl = document.getElementById("intro-screen");
-    const startBtn = document.getElementById("start-btn");
-    const introMusic = document.getElementById("intro-music");
-    const countdownEl = document.getElementById("countdown");
-
-    let introActive = true;
-    let gameActive = false;
-
-    // Controleer of audio geladen is
-    introMusic.oncanplaythrough = () => console.log('Audio is loaded and ready to play');
-    introMusic.onerror = () => console.error('Failed to load audio file:', introMusic.src);
-
-    // Start muziek bij intro
-    function playMusic() {
-      if (introMusic && introMusic.paused && introActive) {
-        introMusic.volume = 0.7;
-        introMusic.play().catch(err => console.warn('Autoplay blocked by browser:', err));
-      }
+  // 1) Muziek 'bij openen' (legaal): arm na 1e interactie ergens op de pagina
+  function armMusicOnce() {
+    if (musicArmed) return;
+    musicArmed = true;
+    introMusic.volume = 0.0;
+    const p = introMusic.play();
+    if (p) {
+      p.then(() => fadeTo(introMusic, 0.6, 600)).catch(() => {/* nog geblokkeerd? ook goed */});
     }
+  }
+  ['pointerdown','keydown','touchstart'].forEach(ev =>
+    document.addEventListener(ev, armMusicOnce, { once:true, passive:true })
+  );
 
-    // Fade out functie
-    function fadeOutAudio(audio, duration = 800) {
-      if (!audio) return;
-      let vol = audio.volume;
-      const step = vol / (duration / 50);
-      const fade = setInterval(() => {
-        vol = Math.max(0, vol - step);
-        audio.volume = vol;
-        if (vol <= 0.01) {
-          audio.pause();
-          audio.currentTime = 0;
-          clearInterval(fade);
+  // volume fade helper
+  function fadeTo(audio, target, ms=400) {
+    const step = 50;
+    const diff = target - audio.volume;
+    const delta = diff / (ms/step);
+    return new Promise(resolve => {
+      const it = setInterval(() => {
+        const next = audio.volume + delta;
+        if ((delta>0 && next>=target) || (delta<0 && next<=target)) {
+          audio.volume = target; clearInterval(it); resolve();
+        } else {
+          audio.volume = Math.max(0, Math.min(1, next));
         }
-      }, 50);
-    }
+      }, step);
+    });
+  }
 
-    function startGame() {
-      if (introActive) {
-        playMusic(); // Start muziek bij intro
-        // Zoom-out animatie (2 seconden)
-        canvas.style.transform = 'scale(0.5)'; // Start groot
+  // 2) START – knop of SPACE → fade muziek, zoom, daarna countdown en game
+  function handleStart() {
+    if (zooming) return;
+    zooming = true;
+
+    fadeTo(introMusic, 0, 300).then(() => introMusic.pause());
+
+    document.body.classList.add('zooming'); // pauzeer animaties + zoom img + fade overlay
+
+    setTimeout(runCountdown, 1400);
+  }
+
+  introStart.addEventListener('click', handleStart);
+  window.addEventListener('keydown', e => {
+    if (e.code === 'Space') { e.preventDefault(); handleStart(); }
+  });
+
+  // 3) 3-2-1 DESTROY → klik jouw bestaande startknop
+  function runCountdown() {
+    introOverlay.style.display = 'none';
+    countdown.style.display = 'grid';
+
+    let n = 3;
+    countNum.textContent = n;
+
+    const tick = setInterval(() => {
+      n--;
+      if (n > 0) {
+        countNum.textContent = n;
+        countNum.style.animation = 'none';
+        countNum.offsetHeight;           // reflow om animatie te resetten
+        countNum.style.animation = '';
+      } else {
+        clearInterval(tick);
+        countNum.textContent = 'DESTROY';
         setTimeout(() => {
-          // Aftellen
-          let count = 3;
-          countdownEl.style.opacity = 1;
-          const countInterval = setInterval(() => {
-            countdownEl.textContent = count > 0 ? count : 'ZESTROY';
-            if (count <= 0) {
-              clearInterval(countInterval);
-              countdownEl.style.opacity = 0;
-              setTimeout(() => {
-                introEl.classList.add("is-hidden");
-                introActive = false;
-                gameActive = true;
-                fadeOutAudio(introMusic, 600); // Muziek stoppen bij start
-                initGame(); // Start de game
-              }, 500); // Extra delay voor "ZESTROY"
-            }
-            count--;
-          }, 1000); // 1 seconde per tel
-        }, 2000); // 2 seconden zoom-out
+          countdown.style.display = 'none';
+          if (startBtn) startBtn.click(); // start jouw game exact zoals nu
+          document.body.classList.remove('zooming');
+        }, 400);
       }
-    }
-
-    // Game logica
-    const G = 2600;
-    const FLAP_VY = -850;
-    const MAX_DROP = 1200;
-    let PIPE_GAP = 290;
-    const PIPE_W = 120;
-    let PIPE_SPACING = 420;
-    let SCROLL_SPEED = 180;
-    const ACCEL = 0;
-    const MARGIN_TOP = 60;
-    const AST = { r: 28, x: 100, y: 300 };
-
-    let score = 0, best = +(localStorage.getItem('flappy-asteroid-best') || 0);
-    let tPrev = 0, speed = SCROLL_SPEED, canFlap = true;
-    let pipes = [];
-    let coins = [];
-    let explosions = [];
-    let currentStage = 1;
-    let pipesPassed = 0;
-    let logosCollected = 0;
-
-    const player = {
-      x: AST.x, y: AST.y, r: AST.r,
-      vy: 0,
-      rot: 0,
-      alive: true,
-      flap() {
-        if (!canFlap || !gameActive) return;
-        this.vy = FLAP_VY;
-        canFlap = false;
-        setTimeout(() => canFlap = true, 150);
-      },
-      update(dt) {
-        this.vy = Math.min(this.vy + G * dt, MAX_DROP);
-        this.y += this.vy * dt;
-        this.rot = Math.max(-0.6, Math.min(0.9, this.vy / 900));
-      },
-      draw() {
-        ctx.save();
-        ctx.translate(this.x, this.y);
-        ctx.rotate(this.rot);
-        ctx.beginPath();
-        ctx.arc(0, 0, this.r, 0, Math.PI * 2);
-        ctx.fillStyle = '#b57f3a';
-        ctx.fill();
-        ctx.restore();
-      }
-    };
-
-    function resetPipes() {
-      pipes = [];
-      coins = [];
-      explosions = [];
-      pipesPassed = 0;
-      for (let i = 0; i < 4; i++) addObstacle(i);
-    }
-
-    function addObstacle(i) {
-      const lastX = pipes.length ? pipes[pipes.length - 1].x : canvas.width + 300;
-      const x = lastX + PIPE_SPACING;
-      const gapY = MARGIN_TOP + Math.random() * (canvas.height - 2 * MARGIN_TOP - PIPE_GAP);
-      pipes.push({ x, gapY, passed: false });
-    }
-
-    function update(dt) {
-      if (!gameActive) return;
-
-      if (pipesPassed >= 10 && currentStage < 10) {
-        currentStage++;
-        speed += 10;
-        pipesPassed = 0;
-        resetPipes();
-      }
-
-      speed += ACCEL * dt * 100;
-      player.update(dt);
-      const move = speed * dt;
-      for (let p of pipes) p.x -= move;
-
-      for (let i = 0; i < pipes.length; i++) {
-        let p = pipes[i];
-        if (!p.passed && player.x > p.x + PIPE_W / 2) {
-          p.passed = true;
-          score++;
-          pipesPassed++;
-        }
-        if (p.x + PIPE_W < 0) {
-          pipes.shift();
-          addObstacle();
-        }
-      }
-
-      if (player.y - player.r < 0 || player.y + player.r > canvas.height) gameOver();
-      for (let p of pipes) {
-        if (player.x + player.r > p.x && player.x - player.r < p.x + PIPE_W) {
-          if (player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP) gameOver();
-        }
-      }
-    }
-
-    function draw() {
-      if (!gameActive) return;
-      ctx.clearRect(0, 0, canvas.width, canvas.height);
-      ctx.fillStyle = '#0b0e20';
-      ctx.fillRect(0, 0, canvas.width, canvas.height);
-
-      for (let p of pipes) {
-        ctx.fillStyle = '#2a2f3e';
-        ctx.fillRect(p.x, 0, PIPE_W, p.gapY);
-        ctx.fillRect(p.x, p.gapY + PIPE_GAP, PIPE_W, canvas.height - (p.gapY + PIPE_GAP));
-      }
-
-      player.draw();
-    }
-
-    function gameOver() {
-      gameActive = false;
-      // Hier kun je extra logica toevoegen, zoals leaderboard
-    }
-
-    function initGame() {
-      resetPipes();
-      gameActive = true;
-      function loop(ts) {
-        if (gameActive) {
-          const dt = (tPrev ? (ts - tPrev) / 1000 : 0.016);
-          tPrev = ts;
-          update(dt);
-          draw();
-        }
-        requestAnimationFrame(loop);
-      }
-      requestAnimationFrame(loop);
-    }
-
-    // Event listeners
-    startBtn.addEventListener("click", startGame);
-    window.addEventListener("keydown", (e) => {
-      if (e.code === "Space") startGame();
-    });
-
-    // Start muziek bij intro (na laadtijd)
-    window.addEventListener("load", () => {
-      if (introMusic.readyState >= 2) playMusic(); // Als audio geladen is
-    });
-  </script>
-</body>
-</html>
+    }, 750);
+  }
+})();
+</script>
