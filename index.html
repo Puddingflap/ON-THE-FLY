@@ -43,7 +43,7 @@
     @supports not (backdrop-filter: blur(6px)) {
       .panel { background: rgba(8,12,22,.8); }
     }
-    /* New: Leaderboard HUD */
+    /* Leaderboard HUD */
     .leaderboard-panel {
       pointer-events:auto; position:absolute; top:50%; left:50%; transform:translate(-50%, -50%);
       background: rgba(8,12,22,.85); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px);
@@ -55,10 +55,10 @@
     .leaderboard-panel .close-btn { background:var(--accent); border:none; color:var(--bg); padding:8px 16px; border-radius:8px; cursor:pointer; }
     .name-input { background:rgba(255,255,255,.08); border:1px solid rgba(255,255,255,.2); color:var(--fg); padding:8px; border-radius:8px; text-transform:uppercase; max-width:60px; text-align:center; font-weight:bold; }
     .name-input:focus { outline:none; border-color:var(--accent); }
-    /* New: Stage hint */
+    /* Stage hint */
     .stage-hint {
       position:absolute; top:50%; left:50%; transform:translate(-50%, -50%); background: rgba(8,12,22,.8);
-      padding:10px 20px; border-radius:10px; color:var(--accent); font-size:18px; opacity=0;
+      padding:10px 20px; border-radius:10px; color:var(--accent); font-size:18px; opacity:0;
       transition: opacity 0.5s;
     }
   </style>
@@ -78,6 +78,8 @@
     <div class="title" id="title">
       <h1>💫 ASTER OID</h1>
       <div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div>
+      <!-- Toegevoegde afbeelding onder de titel -->
+      <img src="assets/cz-droid.png" alt="CZ Droid" style="max-width:200px; margin-top:20px; pointer-events:none; user-select:none;">
     </div>
     <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment.</div>
     <button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
@@ -119,14 +121,14 @@
   const MAX_DROP = 1200;
   let PIPE_GAP = 290; // Fixed value of 290 px for all stages
   const PIPE_W = 120;
-  let PIPE_SPACING = 420; // Changed to let for dynamic adjustment
+  let PIPE_SPACING = 420; // dynamic adjustment allowed
   let SCROLL_SPEED = 180;
   const ACCEL = 0; // Disable continuous acceleration, use stage-based speed increase
   const MARGIN_TOP = 60;
   const AST = { r: 28, x: 200, y: 300 };
 
   let state = 'start';
-  let score = 0, best = +(localStorage.getItem('aster-oid-best')||0);
+  let score = 0, best = +(localStorage.getItem('flappy-asteroid-best')||0);
   let tPrev = 0, speed = SCROLL_SPEED, paused = false;
   let canFlap = true;
   let leaderboardActive = false;
@@ -138,7 +140,7 @@
     scorePanel: document.getElementById('scorePanel'),
     score: document.getElementById('score'),
     best: document.getElementById('best'),
-    logosCollected: document.getElementById('logosCollected'), // Updated UI element
+    logosCollected: document.getElementById('logosCollected'),
     startBtn: document.getElementById('startBtn'),
     title: document.getElementById('title'),
     hint: document.getElementById('hint'),
@@ -152,9 +154,9 @@
     stageHint: document.getElementById('stageHint'),
   };
   ui.best.textContent = best;
-  ui.logosCollected.textContent = logosCollected; // Initialize logo counter
+  ui.logosCollected.textContent = logosCollected;
 
-  const LEADERBOARD_KEY = 'aster-oid-leaderboard';
+  const LEADERBOARD_KEY = 'flappy-asteroid-leaderboard';
   let leaderboard = JSON.parse(localStorage.getItem(LEADERBOARD_KEY)) || [];
 
   function saveLeaderboard() {
@@ -241,19 +243,20 @@
   };
 
   const pipes = [];
-  const coins = []; // Now logos, but name remains for compatibility
-  const explosions = []; // New array for explosion animations
-  const LOGO_CHANCE = 0.2; // Increased to 20% for testing
-  const LOGO_SIZE = 20; // Size of the logo
-  const LOGO_GAP = 100; // Gap size around the logo to avoid pipes
-  const LOGO_SCORE_BONUS = 5; // Bonus points for hitting a logo
+  const coins = []; // logos
+  const explosions = [];
+
+  const LOGO_CHANCE = 0.2;
+  const LOGO_SIZE = 20;
+  const LOGO_GAP = 100;
+  const LOGO_SCORE_BONUS = 5;
 
   function resetPipes() {
     pipes.length = 0;
-    coins.length = 0; // Reset logos
-    explosions.length = 0; // Reset explosions
-    pipesPassed = 0; // Reset pipes passed counter
-    const count = 8; // Increased to ensure more pipes are generated
+    coins.length = 0;
+    explosions.length = 0;
+    pipesPassed = 0;
+    const count = 8;
     for (let i = 0; i < count; i++) addObstacle(i);
   }
 
@@ -267,35 +270,33 @@
       // Add a logo without pipes around it
       const gapY = MARGIN_TOP + Math.random() * (canvas.height / DPR - 2 * MARGIN_TOP - LOGO_GAP);
       coins.push({ x, y: gapY + LOGO_GAP / 2, r: LOGO_SIZE, collected: false });
-      // Increase spacing temporarily to avoid pipes right after
-      PIPE_SPACING += LOGO_GAP;
+      PIPE_SPACING += LOGO_GAP; // temporary spacing bump
     } else {
       // Add a pipe
       const gapY = MARGIN_TOP + Math.random() * (canvas.height / DPR - 2 * MARGIN_TOP - PIPE_GAP);
       pipes.push({ x, gapY, passed: false });
-      // Reset spacing to original value
-      PIPE_SPACING = 420;
+      PIPE_SPACING = 420; // reset spacing
     }
   }
 
   let flashT = 0;
-  function flash(d) { flashT = Math.max(flashT, d); }
+  function flash(d){ flashT = Math.max(flashT, d); }
 
   function addExplosion(x, y) {
     explosions.push({ x, y, startTime: performance.now(), duration: 500, maxRadius: 50 });
   }
 
-  function boost() {
+  function boost(){
     if (leaderboardActive) return;
-    if (state === 'start') { startGame(); }
-    else if (state === 'dead') { restart(); }
-    else if (state === 'playing') { player.flap(); }
+    if(state==='start'){ startGame(); }
+    else if(state==='dead'){ restart(); }
+    else if(state==='playing'){ player.flap(); }
   }
-  window.addEventListener('keydown', e => {
-    if (['Space', 'ArrowUp', 'KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
-    if (e.code === 'KeyR') restart();
+  window.addEventListener('keydown', e=>{
+    if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); }
+    if(e.code==='KeyR') restart();
   });
-  window.addEventListener('pointerdown', e => { if (e.target === canvas) boost(); });
+  window.addEventListener('pointerdown', e=>{ if(e.target===canvas) boost(); });
   ui.startBtn.addEventListener('click', boost);
 
   document.addEventListener('visibilitychange', () => {
@@ -303,19 +304,19 @@
     ui.pauseToast.hidden = !paused;
   });
 
-  function startGame() {
+  function startGame(){
     state = 'playing';
     score = 0; speed = SCROLL_SPEED; tPrev = 0; currentStage = 1;
     player.y = AST.y; player.vy = 0; player.alive = true;
-    PIPE_GAP = 290; // Fixed value for all stages
-    logosCollected = 0; // Reset logo counter
+    PIPE_GAP = 290;
+    logosCollected = 0;
     resetPipes();
     setUI();
     showStageHint('Stage 1: Orbit Entry');
   }
-  function gameOver() {
+  function gameOver(){
     state = 'dead';
-    best = Math.max(best, score); localStorage.setItem('aster-oid-best', best); ui.best.textContent = best;
+    best = Math.max(best, score); localStorage.setItem('flappy-asteroid-best', best); ui.best.textContent = best;
     ui.title.querySelector('h1').innerHTML = '💥 Game Over';
     ui.hint.textContent = 'Press R or click to play again';
     ui.startBtn.textContent = 'Restart';
@@ -325,21 +326,18 @@
       showLeaderboard(true);
     }
   }
-  function restart() {
+  function restart(){
     ui.title.querySelector('h1').innerHTML = '💫 ASTER OID';
     ui.startBtn.textContent = 'Start';
     startGame();
   }
 
-  function update(dt) {
-    // Debug output to console
-    console.log(`Score: ${score}, Pipes Passed: ${pipesPassed}, Logos Collected: ${logosCollected}, Current Stage: ${currentStage}`);
-
-    // Update stage based on pipes passed (10 per stage)
+  function update(dt){
+    // stage progress: every 10 passed pipes
     if (pipesPassed >= 10 && currentStage < 10) {
       currentStage++;
-      speed = SCROLL_SPEED + (currentStage - 1) * 10; // Increase speed by 10 px/s per stage
-      pipesPassed = 0; // Reset pipes passed for new stage
+      speed = SCROLL_SPEED + (currentStage - 1) * 10; // +10 px/s per stage
+      pipesPassed = 0;
       switch (currentStage) {
         case 2: showStageHint('Stage 2: Meme Belt'); break;
         case 3: showStageHint('Stage 3: Shitcoin Storm'); break;
@@ -351,83 +349,92 @@
         case 9: showStageHint('Stage 9: To the Moon'); break;
         case 10: showStageHint('Stage 10: Final Impact'); break;
       }
-      resetPipes(); // Reset obstacles for new stage
+      resetPipes();
     }
 
-    speed += ACCEL * dt * 100; // Optional continuous acceleration (currently disabled with ACCEL = 0)
+    speed += ACCEL * dt * 100; // (ACCEL is 0, dus geen continue versnelling)
     player.update(dt);
     const move = speed * dt;
+
+    // pipes
     for (const p of pipes) { p.x -= move; }
     for (let i = 0; i < pipes.length; i++) {
       const p = pipes[i];
       if (!p.passed && player.x > p.x + PIPE_W / 2) {
         p.passed = true;
         score++; // 1 point per pipe
-        pipesPassed++; // Increment pipes passed counter
+        pipesPassed++;
         ui.score.textContent = score;
       }
       if (p.x + PIPE_W < -80) {
         pipes.shift(); addObstacle(1); i--;
       }
     }
+
+    // coins/logos
     for (let i = 0; i < coins.length; i++) {
       const c = coins[i];
       c.x -= move;
-      // Check collision with player
       const dx = player.x - c.x;
       const dy = player.y - c.y;
-      const distance = Math.sqrt(dx * dx + dy * dy);
+      const distance = Math.sqrt(dx*dx + dy*dy);
       if (distance < player.r + c.r && !c.collected) {
         c.collected = true;
-        score += LOGO_SCORE_BONUS; // 5 bonus points per logo
-        logosCollected++; // Increment logo counter
-        ui.logosCollected.textContent = logosCollected; // Update UI
+        score += LOGO_SCORE_BONUS;
+        logosCollected++;
+        ui.logosCollected.textContent = logosCollected;
         ui.score.textContent = score;
-        addExplosion(c.x, c.y); // Add explosion at logo
+        addExplosion(c.x, c.y);
       }
       if (c.x + c.r < -80) {
         coins.splice(i, 1); i--;
       }
     }
-    if (player.y - player.r < 0 || player.y + player.r > canvas.height / DPR) { return gameOver(); }
-    for (const p of pipes) {
+
+    // borders & collisions
+    if(player.y - player.r < 0 || player.y + player.r > canvas.height / DPR){ return gameOver(); }
+    for(const p of pipes){
       const inX = player.x + player.r > p.x && player.x - player.r < p.x + PIPE_W;
-      if (inX) {
-        if (player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP) {
+      if(inX){
+        if(player.y - player.r < p.gapY || player.y + player.r > p.gapY + PIPE_GAP){
           return gameOver();
         }
       }
     }
   }
 
-  function draw() {
-    ctx.clearRect(0, 0, canvas.width, canvas.height);
-    const g = ctx.createLinearGradient(0, 0, 0, canvas.height);
+  function draw(){
+    ctx.clearRect(0,0,canvas.width, canvas.height);
+    const g = ctx.createLinearGradient(0,0,0,canvas.height);
     g.addColorStop(0, '#091224');
     g.addColorStop(1, '#05070f');
-    ctx.fillStyle = g; ctx.fillRect(0, 0, canvas.width, canvas.height);
-    for (const s of stars) {
-      s.x -= (speed * s.z * 0.08) * (1 / 60) * DPR;
-      if (s.x < -2) { s.x = canvas.width + Math.random() * 40; s.y = Math.random() * canvas.height; s.z = 0.3 + Math.random() * 0.7; }
-      ctx.globalAlpha = 0.5 + s.z * 0.5;
-      ctx.beginPath(); ctx.arc(s.x, s.y, s.r * DPR, 0, Math.PI * 2); ctx.fillStyle = '#e8f0ff'; ctx.fill();
-      if (Math.random() < 0.003) { ctx.globalAlpha = 0.9; ctx.fillRect(s.x - 0.5, s.y - 0.5, 1, 1); }
+    ctx.fillStyle = g; ctx.fillRect(0,0,canvas.width, canvas.height);
+
+    // stars parallax
+    for(const s of stars){
+      s.x -= (speed*s.z*0.08) * (1/60) * DPR;
+      if(s.x < -2){ s.x = canvas.width + Math.random()*40; s.y = Math.random()*canvas.height; s.z = 0.3 + Math.random()*0.7; }
+      ctx.globalAlpha = 0.5 + s.z*0.5;
+      ctx.beginPath(); ctx.arc(s.x, s.y, s.r*DPR, 0, Math.PI*2); ctx.fillStyle = '#e8f0ff'; ctx.fill();
+      if(Math.random()<0.003){ ctx.globalAlpha = 0.9; ctx.fillRect(s.x-0.5, s.y-0.5, 1, 1); }
     }
     ctx.globalAlpha = 1;
-    for (const p of pipes) {
-      const x = p.x * DPR; const w = PIPE_W * DPR; const gapY = p.gapY * DPR; const gapH = PIPE_GAP * DPR;
-      drawRockColumn(x, 0, w, gapY - 0, true);
-      drawRockColumn(x, gapY + gapH, w, canvas.height - (gapY + gapH), false);
-      ctx.strokeStyle = 'rgba(110,231,255,0.18)'; ctx.lineWidth = 4 * DPR; ctx.beginPath(); ctx.moveTo(x, gapY); ctx.lineTo(x, gapY + gapH); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x + w, gapY); ctx.lineTo(x + w, gapY + gapH); ctx.stroke();
+
+    // pipes
+    for(const p of pipes){
+      const x = p.x*DPR; const w = PIPE_W*DPR; const gapY = p.gapY*DPR; const gapH = PIPE_GAP*DPR;
+      drawRockColumn(x, 0, w, gapY-0, true);
+      drawRockColumn(x, gapY+gapH, w, canvas.height-(gapY+gapH), false);
+      ctx.strokeStyle = 'rgba(110,231,255,0.18)'; ctx.lineWidth = 4*DPR; ctx.beginPath(); ctx.moveTo(x, gapY); ctx.lineTo(x, gapY+gapH); ctx.stroke();
+      ctx.beginPath(); ctx.moveTo(x+w, gapY); ctx.lineTo(x+w, gapY+gapH); ctx.stroke();
     }
-    // Draw logos with a dedicated gap
+
+    // logos (placeholder visual)
     for (const c of coins) {
       if (!c.collected) {
         ctx.save();
         ctx.translate(c.x * DPR, c.y * DPR);
         ctx.beginPath();
-        // Simple logo-like shape (placeholder)
         ctx.moveTo(-c.r * DPR * 0.5, -c.r * DPR);
         ctx.lineTo(c.r * DPR * 0.5, -c.r * DPR);
         ctx.lineTo(c.r * DPR, c.r * DPR);
@@ -441,7 +448,8 @@
         ctx.restore();
       }
     }
-    // Draw explosion animations
+
+    // explosions
     const now = performance.now();
     for (let i = explosions.length - 1; i >= 0; i--) {
       const e = explosions[i];
@@ -457,96 +465,98 @@
         ctx.fill();
       }
     }
+
     player.draw();
-    if (flashT > 0) {
-      ctx.fillStyle = `rgba(255,255,255,${flashT})`; ctx.fillRect(0, 0, canvas.width, canvas.height); flashT = Math.max(0, flashT - 0.04);
+
+    if(flashT>0){
+      ctx.fillStyle = `rgba(255,255,255,${flashT})`; ctx.fillRect(0,0,canvas.width, canvas.height); flashT = Math.max(0, flashT - 0.04);
     }
   }
 
-  function drawAsteroid(r) {
-    const grd = ctx.createRadialGradient(-r * 0.3, -r * 0.3, r * 0.2, 0, 0, r);
+  function drawAsteroid(r){
+    const grd = ctx.createRadialGradient(-r*0.3, -r*0.3, r*0.2, 0,0, r);
     grd.addColorStop(0, '#ffdfa6');
     grd.addColorStop(1, '#b57f3a');
     ctx.fillStyle = grd;
-    roundedPolygon(ctx, [[-r * 0.9, -r * 0.3], [-r * 0.3, -r * 0.9], [r * 0.7, -r * 0.6], [r * 0.9, 0], [r * 0.5, r * 0.8], [-r * 0.6, r * 0.6]], r * 0.25);
+    roundedPolygon(ctx,[[-r*0.9,-r*0.3],[ -r*0.3,-r*0.9],[ r*0.7,-r*0.6],[ r*0.9,0],[ r*0.5,r*0.8],[ -r*0.6,r*0.6]], r*0.25);
     ctx.fill();
     ctx.globalAlpha = 0.25; ctx.fillStyle = '#000';
-    for (let i = 0; i < 5; i++) {
-      const a = Math.random() * Math.PI * 2; const rr = r * (0.1 + Math.random() * 0.15);
-      ctx.beginPath(); ctx.ellipse(Math.cos(a) * r * 0.5, Math.sin(a) * r * 0.4, rr, rr * 0.7, a, 0, Math.PI * 2); ctx.fill();
+    for(let i=0;i<5;i++){
+      const a = Math.random()*Math.PI*2; const rr = r*(0.1+Math.random()*0.15);
+      ctx.beginPath(); ctx.ellipse(Math.cos(a)*r*0.5, Math.sin(a)*r*0.4, rr, rr*0.7, a, 0, Math.PI*2); ctx.fill();
     }
     ctx.globalAlpha = 1;
-    if (player.vy < -50) {
+    if(player.vy < -50){
       ctx.save();
-      ctx.translate(-r * 0.9, 0);
-      ctx.rotate(-Math.PI / 2);
-      const len = Math.min(60, 30 + (-player.vy) * 0.06);
-      const grad = ctx.createLinearGradient(0, 0, 0, len);
+      ctx.translate(-r*0.9, 0);
+      ctx.rotate(-Math.PI/2);
+      const len = Math.min(60, 30 + (-player.vy)*0.06);
+      const grad = ctx.createLinearGradient(0,0,0,len);
       grad.addColorStop(0, 'rgba(110,231,255,0.85)');
       grad.addColorStop(1, 'rgba(110,231,255,0)');
       ctx.fillStyle = grad;
-      ctx.beginPath(); ctx.moveTo(0, -6); ctx.lineTo(0, 6); ctx.lineTo(len, 0); ctx.closePath(); ctx.fill();
+      ctx.beginPath(); ctx.moveTo(0,-6); ctx.lineTo(0,6); ctx.lineTo(len,0); ctx.closePath(); ctx.fill();
       ctx.restore();
     }
   }
 
-  function roundedPolygon(ctx, pts, r) {
+  function roundedPolygon(ctx, pts, r){
     const l = pts.length; ctx.beginPath();
-    for (let i = 0; i < l; i++) {
-      const p0 = pts[(i - 1 + l) % l], p1 = pts[i], p2 = pts[(i + 1) % l];
-      const v1x = p1[0] - p0[0], v1y = p1[1] - p0[1];
-      const v2x = p2[0] - p1[0], v2y = p2[1] - p1[1];
-      const len1 = Math.hypot(v1x, v1y), len2 = Math.hypot(v2x, v2y);
-      const n1x = v1x / len1, n1y = v1y / len1, n2x = v2x / len2, n2y = v2y / len2;
-      const k = Math.min(r, Math.min(len1 / 2, len2 / 2));
-      const pA = [p1[0] - n1x * k, p1[1] - n1y * k];
-      const pB = [p1[0] + n2x * k, p1[1] + n2y * k];
-      if (i === 0) ctx.moveTo(pA[0], pA[1]); else ctx.lineTo(pA[0], pA[1]);
+    for(let i=0;i<l;i++){
+      const p0 = pts[(i-1+l)%l], p1 = pts[i], p2 = pts[(i+1)%l];
+      const v1x = p1[0]-p0[0], v1y = p1[1]-p0[1];
+      const v2x = p2[0]-p1[0], v2y = p2[1]-p1[1];
+      const len1 = Math.hypot(v1x,v1y), len2 = Math.hypot(v2x,v2y);
+      const n1x = v1x/len1, n1y = v1y/len1, n2x = v2x/len2, n2y = v2y/len2;
+      const k = Math.min(r, Math.min(len1/2, len2/2));
+      const pA = [p1[0]-n1x*k, p1[1]-n1y*k];
+      const pB = [p1[0]+n2x*k, p1[1]+n2y*k];
+      if(i===0) ctx.moveTo(pA[0], pA[1]); else ctx.lineTo(pA[0], pA[1]);
       const cx = p1[0], cy = p1[1];
-      const ang1 = Math.atan2(pA[1] - cy, pA[0] - cx);
-      const ang2 = Math.atan2(pB[1] - cy, pB[0] - cx);
+      const ang1 = Math.atan2(pA[1]-cy, pA[0]-cx);
+      const ang2 = Math.atan2(pB[1]-cy, pB[0]-cx);
       ctx.arc(cx, cy, k, ang1, ang2);
     }
     ctx.closePath();
   }
 
-  function drawRockColumn(x, y, w, h, fromTop) {
+  function drawRockColumn(x, y, w, h, fromTop){
     ctx.save();
     ctx.beginPath();
-    const step = 32 * DPR; const rough = 18 * DPR; const start = y; const end = y + h;
+    const step = 32*DPR; const rough = 18*DPR; const start = y; const end = y+h;
     ctx.moveTo(x, start);
-    for (let yy = start; yy <= end; yy += step) {
-      const off = (Math.sin(yy * 0.03) * 0.5 + Math.random() * 0.5) * rough;
-      ctx.lineTo(x + (fromTop ? off : -off) + w, Math.min(yy + step, end));
+    for(let yy=start; yy<=end; yy+=step){
+      const off = (Math.sin(yy*0.03) * 0.5 + Math.random()*0.5) * rough;
+      ctx.lineTo(x + (fromTop? off : -off) + w, Math.min(yy+step, end));
     }
     ctx.lineTo(x, end);
     ctx.closePath();
-    const rock = ctx.createLinearGradient(x, y, x + w, y);
+    const rock = ctx.createLinearGradient(x, y, x+w, y);
     rock.addColorStop(0, '#2a2f3e');
     rock.addColorStop(1, '#101420');
     ctx.fillStyle = rock; ctx.fill();
-    ctx.strokeStyle = 'rgba(232,240,255,0.05)'; ctx.lineWidth = 2 * DPR; ctx.stroke();
+    ctx.strokeStyle = 'rgba(232,240,255,0.05)'; ctx.lineWidth = 2*DPR; ctx.stroke();
     ctx.restore();
   }
 
-  function loop(ts) {
-    if (paused) {
+  function loop(ts){
+    if(paused){
       tPrev = ts;
       requestAnimationFrame(loop);
       return;
     }
-    const dt = Math.min(0.033, (tPrev ? (ts - tPrev) / 1000 : 0.016));
+    const dt = Math.min(0.033, (tPrev? (ts - tPrev)/1000 : 0.016));
     tPrev = ts;
-    if (state === 'playing') update(dt);
+    if(state==='playing') update(dt);
     draw();
     requestAnimationFrame(loop);
   }
   setUI();
   requestAnimationFrame(loop);
 
-  try {
+  try{
     const selftest = /[?&]selftest=1/.test(location.search);
-    if (selftest) {
+    if(selftest){
       console.group('Selftest');
       console.assert(document.getElementsByTagName('html').length === 1, 'There should be only 1 <html> element');
       console.assert(ui.title && ui.startBtn && ui.hint && ui.scorePanel, 'UI elements exist');
@@ -557,7 +567,7 @@
       console.assert(getComputedStyle(ui.startBtn).display !== 'none', 'Start button back after game over');
       console.groupEnd();
     }
-  } catch (e) { /* no-op */ }
+  }catch(e){ /* no-op */ }
 })();
 </script>
 </body>
