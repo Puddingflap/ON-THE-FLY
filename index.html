@@ -30,6 +30,8 @@
     h1{margin:0 0 6px 0; font-size: clamp(28px, 6vw, 48px)}
     .subtitle{opacity:.75}
     .toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}
+    @supports not (backdrop-filter: blur(6px)) { .panel { background: rgba(8,12,22,.8); } }
+    /* Ik laat h1 in START verbergen via JS; in DEAD tonen we 'Game Over' */
   </style>
 </head>
 <body>
@@ -58,7 +60,7 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d');
 
-  /* --- muziek (blijft zoals je had) --- */
+  /* --- muziek --- */
   const music = new Audio('assets/intro.mp3');
   music.loop = true;
   let musicStarted = false;
@@ -66,147 +68,144 @@
   window.addEventListener('pointerdown', startMusic);
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
 
-  /* --- speler-sprite --- */
-  const ASTEROID_SPRITE = 'assets/cz-droid.png';
-  const asteroidImg = new Image();
-  asteroidImg.src = ASTEROID_SPRITE;
+  /* --- sprite --- */
+  const SPRITE_SRC = 'assets/cz-droid.png';
+  const spriteImg = new Image();
+  spriteImg.src = SPRITE_SRC;
 
   const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   const W0 = canvas.width, H0 = canvas.height;
-  function resize(){
-    const rect = canvas.getBoundingClientRect();
-    canvas.width = Math.round(rect.width * DPR);
-    canvas.height = Math.round(rect.height * DPR);
-    scale = canvas.width / W0;
-  }
-  let scale = 1; resize();
-  window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t = setTimeout(resize,100); });
+  function resize(){ const r = canvas.getBoundingClientRect(); canvas.width=Math.round(r.width*DPR); canvas.height=Math.round(r.height*DPR); }
+  resize(); window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t=setTimeout(resize,100); });
 
-  const G = 2600, FLAP_VY = -850, MAX_DROP = 1200;
-  let PIPE_GAP = 290, PIPE_SPACING = 420, SCROLL_SPEED = 180, ACCEL = 0;
-  const PIPE_W = 120, MARGIN_TOP = 60;
-  const AST = { r: 28, x: 200, y: 300 };
+  // --- wereld ---
+  const G=2600, FLAP_VY=-850, MAX_DROP=1200;
+  let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
+  const PIPE_W=120, MARGIN_TOP=60;
+  const AST = { r:28, x:200, y:300 };
 
-  let state = 'start';
-  let score = 0, best = +(localStorage.getItem('flappy-asteroid-best')||0);
-  let tPrev = 0, speed = SCROLL_SPEED, paused = false;
-  let canFlap = true, leaderboardActive = false, currentStage = 1, pipesPassed = 0, logosCollected = 0;
+  // --- states ---
+  let state='start';     // 'start' -> 'intro' (zoom) -> 'playing' -> 'dead'
+  let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
+  let tPrev=0, speed=SCROLL_SPEED, paused=false;
+  let canFlap=true, currentStage=1, pipesPassed=0, logosCollected=0;
 
-  const ui = {
-    scorePanel: document.getElementById('scorePanel'),
-    score: document.getElementById('score'),
-    best: document.getElementById('best'),
-    logosCollected: document.getElementById('logosCollected'),
-    startBtn: document.getElementById('startBtn'),
-    title: document.getElementById('title'),
-    hint: document.getElementById('hint'),
-    pauseToast: document.getElementById('pauseToast')
+  const ui={
+    scorePanel:document.getElementById('scorePanel'), score:document.getElementById('score'),
+    best:document.getElementById('best'), logosCollected:document.getElementById('logosCollected'),
+    startBtn:document.getElementById('startBtn'), title:document.getElementById('title'),
+    hint:document.getElementById('hint'), pauseToast:document.getElementById('pauseToast'),
+    titleH1:document.querySelector('#title h1')
   };
-  ui.best.textContent = best; ui.logosCollected.textContent = logosCollected;
+  ui.best.textContent=best; ui.logosCollected.textContent=logosCollected;
 
   function setUI(){
-    const isStartOrDead = state === 'start' || state === 'dead';
+    const isStartOrDead = state==='start' || state==='dead';
     ui.title.style.display = isStartOrDead ? '' : 'none';
-    ui.hint.style.display = isStartOrDead ? '' : 'none';
+    ui.hint.style.display  = isStartOrDead ? '' : 'none';
     ui.startBtn.style.display = isStartOrDead ? '' : 'none';
-    ui.scorePanel.hidden = state !== 'playing' && state !== 'dead';
+    ui.scorePanel.hidden = state!=='playing' && state!=='dead';
+    // Alleen in START willen we géén "ASTER OID" tekst; in DEAD juist wel "Game Over"
+    if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
   }
 
-  const stars = Array.from({length:160},()=>({
-    x:Math.random()*canvas.width, y:Math.random()*canvas.height,
-    z:0.3+Math.random()*0.7, r:0.6+Math.random()*1.8
-  }));
+  // --- sterren ---
+  const stars = Array.from({length:160},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:0.3+Math.random()*0.7,r:0.6+Math.random()*1.8}));
 
+  // --- intro zoom control ---
+  const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
+  function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+  // --- speler ---
   const player = {
-    x: AST.x, y: AST.y, r: AST.r, vy:0, rot:0, alive:true,
-    flap(){ if(!canFlap) return; this.vy = FLAP_VY; flash(0.17); canFlap=false; setTimeout(()=>canFlap=true,150); },
-    update(dt){ this.vy = Math.min(this.vy + G*dt, MAX_DROP); this.y += this.vy*dt; this.rot = Math.max(-0.6, Math.min(0.9, this.vy/900)); },
-    draw(){
-      ctx.save();
-
-      // --- tekenpositie ---
-      let drawX = this.x, drawY = this.y;
-      if (state === 'start') {
-        // centreer in startscherm, iets boven de titel
-        drawX = (canvas.width / DPR) * 0.5;
-        drawY = (canvas.height / DPR) * 0.35;
-      }
-
-      ctx.translate(drawX*DPR, drawY*DPR);
-      ctx.rotate(this.rot);
-
-      // --- beeldverhouding behouden ---
-      const targetDiam = this.r * 2 * DPR; // max diameter die we willen vullen
-      if (asteroidImg.complete && asteroidImg.naturalWidth) {
-        const iw = asteroidImg.naturalWidth, ih = asteroidImg.naturalHeight;
-        const scale = Math.min(targetDiam/iw, targetDiam/ih);
-        const dw = iw * scale, dh = ih * scale;
-        ctx.drawImage(asteroidImg, -dw/2, -dh/2, dw, dh);
+    x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,
+    flap(){ if(!canFlap || state!=='playing') return; this.vy=FLAP_VY; flash(0.17); canFlap=false; setTimeout(()=>canFlap=true,150); },
+    update(dt){ if(state!=='playing') return; this.vy=Math.min(this.vy+G*dt,MAX_DROP); this.y+=this.vy*dt; this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900)); },
+    drawAt(x,y,diamPx){
+      ctx.save(); ctx.translate(x*DPR,y*DPR); if(state==='playing') ctx.rotate(this.rot);
+      if (spriteImg.complete && spriteImg.naturalWidth){
+        const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;
+        const scale=Math.min((diamPx*DPR)/iw,(diamPx*DPR)/ih);
+        const dw=iw*scale, dh=ih*scale;
+        ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);
       } else {
-        // fallback: simpele cirkel
-        ctx.fillStyle = '#ffcc6e';
-        ctx.beginPath(); ctx.arc(0,0,this.r*DPR,0,Math.PI*2); ctx.fill();
+        // fallback cirkel
+        ctx.fillStyle='#ffcc6e'; ctx.beginPath(); ctx.arc(0,0,(diamPx*DPR)/2,0,Math.PI*2); ctx.fill();
       }
       ctx.restore();
-    }
+    },
+    draw(){ this.drawAt(this.x, this.y, this.r*2); }
   };
 
+  // --- obstakels & items ---
   const pipes=[], coins=[], explosions=[];
   const LOGO_CHANCE=0.2, LOGO_SIZE=20, LOGO_GAP=100, LOGO_SCORE_BONUS=5;
 
-  function resetPipes(){ pipes.length=0; coins.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(i); }
+  function resetPipes(){ pipes.length=0; coins.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
   function addObstacle(){
     const lastX = pipes.length + coins.length ? Math.max(pipes.at(-1)?.x ?? -Infinity, coins.at(-1)?.x ?? -Infinity) : canvas.width/DPR + 300;
     const x = lastX + PIPE_SPACING;
     if (Math.random()<LOGO_CHANCE){
-      const gapY = MARGIN_TOP + Math.random() * (canvas.height/DPR - 2*MARGIN_TOP - LOGO_GAP);
-      coins.push({x, y:gapY + LOGO_GAP/2, r:LOGO_SIZE, collected:false});
-      PIPE_SPACING += LOGO_GAP;
+      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - LOGO_GAP);
+      coins.push({x, y:gapY+LOGO_GAP/2, r:LOGO_SIZE, collected:false}); PIPE_SPACING += LOGO_GAP;
     } else {
-      const gapY = MARGIN_TOP + Math.random() * (canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
-      pipes.push({x, gapY, passed:false});
-      PIPE_SPACING = 420;
+      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
+      pipes.push({x, gapY, passed:false}); PIPE_SPACING=420;
     }
   }
 
   let flashT=0; function flash(d){ flashT=Math.max(flashT,d); }
-  function addExplosion(x,y){ explosions.push({ x,y,startTime:performance.now(),duration:500,maxRadius:50 }); }
+  function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
 
+  // --- input ---
   function boost(){
-    if (leaderboardActive) return;
-    if (state==='start') startGame();
+    if (state==='start') beginIntro();
     else if (state==='dead') restart();
     else if (state==='playing') player.flap();
   }
-  window.addEventListener('keydown', e => {
-    if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
-    if (e.code==='KeyR') restart();
-  });
+  window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); } if(e.code==='KeyR') restart();});
   window.addEventListener('pointerdown', e => { if (e.target===canvas) boost(); });
   ui.startBtn.addEventListener('click', boost);
 
   document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; ui.pauseToast.hidden=!paused; });
 
+  // --- state transitions ---
+  function beginIntro(){
+    // startframe: groot midden in beeld
+    const cx = (canvas.width/DPR)*0.5;
+    const cy = (canvas.height/DPR)*0.42;
+    const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45; // ~45% van korte zijde
+    intro.from = { x:cx, y:cy, diam:bigDiam };
+    intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };
+    intro.active = true; intro.t0 = performance.now();
+    state='intro';
+    // verberg titeltekst tijdens intro
+    ui.titleH1.style.display='none';
+    ui.startBtn.style.display='none';
+  }
+
   function startGame(){
-    state='playing';
-    score=0; speed=SCROLL_SPEED; tPrev=0; currentStage=1;
-    player.x = AST.x; player.y=AST.y; player.vy=0; player.alive=true;
-    PIPE_GAP=290; logosCollected=0; ui.logosCollected.textContent=0;
-    resetPipes(); setUI();
+    state='playing'; score=0; speed=SCROLL_SPEED; tPrev=0; currentStage=1;
+    player.x=AST.x; player.y=AST.y; player.vy=0;
+    PIPE_GAP=290; logosCollected=0; ui.logosCollected.textContent=0; resetPipes(); setUI();
   }
   function gameOver(){
     state='dead';
-    best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); document.getElementById('best').textContent=best;
-    document.querySelector('#title h1').textContent='Game Over';
-    ui.hint.textContent='Press R or click to play again'; ui.startBtn.textContent='Restart';
-    setUI();
+    best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
+    ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
+    ui.hint.textContent='Press R or click to play again'; ui.startBtn.textContent='Restart'; setUI();
   }
-  function restart(){ document.querySelector('#title h1').textContent='ASTER OID'; ui.startBtn.textContent='Start'; startGame(); }
+  function restart(){ ui.titleH1.textContent='ASTER OID'; ui.startBtn.textContent='Start'; state='start'; setUI(); }
 
+  // --- update ---
   function update(dt){
+    if (state==='intro'){
+      // niets fysisch updaten; zoom gebeurt in draw()
+      return;
+    }
+    // Stages per 10 pipes
     if (pipesPassed>=10 && currentStage<10){
-      currentStage++; speed = SCROLL_SPEED + (currentStage-1)*10; pipesPassed=0;
-      resetPipes();
+      currentStage++; speed = SCROLL_SPEED + (currentStage-1)*10; pipesPassed=0; resetPipes();
     }
     speed += ACCEL*dt*100;
     player.update(dt);
@@ -219,8 +218,8 @@
     }
     for(let i=0;i<coins.length;i++){
       const c=coins[i]; c.x -= move;
-      const dx=player.x-c.x, dy=player.y-c.y, dist=Math.hypot(dx,dy);
-      if(dist<player.r+c.r && !c.collected){ c.collected=true; score+=LOGO_SCORE_BONUS; logosCollected++; ui.logosCollected.textContent=logosCollected; ui.score.textContent=score; addExplosion(c.x,c.y); }
+      const dx=player.x-c.x, dy=player.y-c.y, d=Math.hypot(dx,dy);
+      if(d<player.r+c.r && !c.collected){ c.collected=true; score+=LOGO_SCORE_BONUS; logosCollected++; ui.logosCollected.textContent=logosCollected; ui.score.textContent=score; addExplosion(c.x,c.y); }
       if(c.x+c.r<-80){ coins.splice(i,1); i--; }
     }
     if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
@@ -230,39 +229,57 @@
     }
   }
 
+  // --- draw ---
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    // sterren
     for(const s of stars){
-      s.x -= (speed * s.z * 0.08) * (1/60) * DPR;
+      const bgSpeed = (state==='start' || state==='intro') ? 30 : speed; // rustig in start/intro
+      s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
       if(s.x < -2){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*0.7; }
       ctx.globalAlpha=0.5 + s.z*0.5;
       ctx.beginPath(); ctx.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); ctx.fillStyle='#e8f0ff'; ctx.fill();
-      if(Math.random()<0.003){ ctx.globalAlpha=0.9; ctx.fillRect(s.x-0.5,s.y-0.5,1,1); }
     }
     ctx.globalAlpha=1;
-    for(const p of pipes){
-      const x=p.x*DPR, w=PIPE_W*DPR, gapY=p.gapY*DPR, gapH=PIPE_GAP*DPR;
-      drawRockColumn(x,0,w,gapY,true);
-      drawRockColumn(x,gapY+gapH,w,canvas.height-(gapY+gapH),false);
-      ctx.strokeStyle='rgba(110,231,255,0.18)'; ctx.lineWidth=4*DPR;
-      ctx.beginPath(); ctx.moveTo(x,gapY); ctx.lineTo(x,gapY+gapH); ctx.stroke();
-      ctx.beginPath(); ctx.moveTo(x+w,gapY); ctx.lineTo(x+w,gapY+gapH); ctx.stroke();
-    }
-    for(const c of coins){
-      if(!c.collected){
-        ctx.save(); ctx.translate(c.x*DPR,c.y*DPR);
-        ctx.beginPath(); ctx.moveTo(-c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR,c.r*DPR); ctx.lineTo(-c.r*DPR,c.r*DPR); ctx.closePath();
-        ctx.fillStyle='#f0f'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();
+
+    // Obstakels alleen tekenen in spel (niet in start/intro)
+    if (state==='playing' || state==='dead'){
+      for(const p of pipes){
+        const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;
+        drawRockColumn(x,0,w,gy,true);
+        drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);
+        ctx.strokeStyle='rgba(110,231,255,0.18)'; ctx.lineWidth=4*DPR;
+        ctx.beginPath(); ctx.moveTo(x,gy); ctx.lineTo(x,gy+gh); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(x+w,gy); ctx.lineTo(x+w,gy+gh); ctx.stroke();
       }
+      // logos
+      for(const c of coins){ if(!c.collected){ ctx.save(); ctx.translate(c.x*DPR,c.y*DPR); ctx.beginPath(); ctx.moveTo(-c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR*0.5,-c.r*DPR); ctx.lineTo(c.r*DPR,c.r*DPR); ctx.lineTo(-c.r*DPR,c.r*DPR); ctx.closePath(); ctx.fillStyle='#f0f'; ctx.fill(); ctx.strokeStyle='#fff'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore(); } }
+      // explosies
+      const now=performance.now();
+      for(let i=explosions.length-1;i>=0;i--){ const e=explosions[i]; const el=(now-e.startTime)/e.duration;
+        if(el>=1) explosions.splice(i,1); else { const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); } }
     }
-    const now=performance.now();
-    for(let i=explosions.length-1;i>=0;i--){
-      const e=explosions[i], el=(now-e.startTime)/e.duration;
-      if(el>=1){ explosions.splice(i,1); } else { const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }
+
+    // speler tekenen
+    if (state==='start'){
+      const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;
+      const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;
+      player.drawAt(cx, cy, bigDiam);
+    } else if (state==='intro'){
+      const t = Math.min(1, (performance.now()-intro.t0)/intro.dur);
+      const p = easeInOutCubic(t);
+      const ix = intro.from.x + (intro.to.x - intro.from.x)*p;
+      const iy = intro.from.y + (intro.to.y - intro.from.y)*p;
+      const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;
+      player.drawAt(ix, iy, id);
+      if (t>=1){ intro.active=false; startGame(); }
+    } else {
+      player.draw();
     }
-    player.draw();
-    if(flashT>0){ ctx.fillStyle=`rgba(255,255,255,${flashT})`; ctx.fillRect(0,0,canvas.width,canvas.height); flashT=Math.max(0, flashT-0.04); }
+
+    if(flashT>0){ ctx.fillStyle=`rgba(255,255,255,${flashT})`; ctx.fillRect(0,0,canvas.width,canvas.height); flashT=Math.max(0,flashT-0.04); }
   }
 
   function drawRockColumn(x,y,w,h,fromTop){
@@ -277,8 +294,8 @@
 
   function loop(ts){
     if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
-    const dt=Math.min(0.033, (tPrev ? (ts-tPrev)/1000 : 0.016)); tPrev=ts;
-    if(state==='playing') update(dt);
+    const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
+    if(state==='playing') update(dt); else update(0); // fysica alleen in spel
     draw(); requestAnimationFrame(loop);
   }
   setUI(); requestAnimationFrame(loop);
