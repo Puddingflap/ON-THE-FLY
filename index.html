@@ -71,9 +71,8 @@
   const SPRITE_SRC = 'assets/cz-droid.png';
   const spriteImg = new Image(); spriteImg.src = SPRITE_SRC;
 
-  /* --- LOGO PNGs (voeg hier jouw bestanden toe) --- */
+  /* --- LOGO PNGs (pas lijst aan naar wens) --- */
   const LOGO_FILES = [
-    // Zet je eigen bestandsnamen hier. Voorbeeld:
     'assets/logo1.png',
     'assets/logo2.png',
     'assets/logo3.png',
@@ -126,13 +125,43 @@
   const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
   function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
 
+  // --- glow ---
+  let glowStrength = 0;
+
   // --- speler ---
   const player = {
     x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,
-    flap(){ if(!canFlap || state!=='playing') return; this.vy=FLAP_VY; flash(0.17); canFlap=false; setTimeout(()=>canFlap=true,150); },
-    update(dt){ if(state!=='playing') return; this.vy=Math.min(this.vy+G*dt,MAX_DROP); this.y+=this.vy*dt; this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900)); },
+    flap(){
+      if(!canFlap || state!=='playing') return;
+      this.vy=FLAP_VY;
+      glowStrength = 1.0;                  // trigger glow
+      flash(0.17);
+      canFlap=false; setTimeout(()=>canFlap=true,150);
+    },
+    update(dt){
+      if(state!=='playing') return;
+      this.vy=Math.min(this.vy+G*dt,MAX_DROP);
+      this.y+=this.vy*dt;
+      this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900));
+      glowStrength = Math.max(0, glowStrength - dt*1.5); // fade glow
+    },
     drawAt(x,y,diamPx){
-      ctx.save(); ctx.translate(x*DPR,y*DPR); if(state==='playing') ctx.rotate(this.rot);
+      ctx.save();
+      ctx.translate(x*DPR,y*DPR);
+      if(state==='playing') ctx.rotate(this.rot);
+
+      // --- GLOW ---
+      if (glowStrength > 0) {
+        const g = ctx.createRadialGradient(0,0,this.r*DPR*0.5, 0,0,this.r*DPR*2.2);
+        g.addColorStop(0, `rgba(110,231,255,${0.40*glowStrength})`);
+        g.addColorStop(1, 'rgba(110,231,255,0)');
+        ctx.fillStyle = g;
+        ctx.beginPath();
+        ctx.arc(0,0,this.r*DPR*2.2,0,Math.PI*2);
+        ctx.fill();
+      }
+
+      // --- sprite ---
       if (spriteImg.complete && spriteImg.naturalWidth){
         const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;
         const scale=Math.min((diamPx*DPR)/iw,(diamPx*DPR)/ih);
@@ -332,7 +361,7 @@
     ctx.save(); ctx.beginPath();
     const step=32*DPR, rough=18*DPR, start=y, end=y+h;
     ctx.moveTo(x,start);
-    for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random()*0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }
+    for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }
     ctx.lineTo(x,end); ctx.closePath();
     const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');
     ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();
