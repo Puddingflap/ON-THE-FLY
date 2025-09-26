@@ -103,6 +103,30 @@
   const asteroidImg = new Image();
   asteroidImg.src = ASTEROID_SPRITE;
 
+  /* --- muziek: intro.mp3 (start na eerste interactie) --- */
+  const music = new Audio('assets/intro.mp3');
+  music.loop = true;
+  music.volume = 0.8;              // pas aan naar smaak (0.0 - 1.0)
+  let musicPrimed = false;         // weten we zeker dat we al geprobeerd hebben te spelen?
+
+  async function startMusic() {
+    if (musicPrimed) return;
+    musicPrimed = true;
+    try {
+      await music.play();
+    } catch (err) {
+      // Browser kan nog blokkeren; reset zodat volgende interactie opnieuw probeert
+      musicPrimed = false;
+      console.warn('Audio play was blocked, try another user interaction:', err);
+    }
+  }
+
+  // Start muziek na eerste user-interactie (klik of toets)
+  window.addEventListener('pointerdown', () => startMusic(), { once:false });
+  window.addEventListener('keydown', (e) => {
+    if (['Space','ArrowUp','KeyW'].includes(e.code)) startMusic();
+  });
+
   const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   const W0 = canvas.width, H0 = canvas.height;
   function resize() {
@@ -565,4 +589,3 @@
 </script>
 </body>
 </html>
-
