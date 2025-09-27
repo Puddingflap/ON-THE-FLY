@@ -1,0 +1,139 @@
+<!DOCTYPE html>
+<html lang="nl">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASTER OID — $ASTER / $OID</title>
+<link rel="icon" href="game/assets/logo1.png">
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
+    --accent:#6ee7ff; --card:rgba(10,14,24,.78); --line:rgba(255,255,255,.08);
+    --shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; height:100%; color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--bg),var(--bg2));
+    overflow-x:hidden;
+  }
+
+  /* sterrenachtergrond */
+  canvas#stars{position:fixed; inset:0; z-index:-1}
+
+  .wrap{
+    display:flex; justify-content:center; gap:24px;
+    flex-wrap:wrap; padding:40px 20px 240px;
+    z-index:1; position:relative;
+  }
+  .col{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:20px; backdrop-filter: blur(6px); box-shadow:var(--shadow);
+    max-width:400px; flex:1 1 320px;
+  }
+  h2{margin-top:0}
+  p{color:var(--muted)}
+  .pill{padding:6px 10px; border:1px solid var(--line); border-radius:999px; margin:2px; display:inline-block}
+  .btn{display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
+    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
+    color:var(--fg); text-decoration:none; font-weight:700}
+  .btn:hover{background:rgba(110,231,255,.25)}
+  .links{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
+  .links a{padding:8px 12px; border-radius:12px; border:1px solid var(--line);
+    text-decoration:none; color:var(--fg); background:rgba(255,255,255,.04)}
+
+  /* hoofd + caption onder */
+  .hero{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    margin-top:-180px; /* schuift omhoog onder de content */
+  }
+  #head{
+    width:clamp(200px,35vmin,380px); aspect-ratio:1/1;
+    background:url("game/assets/cz-droid.png") center/contain no-repeat;
+    filter:drop-shadow(0 40px 80px rgba(0,0,0,.55));
+    transition: transform .12s ease-out;
+  }
+  .caption{margin-top:12px; font-weight:700; opacity:.8}
+
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+  <section class="col">
+    <h2>$ASTER / $OID</h2>
+    <p><strong>The first $ASTER meme—paired and primed.</strong></p>
+    <div>
+      <span class="pill">Chain: BNB</span>
+      <span class="pill">LP: Paired with $ASTER</span>
+      <span class="pill">Ticker: $OID</span>
+    </div>
+    <div class="links">
+      <a href="https://x.com/oid_bnb?s=21" target="_blank">X / Twitter</a>
+      <a href="https://t.me/OID_BNB" target="_blank">Telegram</a>
+      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank">DexScreener</a>
+      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank">BscScan</a>
+    </div>
+  </section>
+
+  <section class="col">
+    <h2>Play ASTER OID</h2>
+    <p><strong>Pilot the asteroid. Dodge the debris. Farm the Mcap.</strong></p>
+    <a class="btn" href="game/index.html">Play Now →</a>
+    <p class="muted">Screenshot your score and share it on socials to challenge others communities.</p>
+  </section>
+</div>
+
+<div class="hero">
+  <div id="head"></div>
+  <div class="caption">He is coming.</div>
+</div>
+
+<script>
+/* sterren */
+(() => {
+  const c=document.getElementById('stars'),x=c.getContext('2d');
+  const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+  let w,h,stars;
+  function resize(){
+    w=c.width=innerWidth*DPR; h=c.height=innerHeight*DPR;
+    stars=Array.from({length:160},()=>({
+      x:Math.random()*w,y:Math.random()*h,z:.3+Math.random()*.7,r:.6+Math.random()*1.6
+    }));
+  }
+  function tick(){
+    x.clearRect(0,0,w,h);
+    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
+    for(const s of stars){
+      s.x-=(25*s.z*0.08); if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
+      x.globalAlpha=0.5+s.z*0.5;
+      x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  resize(); addEventListener('resize',resize); tick();
+})();
+
+/* hoofd volgt muis */
+(() => {
+  const head=document.getElementById('head');
+  let vw=window.innerWidth,vh=window.innerHeight;
+  const drift=20,maxTilt=10;
+  function onMove(e){
+    const p=e.touches?e.touches[0]:e;
+    const dx=(p.clientX-vw/2)/(vw/2); // -1..1
+    const dy=(p.clientY-vh/2)/(vh/2);
+    const tx=dx*drift, ty=dy*drift;
+    const rx=dy*maxTilt, ry=-dx*maxTilt;
+    head.style.transform=`translate(${tx}px,${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  }
+  addEventListener('mousemove',onMove,{passive:true});
+  addEventListener('touchmove',onMove,{passive:true});
+  addEventListener('resize',()=>{vw=innerWidth;vh=innerHeight;});
+})();
+</script>
+</body>
+</html>
