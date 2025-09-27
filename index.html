@@ -125,8 +125,8 @@
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
 
   /* --- assets (with robust loading) --- */
-  const SPRITE_SRC = 'assets/cz-droid.png';           // << ensure this file exists
-  const BADGE_SRC  = 'assets/asteroid-badge.png';     // << ensure this file exists
+  const SPRITE_SRC = 'assets/cz-droid.png';           // ensure this file exists
+  const BADGE_SRC  = 'assets/asteroid-badge.png';     // ensure this file exists (or remove watermark block)
 
   const spriteImg = new Image();
   const badge = new Image();
@@ -277,7 +277,22 @@
     else if (state==='playing') player.flap();
   }
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); } if(e.code==='KeyR') restart();});
-  window.addEventListener('pointerdown', e => { if (e.target===canvas) boost(); });
+
+  // --- FIX 1: vervang canvas-only pointerdown door globale handler ---
+  window.addEventListener('pointerdown', (e) => {
+    const inCard = e.target.closest('.card');      // tap op kaart (inputs/knoppen)? negeren
+    const inButton = e.target.closest('button,a'); // knoppen/links laten hun werk doen
+    if (inCard || inButton) return;
+
+    if (state === 'dead' && resultModal.classList.contains('show')) { // Clean Mode: geen knoppen zichtbaar
+      restart();
+      return;
+    }
+    if (state === 'start') { beginIntro(); return; }
+    if (state === 'dead')  { restart(); return; }
+    if (state === 'playing' && e.target === canvas) { player.flap(); }
+  });
+
   document.getElementById('startBtn').addEventListener('click', boost);
   document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
 
@@ -324,6 +339,13 @@
     window.open(intent.toString(), '_blank', 'noopener');
   });
 
+  /* --- FIX 2: klik op de donkere modal-achtergrond = restart bij 'dead' --- */
+  resultModal.addEventListener('click', (e) => {
+    if (e.target === resultModal && state === 'dead') {
+      restart();
+    }
+  });
+
   /* state transitions */
   function beginIntro(){
     const cx = (canvas.width/DPR)*0.5;
@@ -345,7 +367,7 @@
     state='dead';
     best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
     ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
-    ui.hint.textContent='Press SPACE or click to restart'; ui.startBtn.textContent='Restart'; setUI();
+    ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();
     openResultModal(score);
   }
   function restart(){
