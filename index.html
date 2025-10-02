@@ -1,539 +1,159 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="nl">
 <head>
-  <meta charset="utf-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>ASTER OID</title>
-  <style>
-    :root{
-      --bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);
-    }
-    html,body{height:100%;margin:0}
-    body{
-      background: radial-gradient(1200px 800px at 70% 20%, rgba(110,231,255,.06), transparent), var(--bg);
-      color:var(--fg); font-family: system-ui, sans-serif; overflow:hidden;
-    }
-    #wrap{position:fixed; inset:0; display:grid; place-items:center}
-    canvas{ width: min(100vw, 100vh*0.5625); height: min(100vh, 100vw/0.5625); max-width:100vw; max-height:100vh; box-shadow: var(--shadow); border-radius: 18px; background: transparent; }
-    .hud{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;}
-    .panel{pointer-events:auto; position:absolute; top:24px; left:50%; transform:translateX(-50%); background: rgba(8,12,22,.6); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px); padding:10px 14px; border-radius:14px; display:flex; gap:18px; align-items:center}
-    .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
-    .panel .sep{opacity:.3}
-    .btn{
-      pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
-      border:1px solid rgba(110,231,255,.4); color:var(--fg); font-weight:700; letter-spacing:.3px;
-      padding:12px 18px; border-radius:14px; box-shadow: var(--shadow); text-decoration:none;
-    }
-    .hint{position:absolute; bottom:86px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:14px}
-    .title{position:absolute; top:50%; left:50%; transform:translate(-50%, -60%); text-align:center}
-    h1{margin:0 0 6px 0; font-size: clamp(28px, 6vw, 48px)}
-    .subtitle{opacity:.75}
-    .toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}
-    .stageOverlay{
-      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
-      font-size:48px; font-weight:700; text-align:center;
-      text-shadow:0 0 12px rgba(110,231,255,.8);
-      opacity:0; transition:opacity 0.5s;
-      pointer-events:none;
-    }
-    .stageOverlay.show{opacity:1;}
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>ASTER OID — $ASTER / $OID</title>
+<link rel="icon" href="game/assets/cz-droid.png" type="image/png">
 
-    /* Results modal */
-    .modal{
-      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
-      background: rgba(6, 10, 18, .65); backdrop-filter: blur(6px); pointer-events:auto; z-index:5;
-    }
-    .modal.show{ display:flex; }
-    .card{
-      width:min(92vw, 480px); background:rgba(10,14,24,.92);
-      border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px;
-      box-shadow: var(--shadow); text-align:center;
-    }
-    .card h2{margin:0 0 6px; font-size:28px}
-    .scoreline{font-size:22px; margin:8px 0 14px; font-weight:800; letter-spacing:.4px}
-    .nameRow{display:flex; gap:10px; margin:10px 0 14px}
-    .nameRow input{
-      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
-      background:rgba(255,255,255,.06); color:var(--fg);
-    }
-    .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
-    .actions button{
-      padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);
-      background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;
-    }
-    .card.clean .nameRow, .card.clean .actions { display:none; }
-    .card.clean .scoreline { font-size:28px; margin:4px 0 4px; }
-    .card.clean h2 { margin-bottom:8px; }
-    .tiny{color:var(--muted); font-size:12px; margin-top:8px}
-  </style>
+<!-- SEO: alternate language versions -->
+<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="en" />
+<link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
+
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
+    --accent:#6ee7ff; --card:rgba(10,14,24,.78); --line:rgba(255,255,255,.08);
+    --shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; height:100%; color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--bg),var(--bg2));
+    overflow-x:hidden;
+  }
+
+  /* sterrenachtergrond */
+  canvas#stars{position:fixed; inset:0; z-index:-1}
+
+  .wrap{
+    display:flex; justify-content:center; gap:24px;
+    flex-wrap:wrap; padding:40px 20px 240px;
+    z-index:1; position:relative;
+  }
+  .col{
+    background:var(--card); border:1px solid var(--line); border-radius:16px;
+    padding:20px; backdrop-filter: blur(6px); box-shadow:var(--shadow);
+    max-width:400px; flex:1 1 320px;
+  }
+  h2{margin-top:0}
+  p{color:var(--muted)}
+  .pill{padding:6px 10px; border:1px solid var(--line); border-radius:999px; margin:2px; display:inline-block}
+  .btn{display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
+    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
+    color:var(--fg); text-decoration:none; font-weight:700}
+  .btn:hover{background:rgba(110,231,255,.25)}
+  .links{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
+  .links a{padding:8px 12px; border-radius:12px; border:1px solid var(--line);
+    text-decoration:none; color:var(--fg); background:rgba(255,255,255,.04)}
+
+  /* hoofd + caption onder */
+  .hero{
+    display:flex; flex-direction:column; align-items:center; justify-content:center;
+    margin-top:-180px; /* schuift omhoog onder de content */
+  }
+  #head{
+    width:clamp(200px,35vmin,380px); aspect-ratio:1/1;
+    background:url("game/assets/cz-droid.png") center/contain no-repeat;
+    filter:drop-shadow(0 40px 80px rgba(0,0,0,.55));
+    transition: transform .12s ease-out;
+  }
+  .caption{margin-top:12px; font-weight:700; opacity:.8}
+
+  /* duidelijke taalschakelaar rechtsboven */
+  .lang-switch{
+    position:fixed; top:14px; right:14px; z-index:1000;
+    background:rgba(255,255,255,0.12);
+    border:1px solid rgba(255,255,255,0.3);
+    padding:6px 12px; border-radius:999px;
+    color:#fff; font-weight:600; text-decoration:none;
+    backdrop-filter: blur(6px);
+    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    transition:background .2s;
+  }
+  .lang-switch:hover{ background:rgba(255,255,255,0.25); }
+</style>
 </head>
 <body>
-  <div id="wrap">
-    <canvas id="game" width="1280" height="720" aria-label="ASTER OID"></canvas>
-  </div>
 
-  <div class="hud" aria-live="polite">
-    <div class="panel" id="scorePanel" hidden>
-      <span class="pill">Mcap $: <span id="score">0B</span></span>
-      <span class="sep">•</span>
-      <span class="pill">Best: <span id="best">0</span></span>
-      <span class="sep">•</span>
-      <span class="pill">Targets: <span id="targetsCollected">0</span></span>
+<!-- taal-knop naar Chinese versie -->
+<a class="lang-switch" href="index-zh.html">中文</a>
+
+<canvas id="stars"></canvas>
+
+<div class="wrap">
+  <section class="col">
+    <h2>$ASTER / $OID</h2>
+    <p><strong>The first $ASTER meme—paired and primed.</strong></p>
+    <div>
+      <span class="pill">Chain: BNB</span>
+      <span class="pill">LP: Paired with $ASTER</span>
+      <span class="pill">Ticker: $OID</span>
     </div>
-    <div class="title" id="title">
-      <h1>ASTER OID</h1>
-      <div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div>
+    <div class="links">
+      <a href="https://x.com/oid_bnb?s=21" target="_blank">X / Twitter</a>
+      <a href="https://t.me/OID_BNB" target="_blank">Telegram</a>
+      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank">DexScreener</a>
+      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank">BscScan</a>
+      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank">Buy on PancakeSwap</a>
     </div>
-    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment. ASTER OID</div>
-    <button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
-    <div class="toast" id="pauseToast" hidden>Game paused (tab not active)</div>
-    <div class="stageOverlay" id="stageOverlay"></div>
-  </div>
+  </section>
 
-  <!-- Results / Name & Score -->
-  <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
-    <div id="resultCard" class="card">
-      <h2 id="resTitle">Game Over</h2>
-      <div id="resLine" class="scoreline">Anonymous — Mcap $: 0B  •  $ASTER  $OID</div>
+  <section class="col">
+    <h2>Play ASTER OID</h2>
+    <p><strong>Pilot the asteroid. Dodge the debris. Farm the Mcap.</strong></p>
+    <a class="btn" href="game/index.html">Play Now →</a>
+    <p class="muted">Screenshot your score and share it on socials to challenge other communities.</p>
+  </section>
+</div>
 
-      <div class="nameRow">
-        <input id="playerName" type="text" maxlength="24" placeholder="Your name (for the screenshot)">
-        <button id="saveNameBtn" type="button">Save</button>
-      </div>
-
-      <div class="actions">
-        <button id="toggleCleanBtn" type="button">Clean Screenshot Mode</button>
-        <button id="shareBtn" type="button">Share to X</button>
-        <button id="closeResultBtn" type="button">Close</button>
-      </div>
-
-      <div class="tiny">Tip: enable <em>Clean Screenshot Mode</em>, then take a screenshot.</div>
-    </div>
-  </div>
+<div class="hero">
+  <div id="head"></div>
+  <div class="caption">He is coming.</div>
+</div>
 
 <script>
+/* sterren */
 (() => {
-  const canvas = document.getElementById('game');
-  const ctx = canvas.getContext('2d', { alpha: true });
-
-  /* --- audio --- */
-  const music = new Audio('assets/intro.mp3');
-  music.loop = true;
-  let musicStarted = false;
-  function startMusic(){ if(!musicStarted){ music.play().catch(()=>{}); musicStarted = true; } }
-  window.addEventListener('pointerdown', startMusic);
-  window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
-
-  /* --- assets (robust) --- */
-  const SPRITE_SRC = 'assets/cz-droid.png';
-  const BADGE_SRC  = 'assets/asteroid-badge.png'; // optioneel; getekend als aanwezig
-
-  const spriteImg = new Image();
-  const badge = new Image();
-
-  let spriteReady = false, spriteError = false;
-  let badgeReady  = false;
-
-  spriteImg.onload = () => { spriteReady = true; };
-  spriteImg.onerror = () => { spriteError = true; };
-  badge.onload = () => { badgeReady = true; };
-
-  spriteImg.src = SPRITE_SRC;
-  badge.src = BADGE_SRC;
-
-  /* --- target images (voorheen logos) --- */
-  const TARGET_FILES = ['assets/logo1.png','assets/logo2.png','assets/logo3.png','assets/logo4.png'];
-  const targetImages = TARGET_FILES.map(src => { const im = new Image(); im.src = src; return im; });
-  const getRandomLoadedTarget = () => {
-    const loaded = targetImages.filter(im => im.complete && im.naturalWidth);
-    return loaded.length ? loaded[Math.floor(Math.random()*loaded.length)] : null;
-  };
-
-  /* --- DPR & resize --- */
-  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  const c=document.getElementById('stars'),x=c.getContext('2d');
+  const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+  let w,h,stars;
   function resize(){
-    const r = canvas.getBoundingClientRect();
-    canvas.width = Math.round(r.width*DPR);
-    canvas.height= Math.round(r.height*DPR);
+    w=c.width=innerWidth*DPR; h=c.height=innerHeight*DPR;
+    stars=Array.from({length:160},()=>({
+      x:Math.random()*w,y:Math.random()*h,z:.3+Math.random()*.7,r:.6+Math.random()*1.6
+    }));
   }
-  resize();
-  window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t=setTimeout(resize,100); });
-
-  /* --- world & player --- */
-  const G=2600, FLAP_VY=-850, MAX_DROP=1200;
-  let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
-  const PIPE_W=120, MARGIN_TOP=60;
-  const AST = { r:28, x:200, y:300 };
-
-  const STAGES = [
-    "Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone",
-    "CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Final Impact"
-  ];
-
-  let state='start'; 
-  let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
-  let tPrev=0, speed=SCROLL_SPEED, paused=false;
-  let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
-  let overlayActive = false;
-
-  const ui={
-    scorePanel:document.getElementById('scorePanel'), score:document.getElementById('score'),
-    best:document.getElementById('best'), targetsCollected:document.getElementById('targetsCollected'),
-    startBtn:document.getElementById('startBtn'), title:document.getElementById('title'),
-    hint:document.getElementById('hint'), pauseToast:document.getElementById('pauseToast'),
-    titleH1:document.querySelector('#title h1'), stageOverlay:document.getElementById('stageOverlay')
-  };
-  ui.best.textContent=best; ui.targetsCollected.textContent=targetsCollected;
-
-  function setUI(){
-    const isStartOrDead = state==='start' || state==='dead';
-    ui.title.style.display = isStartOrDead ? '' : 'none';
-    ui.hint.style.display  = isStartOrDead ? '' : 'none';
-    ui.startBtn.style.display = isStartOrDead ? '' : 'none';
-    ui.scorePanel.hidden = !(state==='playing' || state==='dead');
-    if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
-  }
-
-  /* stars bg */
-  const stars = Array.from({length:160},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:0.3+Math.random()*0.7,r:0.6+Math.random()*1.8}));
-
-  /* intro zoom */
-  const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
-  function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
-
-  /* player */
-  let glowStrength = 0;
-  const player = {
-    x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,
-    flap(){
-      if(!canFlap || state!=='playing') return;
-      this.vy=FLAP_VY;
-      glowStrength = 1.0;
-      canFlap=false; setTimeout(()=>canFlap=true,150);
-    },
-    update(dt){
-      if(state!=='playing') return;
-      this.vy=Math.min(this.vy+G*dt,MAX_DROP);
-      this.y+=this.vy*dt;
-      this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900));
-      glowStrength = Math.max(0, glowStrength - dt*1.5);
-    },
-    drawAt(x,y,diamPx){
-      ctx.save();
-      ctx.translate(x*DPR,y*DPR);
-      if(state==='playing') ctx.rotate(this.rot);
-
-      if (glowStrength > 0) {
-        const g = ctx.createRadialGradient(0,0,this.r*DPR*0.5, 0,0,this.r*DPR*2.2);
-        g.addColorStop(0, `rgba(110,231,255,${0.40*glowStrength})`);
-        g.addColorStop(1, 'rgba(110,231,255,0)');
-        ctx.fillStyle = g;
-        ctx.beginPath();
-        ctx.arc(0,0,this.r*DPR*2.2,0,Math.PI*2);
-        ctx.fill();
-      }
-
-      if (spriteReady && spriteImg.naturalWidth){
-        const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;
-        const scale=Math.min((diamPx*DPR)/iw,(diamPx*DPR)/ih);
-        const dw=iw*scale, dh=ih*scale;
-        ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);
-      } else {
-        ctx.fillStyle='rgba(255,255,255,.15)';
-        ctx.beginPath(); ctx.arc(0,0,(diamPx*DPR)/2,0,Math.PI*2); ctx.fill();
-        ctx.font=`${12*DPR}px system-ui`; ctx.fillStyle='#e8f0ff';
-        const msg = spriteError ? 'sprite not found' : 'loading…';
-        ctx.fillText(msg, -40*DPR, 4*DPR);
-      }
-      ctx.restore();
-    },
-    draw(){ this.drawAt(this.x, this.y, this.r*2); }
-  };
-
-  /* obstacles & targets */
-  const pipes=[], targets=[], explosions=[];
-  const TARGET_CHANCE=0.2, TARGET_SIZE=22, TARGET_GAP=100, TARGET_SCORE_BONUS=5;
-
-  function resetPipes(){ pipes.length=0; targets.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
-  function addObstacle(){
-    const lastX = pipes.length + targets.length ? Math.max(pipes.at(-1)?.x ?? -Infinity, targets.at(-1)?.x ?? -Infinity) : canvas.width/DPR + 300;
-    const x = lastX + PIPE_SPACING;
-    if (Math.random()<TARGET_CHANCE){
-      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - TARGET_GAP);
-      targets.push({ x, y:gapY+TARGET_GAP/2, r:TARGET_SIZE, hit:false, img:getRandomLoadedTarget(), wobbleSeed:Math.random()*Math.PI*2 });
-      PIPE_SPACING += TARGET_GAP;
-    } else {
-      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
-      pipes.push({x, gapY, passed:false}); PIPE_SPACING=420;
-    }
-  }
-  function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
-
-  /* input */
-  function boost(){
-    if (state==='start') beginIntro();
-    else if (state==='dead') restart();
-    else if (state==='playing') player.flap();
-  }
-  window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); } if(e.code==='KeyR') restart();});
-
-  /* globale pointerdown (werkt ook met modal clean) */
-  window.addEventListener('pointerdown', (e) => {
-    const inCard = e.target.closest('.card');
-    const inButton = e.target.closest('button,a');
-    if (inCard || inButton) return;
-
-    if (state === 'dead' && resultModal.classList.contains('show')) { // modal open (clean)
-      restart();
-      return;
-    }
-    if (state === 'start') { beginIntro(); return; }
-    if (state === 'dead')  { restart(); return; }
-    if (state === 'playing' && e.target === canvas) { player.flap(); }
-  });
-
-  document.getElementById('startBtn').addEventListener('click', boost);
-  document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
-
-  /* result modal + share */
-  const resultModal = document.getElementById('resultModal');
-  const resultCard  = document.getElementById('resultCard');
-  const resLine     = document.getElementById('resLine');
-  const playerNameI = document.getElementById('playerName');
-  const saveNameBtn = document.getElementById('saveNameBtn');
-  const toggleClean = document.getElementById('toggleCleanBtn');
-  const shareBtn    = document.getElementById('shareBtn');
-  const closeResBtn = document.getElementById('closeResultBtn');
-
-  function openResultModal(finalScore){
-    const savedName = localStorage.getItem('aster-username') || '';
-    playerNameI.value = savedName;
-    resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID`;
-    resultModal.classList.add('show');
-  }
-  function updateResLine(){
-    const nm = playerNameI.value.trim() || 'Anonymous';
-    resLine.textContent = `${nm} — Mcap $: ${score}B  •  $ASTER  $OID`;
-  }
-  function closeResultModal(){
-    resultModal.classList.remove('show');
-    resultCard.classList.remove('clean');
-  }
-  saveNameBtn.addEventListener('click', ()=>{
-    const nm = playerNameI.value.trim().slice(0,24);
-    localStorage.setItem('aster-username', nm);
-    updateResLine();
-  });
-  toggleClean.addEventListener('click', ()=>{ resultCard.classList.toggle('clean'); });
-  closeResBtn.addEventListener('click', closeResultModal);
-
-  // Share to X
-  shareBtn.addEventListener('click', ()=>{
-    const nm = (playerNameI.value.trim() || 'Anonymous');
-    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID #ASTER #OID #BNB`;
-    const url  = 'https://asteroidmeme.com';
-    const intent = new URL('https://twitter.com/intent/tweet');
-    intent.searchParams.set('text', text);
-    intent.searchParams.set('url', url);
-    window.open(intent.toString(), '_blank', 'noopener');
-  });
-
-  /* modal backdrop tap = restart in 'dead' */
-  resultModal.addEventListener('click', (e) => {
-    if (e.target === resultModal && state === 'dead') {
-      restart();
-    }
-  });
-
-  /* state transitions */
-  function beginIntro(){
-    const cx = (canvas.width/DPR)*0.5;
-    const cy = (canvas.height/DPR)*0.42;
-    const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;
-    intro.from = { x:cx, y:cy, diam:bigDiam };
-    intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };
-    intro.active = true; intro.t0 = performance.now(); state='intro';
-    ui.titleH1.style.display='none';
-    ui.startBtn.style.display='none';
-  }
-  function startGame(){
-    state='playing';
-    score = 0;                        // reset data
-    ui.score.textContent = 0;         // reset UI
-    speed=SCROLL_SPEED; tPrev=0; currentStage=1;
-    player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;
-    PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0;
-    resetPipes(); setUI();
-    showStageOverlay(currentStage);
-  }
-  function gameOver(){
-    state='dead';
-    best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
-    ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
-    ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();
-    openResultModal(score);
-  }
-  function restart(){
-    state='start';
-    score = 0;                        // reset data
-    ui.score.textContent = 0;         // reset UI
-    ui.targetsCollected.textContent = 0;
-    speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
-    pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;
-    ui.titleH1.textContent='ASTER OID'; ui.startBtn.textContent='Start'; setUI();
-    closeResultModal();
-  }
-
-  function showStageOverlay(stageNum){
-    if(stageNum<1 || stageNum>STAGES.length) return;
-    const name = STAGES[stageNum-1];
-    ui.stageOverlay.textContent = `Stage ${stageNum}: ${name}`;
-    ui.stageOverlay.classList.add("show");
-    overlayActive = true;
-    setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);
-  }
-
-  /* update */
-  function update(dt){
-    if (state==='intro' || paused) return;
-
-    if (state==='playing'){
-      if(pipesPassed>=10 && currentStage<STAGES.length){
-        currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;
-        resetPipes();
-        showStageOverlay(currentStage);
-      }
-
-      speed += ACCEL*dt*100;
-      player.update(dt);
-      const move = speed*dt;
-
-      if (!overlayActive){
-        for(const p of pipes){ p.x -= move; }
-        for(let i=0;i<pipes.length;i++){
-          const p=pipes[i];
-          if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }
-          if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
-        }
-        for(let i=0;i<targets.length;i++){
-          const t=targets[i]; t.x -= move;
-          const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);
-          if(d<player.r+t.r && !t.hit){
-            t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score; addExplosion(t.x,t.y);
-          }
-          if(t.x+t.r<-80){ targets.splice(i,1); i--; }
-        }
-        for(const p of pipes){
-          const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
-          if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
-        }
-      }
-      if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
-    }
-  }
-
-  /* draw */
-  function draw(){
-    ctx.clearRect(0,0,canvas.width,canvas.height);
-    const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    // stars
+  function tick(){
+    x.clearRect(0,0,w,h);
+    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
     for(const s of stars){
-      const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;
-      s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
-      if(s.x < -2){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*0.7; }
-      ctx.globalAlpha=0.5 + s.z*0.5;
-      ctx.beginPath(); ctx.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); ctx.fillStyle='#e8f0ff'; ctx.fill();
+      s.x-=(25*s.z*0.08); if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
+      x.globalAlpha=0.5+s.z*0.5;
+      x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
     }
-    ctx.globalAlpha=1;
-
-    // obstacles & targets
-    if ((state==='playing' || state==='dead') && !overlayActive){
-      for(const p of pipes){
-        const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;
-        drawRockColumn(x,0,w,gy,true);
-        drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);
-      }
-      const now=performance.now()*0.002;
-      for(const t of targets){
-        if(t.hit) continue;
-        ctx.save();
-        const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;
-        ctx.translate(t.x*DPR, (t.y + wobble)*DPR);
-        const img = t.img;
-        if (img && img.complete && img.naturalWidth){
-          const iw=img.naturalWidth, ih=img.naturalHeight;
-          const target = t.r*2*DPR;
-          const scale = Math.min(target/iw, target/ih);
-          const dw = iw*scale, dh = ih*scale;
-          ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;
-          ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
-        }
-        ctx.restore();
-      }
-      const timeNow=performance.now();
-      for(let i=explosions.length-1;i>=0;i--){
-        const e=explosions[i], el=(timeNow-e.startTime)/e.duration;
-        if(el>=1){ explosions.splice(i,1); }
-        else{ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }
-      }
-    }
-
-    // player / intro
-    if (state==='start'){
-      const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;
-      const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;
-      player.drawAt(cx, cy, bigDiam);
-    } else if (state==='intro'){
-      const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);
-      const p = easeInOutCubic(tt);
-      const ix = intro.from.x + (intro.to.x - intro.from.x)*p;
-      const iy = intro.from.y + (intro.to.y - intro.from.y)*p;
-      const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;
-      player.drawAt(ix, iy, id);
-      if (tt>=1){ intro.active=false; startGame(); }
-    } else {
-      player.draw();
-    }
-
-    // watermark when dead
-    if (state === 'dead'){
-      ctx.save();
-      const pad = 18 * DPR;
-      const s   = 48 * DPR;
-      const x   = pad, y = canvas.height - s - pad;
-      if (badgeReady){
-        ctx.globalAlpha = 0.95;
-        ctx.drawImage(badge, x, y, s, s);
-      }
-      ctx.globalAlpha=1;
-      ctx.font=`${16*DPR}px system-ui, sans-serif`;
-      ctx.fillStyle='rgba(232,240,255,.95)';
-      ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));
-      ctx.restore();
-    }
+    requestAnimationFrame(tick);
   }
+  resize(); addEventListener('resize',resize); tick();
+})();
 
-  function drawRockColumn(x,y,w,h,fromTop){
-    ctx.save(); ctx.beginPath();
-    const step=32*DPR, rough=18*DPR, start=y, end=y+h;
-    ctx.moveTo(x,start);
-    for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }
-    ctx.lineTo(x,end); ctx.closePath();
-    const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');
-    ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();
+/* hoofd volgt muis */
+(() => {
+  const head=document.getElementById('head');
+  let vw=window.innerWidth,vh=window.innerHeight;
+  const drift=20,maxTilt=10;
+  function onMove(e){
+    const p=e.touches?e.touches[0]:e;
+    const dx=(p.clientX-vw/2)/(vw/2); // -1..1
+    const dy=(p.clientY-vh/2)/(vh/2);
+    const tx=dx*drift, ty=dy*drift;
+    const rx=dy*maxTilt, ry=-dx*maxTilt;
+    head.style.transform=`translate(${tx}px,${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
   }
-
-  function loop(ts){
-    if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
-    const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
-    update(dt); draw(); requestAnimationFrame(loop);
-  }
-  setUI(); requestAnimationFrame(loop);
-
-  // naam live updaten in result line
-  playerNameI.addEventListener('input', updateResLine);
-
+  addEventListener('mousemove',onMove,{passive:true});
+  addEventListener('touchmove',onMove,{passive:true});
+  addEventListener('resize',()=>{vw=innerWidth;vh=innerHeight;});
 })();
 </script>
 </body>
