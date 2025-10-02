@@ -275,8 +275,24 @@
     else if (state==='dead') restart();
     else if (state==='playing') player.flap();
   }
-  window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)){ e.preventDefault(); boost(); } if(e.code==='KeyR') restart();});
+  window.addEventListener('keydown', e => {
+  const el = document.activeElement;
+  const typing = el && (
+    el.tagName === 'INPUT' ||
+    el.tagName === 'TEXTAREA' ||
+    el.isContentEditable
+  );
 
+  if (typing) return; // niks doen als je in het naamveld typt
+
+  if (['Space','ArrowUp','KeyW'].includes(e.code)) {
+    e.preventDefault();
+    boost();
+  }
+  if (e.code === 'KeyR') {
+    restart();
+  }
+});
   /* globale pointerdown (werkt ook met modal clean) */
   window.addEventListener('pointerdown', (e) => {
     const inCard = e.target.closest('.card');
