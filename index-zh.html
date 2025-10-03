@@ -7,7 +7,7 @@
 <link rel="icon" href="game/assets/cz-droid.png" type="image/png">
 
 <!-- SEO: alternate language versions -->
-<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="en" />
+<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="nl" />
 <link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
 
 <style>
@@ -24,7 +24,7 @@
     overflow-x:hidden;
   }
 
-  /* sterrenachtergrond */
+  /* 星空背景画布 */
   canvas#stars{position:fixed; inset:0; z-index:-1}
 
   .wrap{
@@ -35,33 +35,44 @@
   .col{
     background:var(--card); border:1px solid var(--line); border-radius:16px;
     padding:20px; backdrop-filter: blur(6px); box-shadow:var(--shadow);
-    max-width:400px; flex:1 1 320px;
+    max-width:420px; flex:1 1 320px;
   }
-  h2{margin-top:0}
+  h2{margin:0}
   p{color:var(--muted)}
   .pill{padding:6px 10px; border:1px solid var(--line); border-radius:999px; margin:2px; display:inline-block}
-  .btn{display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
-    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
-    color:var(--fg); text-decoration:none; font-weight:700}
-  .btn:hover{background:rgba(110,231,255,.25)}
   .links{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
   .links a{padding:8px 12px; border-radius:12px; border:1px solid var(--line);
     text-decoration:none; color:var(--fg); background:rgba(255,255,255,.04)}
+  .btn{
+    display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
+    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
+    color:var(--fg); text-decoration:none; font-weight:700
+  }
+  .btn:hover{background:rgba(110,231,255,.25)}
 
-  /* hoofd + caption onder */
+  /* 标题行徽章 */
+  .title-row{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .badge{
+    height:28px; width:28px; border-radius:50%; overflow:hidden; flex:0 0 28px;
+    background:#0e1626; border:1px solid var(--line); display:grid; place-items:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  .badge img{height:100%; width:100%; object-fit:contain}
+
+  /* 底部英雄区（大头） */
   .hero{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
-    margin-top:-180px; /* schuift omhoog onder de content */
+    margin-top:-160px;
   }
   #head{
-    width:clamp(200px,35vmin,380px); aspect-ratio:1/1;
+    width:clamp(200px,34vmin,360px); aspect-ratio:1/1;
     background:url("game/assets/cz-droid.png") center/contain no-repeat;
     filter:drop-shadow(0 40px 80px rgba(0,0,0,.55));
     transition: transform .12s ease-out;
   }
   .caption{margin-top:12px; font-weight:700; opacity:.8}
 
-  /* duidelijke taalschakelaar rechtsboven */
+  /* 右上角语言切换 */
   .lang-switch{
     position:fixed; top:14px; right:14px; z-index:1000;
     background:rgba(255,255,255,0.12);
@@ -73,49 +84,71 @@
     transition:background .2s;
   }
   .lang-switch:hover{ background:rgba(255,255,255,0.25); }
+
+  /* 移动端微调 */
+  @media (max-width: 640px){
+    .wrap{padding-bottom:160px}
+    .hero{ margin-top:-60px; }
+    #head{ width:clamp(180px,46vw,300px); }
+  }
 </style>
 </head>
 <body>
 
-<!-- taal-knop terug naar Engels -->
-<a class="lang-switch" href="index.html">EN</a>
+<!-- 返回荷兰语版本 -->
+<a class="lang-switch" href="index.html">NL</a>
 
 <canvas id="stars"></canvas>
 
 <div class="wrap">
-  <section class="col">
-    <h2>$ASTER / $OID</h2>
-    <p><strong>首个 $ASTER 模因 —— 已配对，整装待发。</strong></p>
+  <!-- 左：ASTER / OID 信息 -->
+  <section class="col" aria-labelledby="infoTitle">
+    <div class="title-row">
+      <div class="badge" aria-hidden="true">
+        <img src="game/assets/aster.png" alt="" />
+      </div>
+      <h2 id="infoTitle">$ASTER / $OID</h2>
+    </div>
+    <p><strong>由 $ASTER 驱动。诞生于 $ASTER 的首个模因。</strong></p>
     <div>
       <span class="pill">链：BNB</span>
-      <span class="pill">LP：与 $ASTER 配对</span>
+      <span class="pill">LP：由 $ASTER 支持</span>
       <span class="pill">符号：$OID</span>
     </div>
     <div class="links">
-      <a href="https://x.com/oid_bnb?s=21" target="_blank">X / 推特</a>
-      <a href="https://t.me/OID_BNB" target="_blank">电报群</a>
-      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank">DexScreener</a>
-      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank">BscScan</a>
-      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank">在 PancakeSwap 购买</a>
+      <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X / 推特</a>
+      <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">电报群</a>
+      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DexScreener</a>
+      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BscScan</a>
+      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">在 PancakeSwap 购买</a>
+      <a href="https://asterdex.com" target="_blank" rel="noopener">了解 $ASTER</a>
     </div>
   </section>
 
-  <section class="col">
-    <h2>游玩 ASTER OID</h2>
+  <!-- 右：游玩 CTA（标题含小 CZ 徽章，按钮内无图标） -->
+  <section class="col" aria-labelledby="playTitle">
+    <div class="title-row">
+      <div class="badge" aria-hidden="true">
+        <img src="game/assets/cz-droid.png" alt="" />
+      </div>
+      <h2 id="playTitle">游玩 ASTER OID</h2>
+    </div>
     <p><strong>驾驶小行星，躲避碎片，冲击市值。</strong></p>
-    <!-- BELANGRIJK: linkt naar de Chinese game -->
     <a class="btn" href="game/index-zh.html">立即开始 →</a>
-    <p class="muted">截屏你的分数，在社媒上挑战其他社区。</p>
+    <p class="muted" style="margin-top:10px">
+      晒出你的成绩，秀出 Mcap。@ 提及 $ASTER 与 $OID，让大家见识你们社区的实力。
+    </p>
   </section>
 </div>
 
-<div class="hero">
+<!-- 底部英雄区 -->
+<div class="hero" aria-hidden="true">
   <div id="head"></div>
   <div class="caption">他要来了。</div>
 </div>
 
 <script>
-/* sterren */
+/* 星空动画 */
 (() => {
   const c=document.getElementById('stars'),x=c.getContext('2d');
   const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
@@ -128,25 +161,30 @@
   }
   function tick(){
     x.clearRect(0,0,w,h);
-    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
+    // 深色渐变底 + 星点
+    const g=x.createLinearGradient(0,0,0,h);
+    g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f');
+    x.fillStyle=g; x.fillRect(0,0,w,h);
     for(const s of stars){
-      s.x-=(25*s.z*0.08); if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
+      s.x-=(25*s.z*0.08);
+      if(s.x<-2){s.x=w+Math.random()*40; s.y=Math.random()*h; s.z=.3+Math.random()*.7;}
       x.globalAlpha=0.5+s.z*0.5;
       x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
     }
+    x.globalAlpha=1;
     requestAnimationFrame(tick);
   }
   resize(); addEventListener('resize',resize); tick();
 })();
 
-/* hoofd volgt muis */
+/* 头部跟随鼠标/触摸 */
 (() => {
   const head=document.getElementById('head');
   let vw=window.innerWidth,vh=window.innerHeight;
   const drift=20,maxTilt=10;
   function onMove(e){
     const p=e.touches?e.touches[0]:e;
-    const dx=(p.clientX-vw/2)/(vw/2); // -1..1
+    const dx=(p.clientX-vw/2)/(vw/2);
     const dy=(p.clientY-vh/2)/(vh/2);
     const tx=dx*drift, ty=dy*drift;
     const rx=dy*maxTilt, ry=-dx*maxTilt;
