@@ -54,12 +54,6 @@
     transition:transform .12s ease, background .2s ease;
   }
   .btn:hover{background:rgba(110,231,255,.25)}
-  /* disabled look */
-  .btn[aria-disabled="true"]{
-    pointer-events:none; opacity:.55; filter:saturate(.5);
-    background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.20);
-  }
-
   .hero{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     margin-top:-160px;
@@ -120,7 +114,7 @@
     </div>
   </section>
 
-  <!-- RIGHT: Play CTA (disabled) -->
+  <!-- RIGHT: Play CTA (active again, restored text) -->
   <section class="col" aria-labelledby="playTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
@@ -130,12 +124,12 @@
     </div>
     <p><strong>Pilot the asteroid. Dodge the debris. Farm the Mcap.</strong></p>
 
-    <!-- Disabled button -->
-    <a class="btn" href="#" aria-disabled="true" title="Coming soon">Coming soon</a>
+    <!-- ✅ Active button -->
+    <a class="btn" href="game/index.html" title="Play ASTER OID">Play ASTER OID</a>
 
-    <!-- Unlock copy -->
-    <p class="muted" style="margin-top:10px">
-      To unlock the game, you've gotta work for it. Retweet, share, and spread the word.
+    <!-- Restored subtext -->
+    <p style="margin-top:10px; color:#90a0c0;">
+      Screenshot your score and share it on socials to challenge other communities.
     </p>
   </section>
 </div>
