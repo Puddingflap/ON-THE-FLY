@@ -18,7 +18,7 @@
   *{box-sizing:border-box}
   body{
     margin:0; color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
     background:linear-gradient(180deg,var(--bg),var(--bg2));
     overflow-x:hidden;
   }
@@ -54,11 +54,6 @@
     transition:transform .12s ease, background .2s ease;
   }
   .btn:hover{background:rgba(110,231,255,.25)}
-  .btn[aria-disabled="true"]{
-    pointer-events:none; opacity:.55; filter:saturate(.5);
-    background:rgba(255,255,255,.10); border-color:rgba(255,255,255,.20);
-  }
-
   .hero{
     display:flex; flex-direction:column; align-items:center; justify-content:center;
     margin-top:-160px;
@@ -91,11 +86,11 @@
 </head>
 <body>
 
-<a class="lang-switch" href="index.html">NL</a>
+<a class="lang-switch" href="index.html">EN</a>
 <canvas id="stars"></canvas>
 
 <div class="wrap">
-  <!-- 左：ASTER / OID 信息 -->
+  <!-- LEFT: ASTER / OID info -->
   <section class="col" aria-labelledby="infoTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
@@ -103,50 +98,50 @@
       </div>
       <h2 id="infoTitle">$ASTER / $OID</h2>
     </div>
-    <p><strong>由 $ASTER 驱动。诞生于 $ASTER 的首个模因。</strong></p>
+    <p><strong>由 $ASTER 驱动，诞生于第一个 $ASTER meme。</strong></p>
     <div>
-      <span class="pill">链：BNB</span>
-      <span class="pill">LP：由 $ASTER 支持</span>
-      <span class="pill">符号：$OID</span>
+      <span class="pill">链: BNB</span>
+      <span class="pill">LP: Powered by $ASTER</span>
+      <span class="pill">代号: $OID</span>
     </div>
     <div class="links">
       <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X / 推特</a>
       <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">电报群</a>
       <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DexScreener</a>
       <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BscScan</a>
-      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">在 PancakeSwap 购买</a>
+      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">PancakeSwap 购买</a>
       <a href="https://asterdex.com" target="_blank" rel="noopener">了解 $ASTER</a>
     </div>
   </section>
 
-  <!-- 右：游玩 CTA（禁用） -->
+  <!-- RIGHT: Play CTA -->
   <section class="col" aria-labelledby="playTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
         <img src="game/assets/cz-droid.png" alt="" />
       </div>
-      <h2 id="playTitle">游玩 ASTER OID</h2>
+      <h2 id="playTitle">Play ASTER OID</h2>
     </div>
-    <p><strong>驾驶小行星，躲避碎片，冲击市值。</strong></p>
+    <p><strong>驾驶小行星，躲避碎片，收割市值。</strong></p>
 
-    <!-- 禁用按钮 -->
-    <a class="btn" href="#" aria-disabled="true" title="Coming soon">即将上线</a>
+    <!-- ✅ Active button -->
+    <a class="btn" href="game/index.html" title="Play ASTER OID">Play ASTER OID</a>
 
-    <!-- 解锁说明 -->
-    <p class="muted" style="margin-top:10px">
-      要解锁游戏，你得靠自己：转发、分享、把消息扩散出去。
+    <!-- Restored subtext -->
+    <p style="margin-top:10px; color:#90a0c0;">
+      截图你的得分并分享到社交媒体上，挑战其他社区。
     </p>
   </section>
 </div>
 
-<!-- 英雄区 -->
+<!-- HERO -->
 <div class="hero" aria-hidden="true">
   <div id="head"></div>
-  <div class="caption">他要来了。</div>
+  <div class="caption">他来了。</div>
 </div>
 
 <script>
-/* 星空动画 */
+/* 星空背景 */
 (() => {
   const c=document.getElementById('stars'),x=c.getContext('2d');
   const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
@@ -171,7 +166,7 @@
   resize(); addEventListener('resize',resize); tick();
 })();
 
-/* 头部跟随 */
+/* 头像跟随鼠标移动 */
 (() => {
   const head=document.getElementById('head');
   let vw=window.innerWidth,vh=window.innerHeight;
