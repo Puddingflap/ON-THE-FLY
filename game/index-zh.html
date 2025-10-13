@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>ASTER OID</title>
+  <title>SPACE OID</title>
   <style>
     :root{
       --bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -98,7 +98,7 @@
 </head>
 <body>
   <div id="wrap">
-    <canvas id="game" width="1280" height="720" aria-label="ASTER OID"></canvas>
+    <canvas id="game" width="1280" height="720" aria-label="SPACE OID"></canvas>
   </div>
 
   <div class="hud" aria-live="polite">
@@ -114,10 +114,10 @@
       <img src="assets/four.png" alt="$4" class="hudLogo hudRight" />
     </div>
     <div class="title" id="title">
-      <h1>ASTER OID</h1>
+      <h1>SPACE OID</h1>
       <div class="subtitle">轻触/点击或按 <strong>空格</strong> 提升</div>
     </div>
-    <div class="hint" id="hint">提示：保持居中，读空隙，在最后一刻提升。ASTER OID</div>
+    <div class="hint" id="hint">提示：保持居中，读空隙，在最后一刻提升。SPACE OID</div>
     <button class="btn" id="startBtn" aria-label="开始游戏（或按空格）">开始</button>
     <div class="toast" id="pauseToast" hidden>游戏已暂停（标签页不活动）</div>
     <div class="stageOverlay" id="stageOverlay"></div>
@@ -338,7 +338,7 @@
     state='start'; speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
     pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;
     score=0; ui.score.textContent=0; ui.targetsCollected.textContent=0;
-    ui.titleH1.textContent='ASTER OID'; ui.startBtn.textContent='开始'; setUI();
+    ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='开始'; setUI();
     closeResultModal();
   }
 
@@ -481,3 +481,4 @@
 </script>
 </body>
 </html>
+
