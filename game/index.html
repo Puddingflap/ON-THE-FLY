@@ -3,7 +3,7 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>ASTER OID</title>
+  <title>SPACE OID</title>
   <style>
     :root{
       --bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -90,7 +90,7 @@
 </head>
 <body>
   <div id="wrap">
-    <canvas id="game" width="1280" height="720" aria-label="ASTER OID"></canvas>
+    <canvas id="game" width="1280" height="720" aria-label="SPACE OID"></canvas>
   </div>
 
   <div class="hud" aria-live="polite">
@@ -106,10 +106,10 @@
       <img class="brand brand-right" src="assets/four.png" alt="$4 logo">
     </div>
     <div class="title" id="title">
-      <h1>ASTER OID</h1>
+      <h1>SPACE OID</h1>
       <div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div>
     </div>
-    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment. ASTER OID</div>
+    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment. SPACE OID</div>
     <button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
     <div class="toast" id="pauseToast" hidden>Game paused (tab not active)</div>
     <div class="stageOverlay" id="stageOverlay"></div>
@@ -424,7 +424,7 @@
     ui.targetsCollected.textContent = 0;
     speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
     pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;
-    ui.titleH1.textContent='ASTER OID'; ui.startBtn.textContent='Start'; setUI();
+    ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='Start'; setUI();
     closeResultModal();
   }
 
