@@ -20,17 +20,15 @@
     .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
     .panel .sep{opacity:.3}
 
-    /* Logo’s in het scorepaneel */
+    /* Logos in the score panel */
     .panel .brand{
       height:22px; width:22px; border-radius:50%;
       flex:0 0 22px; object-fit:cover;
       filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
       opacity:.95;
     }
-    /* ▼ nieuw: spacer + rechter badge */
     .panel .spacer{ flex:1 1 auto; }
-    /* schuif het $4-icoon ~6px naar links */
-.panel .brand-right{ margin-left:-4px; }
+    .panel .brand-right{ margin-left:-6px; } /* small nudge left for symmetry */
 
     .btn{
       pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
@@ -82,10 +80,11 @@
       padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);
       background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;
     }
-    .card.clean .nameRow, .card.clean .actions { display:none; }
+
+    /* Clean screenshot mode: just hide the name row */
+    .card.clean .nameRow { display:none; }
     .card.clean .scoreline { font-size:28px; margin:4px 0 4px; }
     .card.clean h2 { margin-bottom:8px; }
-    .tiny{color:var(--muted); font-size:12px; margin-top:8px}
   </style>
 </head>
 <body>
@@ -101,7 +100,7 @@
       <span class="pill">Best: <span id="best">0</span></span>
       <span class="sep">•</span>
       <span class="pill">Targets: <span id="targetsCollected">0</span></span>
-      <!-- ▼ nieuw: $4 logo rechts -->
+      <!-- right badge: $4 -->
       <span class="spacer"></span>
       <img class="brand brand-right" src="assets/four.png" alt="$4 logo">
     </div>
@@ -109,7 +108,7 @@
       <h1>SPACE OID</h1>
       <div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div>
     </div>
-    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment. SPACE OID</div>
+    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment.</div>
     <button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
     <div class="toast" id="pauseToast" hidden>Game paused (tab not active)</div>
     <div class="stageOverlay" id="stageOverlay"></div>
@@ -132,12 +131,10 @@
       </div>
 
       <div class="actions">
-        <button id="toggleCleanBtn" type="button">Clean Screenshot Mode</button>
+        <!-- Clean Screenshot Mode button removed by design -->
         <button id="shareBtn" type="button">Share to X</button>
         <button id="closeResultBtn" type="button">Close</button>
       </div>
-
-      <div class="tiny">Tip: enable <em>Clean Screenshot Mode</em>, then take a screenshot.</div>
     </div>
   </div>
 
@@ -345,7 +342,6 @@
   const resLine     = document.getElementById('resLine');
   const playerNameI = document.getElementById('playerName');
   const saveNameBtn = document.getElementById('saveNameBtn');
-  const toggleClean = document.getElementById('toggleCleanBtn');
   const shareBtn    = document.getElementById('shareBtn');
   const closeResBtn = document.getElementById('closeResultBtn');
 
@@ -354,6 +350,8 @@
     playerNameI.value = savedName;
     resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID  $4`;
     resultModal.classList.add('show');
+    // ensure we start NOT in clean mode so the input is visible first
+    resultCard.classList.remove('clean');
   }
   function updateResLine(){
     const nm = playerNameI.value.trim() || 'Anonymous';
@@ -361,14 +359,17 @@
   }
   function closeResultModal(){
     resultModal.classList.remove('show');
-    resultCard.classList.remove('clean');
   }
+
+  // Save name => auto clean screenshot mode
   saveNameBtn.addEventListener('click', ()=>{
     const nm = playerNameI.value.trim().slice(0,24);
     localStorage.setItem('aster-username', nm);
     updateResLine();
+    // enter clean mode automatically
+    resultCard.classList.add('clean');
   });
-  toggleClean.addEventListener('click', ()=>{ resultCard.classList.toggle('clean'); });
+
   closeResBtn.addEventListener('click', closeResultModal);
 
   // Share to X
@@ -575,7 +576,7 @@
   }
   setUI(); requestAnimationFrame(loop);
 
-  // naam live updaten in result line
+  // live update name in result line
   playerNameI.addEventListener('input', updateResLine);
 
 })();
