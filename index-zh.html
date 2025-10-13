@@ -1,184 +1,511 @@
 <!DOCTYPE html>
 <html lang="zh-CN">
 <head>
-<meta charset="utf-8" />
-<meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ASTER OID — asterOID</title>
-<link rel="icon" href="game/assets/cz-droid.png" type="image/png">
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
+  <title>SPACE OID</title>
+  <style>
+    :root{
+      --bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);
+    }
+    html,body{height:100%;margin:0}
+    body{
+      background: radial-gradient(1200px 800px at 70% 20%, rgba(110,231,255,.06), transparent), var(--bg);
+      color:var(--fg);
+      font-family: system-ui, -apple-system, Segoe UI, Roboto, Inter, Arial, "PingFang SC","Noto Sans SC","Microsoft YaHei", sans-serif;
+      overflow:hidden;
+    }
+    #wrap{position:fixed; inset:0; display:grid; place-items:center}
+    canvas{ width: min(100vw, 100vh*0.5625); height: min(100vh, 100vw/0.5625); max-width:100vw; max-height:100vh; box-shadow: var(--shadow); border-radius: 18px; background: transparent; }
 
-<!-- alternates -->
-<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="nl" />
-<link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
+    .hud{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;}
+    .panel{
+      pointer-events:auto; position:absolute; top:24px; left:50%; transform:translateX(-50%);
+      background: rgba(8,12,22,.6); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px);
+      padding:8px 12px; border-radius:14px; display:flex; gap:18px; align-items:center
+    }
+    .hudLogo{
+      height:22px; width:auto; display:block; border-radius:6px;
+      filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
+      opacity:.95;
+    }
+    /* spacer + 右侧 $4 徽标微调 */
+    .panel .spacer{ flex:1 1 auto; }
+    .hudRight{ margin-left:-6px; }
 
-<style>
-  :root{
-    --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
-    --accent:#6ee7ff; --card:rgba(10,14,24,.78); --line:rgba(255,255,255,.08);
-    --shadow:0 12px 40px rgba(0,0,0,.45);
-  }
-  *{box-sizing:border-box}
-  body{
-    margin:0; color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
-    background:linear-gradient(180deg,var(--bg),var(--bg2));
-    overflow-x:hidden;
-  }
-  canvas#stars{position:fixed; inset:0; z-index:-1}
+    .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
+    .panel .sep{opacity:.3}
 
-  .wrap{
-    display:flex; justify-content:center; gap:24px; flex-wrap:wrap;
-    padding:40px 20px 240px; position:relative; z-index:1;
-  }
-  .col{
-    background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:20px; backdrop-filter: blur(6px); box-shadow:var(--shadow);
-    max-width:420px; flex:1 1 320px;
-  }
-  h2{margin:0}
-  p{color:var(--muted)}
-  .pill{padding:6px 10px; border:1px solid var(--line); border-radius:999px; margin:2px; display:inline-block}
-  .links{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
-  .links a{padding:8px 12px; border-radius:12px; border:1px solid var(--line);
-    text-decoration:none; color:var(--fg); background:rgba(255,255,255,.04)}
-  .title-row{display:flex; align-items:center; gap:10px; margin-bottom:12px}
-  .badge{
-    height:28px; width:28px; border-radius:50%; overflow:hidden; flex:0 0 28px;
-    background:#0e1626; border:1px solid var(--line); display:grid; place-items:center;
-    box-shadow:0 6px 18px rgba(0,0,0,.35);
-  }
-  .badge img{height:100%; width:100%; object-fit:contain}
+    .btn{
+      pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
+      border:1px solid rgba(110,231,255,.4); color:var(--fg); font-weight:700; letter-spacing:.3px;
+      padding:12px 18px; border-radius:14px; box-shadow: var(--shadow); text-decoration:none;
+    }
+    .hint{position:absolute; bottom:86px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:14px}
+    .title{position:absolute; top:50%; left:50%; transform:translate(-50%, -60%); text-align:center}
+    h1{margin:0 0 6px 0; font-size: clamp(28px, 6vw, 48px)}
+    .subtitle{opacity:.75}
+    .toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}
+    .stageOverlay{
+      position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);
+      font-size:48px; font-weight:700; text-align:center;
+      text-shadow:0 0 12px rgba(110,231,255,.8);
+      opacity:0; transition:opacity 0.5s;
+      pointer-events:none;
+    }
+    .stageOverlay.show{opacity:1;}
 
-  .btn{
-    display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
-    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
-    color:var(--fg); text-decoration:none; font-weight:700;
-    transition:transform .12s ease, background .2s ease;
-  }
-  .btn:hover{background:rgba(110,231,255,.25)}
-  .hero{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    margin-top:-160px;
-  }
-  #head{
-    width:clamp(200px,34vmin,360px); aspect-ratio:1/1;
-    background:url("game/assets/cz-droid.png") center/contain no-repeat;
-    filter:drop-shadow(0 40px 80px rgba(0,0,0,.55));
-    transition: transform .12s ease-out;
-  }
-  .caption{margin-top:12px; font-weight:700; opacity:.8}
+    /* 结果弹窗 */
+    .modal{
+      position:fixed; inset:0; display:none; align-items:center; justify-content:center;
+      background: rgba(6, 10, 18, .65); backdrop-filter: blur(6px); pointer-events:auto; z-index:5;
+    }
+    .modal.show{ display:flex; }
+    .card{
+      position:relative;
+      width:min(92vw, 480px); background:rgba(10,14,24,.92);
+      border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px 18px 20px;
+      box-shadow: var(--shadow); text-align:center; overflow:hidden;
+    }
+    .brandLogo{
+      height:34px; margin:2px auto 10px; display:block;
+      filter: drop-shadow(0 3px 10px rgba(0,0,0,.45));
+    }
+    .mascotLogo{
+      position:absolute; right:12px; top:10px; width:96px;
+      opacity:.32; pointer-events:none; z-index:0;
+      filter: drop-shadow(0 6px 12px rgba(0,0,0,.55)) brightness(1.05) contrast(1.05);
+      transform: rotate(-6deg);
+    }
 
-  .lang-switch{
-    position:fixed; top:14px; right:14px; z-index:1000;
-    background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,255,255,0.3);
-    padding:6px 12px; border-radius:999px;
-    color:#fff; font-weight:600; text-decoration:none;
-    backdrop-filter: blur(6px);
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
-  }
-  .lang-switch:hover{ background:rgba(255,255,255,0.25); }
+    .card h2{margin:0 0 6px; font-size:28px; position:relative; z-index:1}
+    .scoreline{font-size:22px; margin:8px 0 14px; font-weight:800; letter-spacing:.4px; position:relative; z-index:1}
+    .nameRow{display:flex; gap:10px; margin:10px 0 14px; position:relative; z-index:1}
+    .nameRow input{
+      flex:1; padding:10px 12px; border-radius:10px; border:1px solid rgba(255,255,255,.15);
+      background:rgba(255,255,255,.06); color:var(--fg);
+    }
+    .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap; position:relative; z-index:1}
+    .actions button{
+      padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);
+      background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;
+    }
 
-  @media (max-width:640px){
-    .wrap{padding-bottom:160px}
-    .hero{ margin-top:-60px; }
-    #head{ width:clamp(180px,46vw,300px); }
-  }
-</style>
+    /* Clean 模式下隐藏输入/按钮，仅留标题+分数行 */
+    .card.clean .nameRow, .card.clean .actions { display:none; }
+    .card.clean .scoreline { font-size:28px; margin:4px 0 4px; }
+    .card.clean h2 { margin-bottom:8px; }
+    .tiny{color:var(--muted); font-size:12px; margin-top:8px}
+  </style>
 </head>
 <body>
+  <div id="wrap">
+    <canvas id="game" width="1280" height="720" aria-label="SPACE OID"></canvas>
+  </div>
 
-<a class="lang-switch" href="index.html">English</a>
-<canvas id="stars"></canvas>
+  <div class="hud" aria-live="polite">
+    <div class="panel" id="scorePanel" hidden>
+      <img src="assets/aster.png" alt="ASTER" class="hudLogo" />
+      <span class="pill">市值 $：<span id="score">0B</span></span>
+      <span class="sep">•</span>
+      <span class="pill">个人最佳：<span id="best">0</span></span>
+      <span class="sep">•</span>
+      <span class="pill">目标：<span id="targetsCollected">0</span></span>
+      <!-- 右侧 $4 徽标 -->
+      <span class="spacer"></span>
+      <img src="assets/four.png" alt="$4" class="hudLogo hudRight" />
+    </div>
+    <div class="title" id="title">
+      <h1>SPACE OID</h1>
+      <div class="subtitle">轻触/点击或按 <strong>空格</strong> 提升</div>
+    </div>
+    <div class="hint" id="hint">提示：保持居中，读空隙，在最后一刻提升。SPACE OID</div>
+    <button class="btn" id="startBtn" aria-label="开始游戏（或按空格）">开始</button>
+    <div class="toast" id="pauseToast" hidden>游戏已暂停（标签页不活动）</div>
+    <div class="stageOverlay" id="stageOverlay"></div>
+  </div>
 
-<div class="wrap">
-  <!-- LEFT: 信息 -->
-  <section class="col" aria-labelledby="infoTitle">
-    <div class="title-row">
-      <div class="badge" aria-hidden="true">
-        <img src="game/assets/aster.png" alt="" />
+  <!-- 结果 / 名称 & 分数 -->
+  <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
+    <div id="resultCard" class="card">
+      <img src="assets/aster.png" alt="ASTER" class="brandLogo">
+      <img src="assets/cz-droid.png" alt="CZ asteroid" class="mascotLogo">
+
+      <h2 id="resTitle">游戏结束</h2>
+      <div id="resLine" class="scoreline">匿名 — 市值 $: 0B  •  $ASTER  $OID  $4</div>
+
+      <div class="nameRow">
+        <input id="playerName" type="text" maxlength="24" placeholder="你的名字（用于截图）">
+        <button id="saveNameBtn" type="button">保存</button>
       </div>
-      <h2 id="infoTitle">asterOID</h2>
-    </div>
-    <p><strong>首个 ASTER meme。</strong></p>
-    <div></div>
-    <div class="links">
-      <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
-      <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">电报</a>
-      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">交易对</a>
-      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BSCScan</a>
-      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">购买</a>
-    </div>
-  </section>
 
-  <!-- RIGHT: 开始游戏 -->
-  <section class="col" aria-labelledby="playTitle">
-    <div class="title-row">
-      <div class="badge" aria-hidden="true">
-        <img src="game/assets/cz-droid.png" alt="" />
+      <div class="actions">
+        <!-- 移除“干净截图模式”按钮，只保留下面两个 -->
+        <button id="shareBtn" type="button">分享到 X</button>
+        <button id="closeResultBtn" type="button">关闭</button>
       </div>
-      <h2 id="playTitle">开始玩 SPACE OID</h2>
+
+      <div class="tiny">提示：点击“保存”后会自动进入干净截图模式，再手动截屏。</div>
     </div>
-    <p><strong>操控小行星，躲避残骸，冲击市值。</strong></p>
-
-    <a class="btn" href="game/index-zh.html" title="Play SPACE OID">开始游戏</a>
-
-    <p style="margin-top:10px; color:#90a0c0;">
-      截图你的分数并分享到社交媒体，向其他社区发起挑战。
-    </p>
-  </section>
-</div>
-
-<!-- HERO -->
-<div class="hero" aria-hidden="true">
-  <div id="head"></div>
-  <div class="caption">他要来了。</div>
-</div>
+  </div>
 
 <script>
-/* 星星背景 */
 (() => {
-  const c=document.getElementById('stars'),x=c.getContext('2d');
-  const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-  let w,h,stars;
-  function resize(){
-    w=c.width=innerWidth*DPR; h=c.height=innerHeight*DPR;
-    stars=Array.from({length:160},()=>({
-      x:Math.random()*w,y:Math.random()*h,z:.3+Math.random()*.7,r:.6+Math.random()*1.6
-    }));
-  }
-  function tick(){
-    x.clearRect(0,0,w,h);
-    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
-    for(const s of stars){
-      s.x-=(25*s.z*0.08);
-      if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
-      x.globalAlpha=0.5+s.z*0.5;
-      x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
-    }
-    requestAnimationFrame(tick);
-  }
-  resize(); addEventListener('resize',resize); tick();
-})();
+  const canvas = document.getElementById('game');
+  const ctx = canvas.getContext('2d', { alpha: true });
 
-/* 头像跟随鼠标/触摸 */
-(() => {
-  const head=document.getElementById('head');
-  let vw=window.innerWidth,vh=window.innerHeight;
-  const drift=20,maxTilt=10;
-  function onMove(e){
-    const p=e.touches?e.touches[0]:e;
-    const dx=(p.clientX-vw/2)/(vw/2);
-    const dy=(p.clientY-vh/2)/(vh/2);
-    const tx=dx*drift, ty=dy*drift;
-    const rx=dy*maxTilt, ry=-dx*maxTilt;
-    head.style.transform=`translate(${tx}px,${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+  /* 音频 */
+  const music = new Audio('assets/intro.mp3');
+  music.loop = true;
+  let musicStarted = false;
+  function startMusic(){ if(!musicStarted){ music.play().catch(()=>{}); musicStarted = true; } }
+  window.addEventListener('pointerdown', startMusic);
+  window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
+
+  /* 资源 */
+  const SPRITE_SRC = 'assets/cz-droid.png';
+  const BADGE_SRC  = 'assets/asteroid-badge.png';
+  const spriteImg = new Image();
+  const badge = new Image();
+  let spriteReady = false, spriteError = false, badgeReady = false;
+  spriteImg.onload = () => { spriteReady = true; };
+  spriteImg.onerror = () => { spriteError = true; };
+  badge.onload = () => { badgeReady = true; };
+  spriteImg.src = SPRITE_SRC; badge.src = BADGE_SRC;
+
+  const TARGET_FILES = ['assets/logo1.png','assets/logo2.png','assets/logo3.png','assets/logo4.png'];
+  const targetImages = TARGET_FILES.map(src => { const im = new Image(); im.src = src; return im; });
+  const getRandomLoadedTarget = () => {
+    const loaded = targetImages.filter(im => im.complete && im.naturalWidth);
+    return loaded.length ? loaded[Math.floor(Math.random()*loaded.length)] : null;
+  };
+
+  /* DPR & resize */
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  function resize(){ const r = canvas.getBoundingClientRect(); canvas.width = Math.round(r.width*DPR); canvas.height= Math.round(r.height*DPR); }
+  resize(); window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t=setTimeout(resize,100); });
+
+  /* 世界参数 */
+  const G=2600, FLAP_VY=-850, MAX_DROP=1200;
+  let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
+  const PIPE_W=120, MARGIN_TOP=60;
+  const AST = { r:28, x:200, y:300 };
+
+  /* 阶段（中文） */
+  const STAGES = [
+    "进入轨道","梗带","屎币风暴","流动性真空","市场崩塌区",
+    "CZ之怒","熊市深渊","小行星季","登月","最终冲击"
+  ];
+
+  let state='start';
+  let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
+  let tPrev=0, speed=SCROLL_SPEED, paused=false;
+  let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
+  let overlayActive = false;
+
+  const ui={
+    scorePanel:document.getElementById('scorePanel'), score:document.getElementById('score'),
+    best:document.getElementById('best'), targetsCollected:document.getElementById('targetsCollected'),
+    startBtn:document.getElementById('startBtn'), title:document.getElementById('title'),
+    hint:document.getElementById('hint'), pauseToast:document.getElementById('pauseToast'),
+    titleH1:document.querySelector('#title h1'), stageOverlay:document.getElementById('stageOverlay')
+  };
+  ui.best.textContent=best; ui.targetsCollected.textContent=targetsCollected;
+
+  function setUI(){
+    const isStartOrDead = state==='start' || state==='dead';
+    ui.title.style.display = isStartOrDead ? '' : 'none';
+    ui.hint.style.display  = isStartOrDead ? '' : 'none';
+    ui.startBtn.style.display = isStartOrDead ? '' : 'none';
+    ui.scorePanel.hidden = !(state==='playing' || state==='dead');
+    if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
   }
-  addEventListener('mousemove',onMove,{passive:true});
-  addEventListener('touchmove',onMove,{passive:true});
-  addEventListener('resize',()=>{vw=innerWidth;vh=innerHeight;});
+
+  /* 背景星星 */
+  const stars = Array.from({length:160},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:0.3+Math.random()*0.7,r:0.6+Math.random()*1.8}));
+
+  /* 进场缩放 */
+  const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
+  function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
+
+  /* 玩家 */
+  let glowStrength = 0;
+  const player = {
+    x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,
+    flap(){ if(!canFlap || state!=='playing') return; this.vy=FLAP_VY; glowStrength = 1.0; canFlap=false; setTimeout(()=>canFlap=true,150); },
+    update(dt){ if(state!=='playing') return; this.vy=Math.min(this.vy+G*dt,MAX_DROP); this.y+=this.vy*dt; this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900)); glowStrength = Math.max(0, glowStrength - dt*1.5); },
+    drawAt(x,y,diamPx){
+      ctx.save(); ctx.translate(x*DPR,y*DPR); if(state==='playing') ctx.rotate(this.rot);
+      if (glowStrength > 0) {
+        const g = ctx.createRadialGradient(0,0,this.r*DPR*0.5, 0,0,this.r*DPR*2.2);
+        g.addColorStop(0, `rgba(110,231,255,${0.40*glowStrength})`); g.addColorStop(1, 'rgba(110,231,255,0)');
+        ctx.fillStyle = g; ctx.beginPath(); ctx.arc(0,0,this.r*DPR*2.2,0,Math.PI*2); ctx.fill();
+      }
+      if (spriteReady && spriteImg.naturalWidth){
+        const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;
+        const scale=Math.min((diamPx*DPR)/iw,(diamPx*DPR)/ih); const dw=iw*scale, dh=ih*scale;
+        ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.15)'; ctx.beginPath(); ctx.arc(0,0,(diamPx*DPR)/2,0,Math.PI*2); ctx.fill();
+        ctx.font=`${12*DPR}px system-ui`; ctx.fillStyle='#e8f0ff'; const msg = spriteError ? '贴图缺失' : '加载中…'; ctx.fillText(msg, -40*DPR, 4*DPR);
+      }
+      ctx.restore();
+    },
+    draw(){ this.drawAt(this.x, this.y, this.r*2); }
+  };
+
+  /* 障碍/目标/爆炸 */
+  const pipes=[], targets=[], explosions=[];
+  const TARGET_CHANCE=0.2, TARGET_SIZE=22, TARGET_GAP=100, TARGET_SCORE_BONUS=5;
+
+  function resetPipes(){ pipes.length=0; targets.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
+  function addObstacle(){
+    const lastX = pipes.length + targets.length ? Math.max(pipes.at(-1)?.x ?? -Infinity, targets.at(-1)?.x ?? -Infinity) : canvas.width/DPR + 300;
+    const x = lastX + PIPE_SPACING;
+    if (Math.random()<TARGET_CHANCE){
+      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - TARGET_GAP);
+      targets.push({ x, y:gapY+TARGET_GAP/2, r:TARGET_SIZE, hit:false, img:getRandomLoadedTarget(), wobbleSeed:Math.random()*Math.PI*2 });
+      PIPE_SPACING += TARGET_GAP;
+    } else {
+      const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);
+      pipes.push({x, gapY, passed:false}); PIPE_SPACING=420;
+    }
+  }
+  function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
+
+  /* 输入 */
+  function boost(){ if (state==='start') beginIntro(); else if (state==='dead') restart(); else if (state==='playing') player.flap(); }
+  window.addEventListener('keydown', e => {
+    const el = document.activeElement;
+    const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
+    if (typing) return;
+    if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
+    if (e.code === 'KeyR') { restart(); }
+  });
+
+  window.addEventListener('pointerdown', (e) => {
+    const inCard = e.target.closest('.card'); const inButton = e.target.closest('button,a'); if (inCard || inButton) return;
+    if (state === 'dead' && resultModal.classList.contains('show')) { restart(); return; }
+    if (state === 'start') { beginIntro(); return; }
+    if (state === 'dead')  { restart(); return; }
+    if (state === 'playing' && e.target === canvas) { player.flap(); }
+  });
+
+  document.getElementById('startBtn').addEventListener('click', boost);
+  document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
+
+  /* 结果弹窗 & 分享 */
+  const resultModal = document.getElementById('resultModal');
+  const resultCard  = document.getElementById('resultCard');
+  const resLine     = document.getElementById('resLine');
+  const playerNameI = document.getElementById('playerName');
+  const saveNameBtn = document.getElementById('saveNameBtn');
+  const shareBtn    = document.getElementById('shareBtn');
+  const closeResBtn = document.getElementById('closeResultBtn');
+
+  function openResultModal(finalScore){
+    const savedName = localStorage.getItem('aster-username') || '';
+    playerNameI.value = savedName;
+    resLine.textContent = `${savedName || '匿名'} — 市值 $: ${finalScore}B  •  $ASTER  $OID  $4`;
+    // 如果已有名字，直接进入干净截图模式
+    if (savedName) resultCard.classList.add('clean'); else resultCard.classList.remove('clean');
+    resultModal.classList.add('show');
+  }
+  function updateResLine(){
+    const nm = playerNameI.value.trim() || '匿名';
+    resLine.textContent = `${nm} — 市值 $: ${score}B  •  $ASTER  $OID  $4`;
+  }
+  function closeResultModal(){ resultModal.classList.remove('show'); resultCard.classList.remove('clean'); }
+  saveNameBtn.addEventListener('click', ()=>{
+    const nm = playerNameI.value.trim().slice(0,24);
+    localStorage.setItem('aster-username', nm);
+    updateResLine();
+    // 保存后自动进入干净截图模式
+    resultCard.classList.add('clean');
+  });
+  // 按回车也等同“保存”
+  playerNameI.addEventListener('keydown', (e)=>{
+    if(e.key === 'Enter'){ e.preventDefault(); saveNameBtn.click(); }
+  });
+  closeResBtn.addEventListener('click', closeResultModal);
+
+  // 分享到 X：包含 $4
+  shareBtn.addEventListener('click', ()=>{
+    const nm = (playerNameI.value.trim() || '匿名');
+    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID $4 #ASTER #OID #BNB`;
+    const url  = 'https://asteroidmeme.com/index-zh.html';
+    const intent = new URL('https://twitter.com/intent/tweet');
+    intent.searchParams.set('text', text); intent.searchParams.set('url', url);
+    window.open(intent.toString(), '_blank', 'noopener');
+  });
+
+  /* 状态切换 */
+  function beginIntro(){
+    const cx = (canvas.width/DPR)*0.5; const cy = (canvas.height/DPR)*0.42;
+    const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;
+    intro.from = { x:cx, y:cy, diam:bigDiam }; intro.to = { x:AST.x, y:AST.y, diam:AST.r*2 };
+    intro.active = true; intro.t0 = performance.now(); state='intro';
+    ui.titleH1.style.display='none'; ui.startBtn.style.display='none';
+  }
+  function startGame(){
+    state='playing'; score=0; speed=SCROLL_SPEED; tPrev=0; currentStage=1;
+    player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;
+    PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0; resetPipes(); setUI();
+    showStageOverlay(currentStage);
+  }
+  function gameOver(){
+    state='dead';
+    best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
+    ui.titleH1.textContent='游戏结束'; ui.titleH1.style.display='';
+    ui.hint.textContent='按空格或点击重新开始'; ui.startBtn.textContent='重新开始'; setUI();
+    openResultModal(score);
+  }
+  function restart(){
+    state='start'; speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
+    pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;
+    score=0; ui.score.textContent=0; ui.targetsCollected.textContent=0;
+    ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='开始'; setUI();
+    closeResultModal();
+  }
+
+  function showStageOverlay(stageNum){
+    if(stageNum<1 || stageNum>STAGES.length) return;
+    const name = STAGES[stageNum-1];
+    ui.stageOverlay.textContent = `阶段 ${stageNum}: ${name}`;
+    ui.stageOverlay.classList.add("show");
+    overlayActive = true;
+    setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);
+  }
+
+  /* 更新 & 绘制 */
+  function update(dt){
+    if (state==='intro' || paused) return;
+    if (state==='playing'){
+      if(pipesPassed>=10 && currentStage<STAGES.length){
+        currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;
+        resetPipes(); showStageOverlay(currentStage);
+      }
+      speed += ACCEL*dt*100; player.update(dt);
+      const move = speed*dt;
+
+      if (!overlayActive){
+        for(const p of pipes){ p.x -= move; }
+        for(let i=0;i<pipes.length;i++){
+          const p=pipes[i];
+          if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }
+          if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
+        }
+        for(let i=0;i<targets.length;i++){
+          const t=targets[i]; t.x -= move;
+          const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);
+          if(d<player.r+t.r && !t.hit){
+            t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score;
+            addExplosion(t.x,t.y);
+          }
+          if(t.x+t.r<-80){ targets.splice(i,1); i--; }
+        }
+        for(const p of pipes){
+          const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
+          if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
+        }
+      }
+      if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
+    }
+  }
+
+  function draw(){
+    ctx.clearRect(0,0,canvas.width,canvas.height);
+    const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+
+    for(const s of stars){
+      const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;
+      s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
+      if(s.x < -2){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*0.7; }
+      ctx.globalAlpha=0.5 + s.z*0.5; ctx.beginPath(); ctx.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); ctx.fillStyle='#e8f0ff'; ctx.fill();
+    }
+    ctx.globalAlpha=1;
+
+    if ((state==='playing' || state==='dead') && !overlayActive){
+      for(const p of pipes){
+        const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;
+        drawRockColumn(x,0,w,gy,true);
+        drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);
+      }
+      const now=performance.now()*0.002;
+      for(const t of targets){
+        if(t.hit) continue;
+        ctx.save();
+        const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;
+        ctx.translate(t.x*DPR, (t.y + wobble)*DPR);
+        const img = t.img;
+        if (img && img.complete && img.naturalWidth){
+          const iw=img.naturalWidth, ih=img.naturalHeight;
+          const target = t.r*2*DPR; const scale = Math.min(target/iw, target/ih);
+          const dw = iw*scale, dh = ih*scale;
+          ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;
+          ctx.drawImage(img, -dw/2, -dh/2, dw, dh);
+        }
+        ctx.restore();
+      }
+      const t=performance.now();
+      for(let i=explosions.length-1;i>=0;i--){
+        const e=explosions[i], el=(t-e.startTime)/e.duration;
+        if(el>=1){ explosions.splice(i,1); }
+        else{ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }
+      }
+    }
+
+    if (state==='start'){
+      const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;
+      const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;
+      player.drawAt(cx, cy, bigDiam);
+    } else if (state==='intro'){
+      const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);
+      const p = easeInOutCubic(tt);
+      const ix = intro.from.x + (intro.to.x - intro.from.x)*p;
+      const iy = intro.from.y + (intro.to.y - intro.from.y)*p;
+      const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;
+      player.drawAt(ix, iy, id);
+      if (tt>=1){ intro.active=false; startGame(); }
+    } else {
+      player.draw();
+    }
+
+    if (state === 'dead'){
+      ctx.save();
+      const pad = 18 * DPR;
+      const s   = 48 * DPR;
+      const x   = pad, y = canvas.height - s - pad;
+      if (badgeReady){ ctx.globalAlpha = 0.95; ctx.drawImage(badge, x, y, s, s); }
+      ctx.globalAlpha=1; ctx.font=`${16*DPR}px system-ui, sans-serif`; ctx.fillStyle='rgba(232,240,255,.95)';
+      ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));
+      ctx.restore();
+    }
+  }
+
+  function drawRockColumn(x,y,w,h,fromTop){
+    ctx.save(); ctx.beginPath();
+    const step=32*DPR, rough=18*DPR, start=y, end=y+h;
+    ctx.moveTo(x,start);
+    for(let yy=start; yy<=end; yy+=step){
+      const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough;
+      ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end));
+    }
+    ctx.lineTo(x,end); ctx.closePath();
+    const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');
+    ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();
+  }
+
+  function loop(ts){
+    if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
+    const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
+    update(dt); draw(); requestAnimationFrame(loop);
+  }
+  setUI(); requestAnimationFrame(loop);
+
+  // 名字输入时实时更新分数行
+  playerNameI.addEventListener('input', updateResLine);
 })();
 </script>
 </body>
 </html>
-
-
