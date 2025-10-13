@@ -3,9 +3,10 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ASTER OID — $ASTER / $OID</title>
+<title>ASTER OID — asterOID</title>
 <link rel="icon" href="game/assets/cz-droid.png" type="image/png">
 
+<!-- alternates -->
 <link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="nl" />
 <link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
 
@@ -18,7 +19,7 @@
   *{box-sizing:border-box}
   body{
     margin:0; color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,"PingFang SC","Noto Sans SC","Microsoft YaHei",sans-serif;
     background:linear-gradient(180deg,var(--bg),var(--bg2));
     overflow-x:hidden;
   }
@@ -86,50 +87,43 @@
 </head>
 <body>
 
-<a class="lang-switch" href="index.html">EN</a>
+<a class="lang-switch" href="index.html">English</a>
 <canvas id="stars"></canvas>
 
 <div class="wrap">
-  <!-- LEFT: ASTER / OID info -->
+  <!-- LEFT: 信息 -->
   <section class="col" aria-labelledby="infoTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
         <img src="game/assets/aster.png" alt="" />
       </div>
-      <h2 id="infoTitle">$ASTER / $OID</h2>
+      <h2 id="infoTitle">asterOID</h2>
     </div>
-    <p><strong>由 $ASTER 驱动，诞生于第一个 $ASTER meme。</strong></p>
-    <div>
-      <span class="pill">链: BNB</span>
-      <span class="pill">LP: Powered by $ASTER and $4</span>
-      <span class="pill">代号: $OID</span>
-    </div>
+    <p><strong>首个 ASTER meme。</strong></p>
+    <div></div>
     <div class="links">
-      <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X / 推特</a>
-      <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">电报群</a>
-      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DexScreener</a>
-      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BscScan</a>
-      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">PancakeSwap 购买</a>
-      <a href="https://asterdex.com" target="_blank" rel="noopener">了解 $ASTER</a>
+      <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
+      <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">电报</a>
+      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">交易对</a>
+      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BSCScan</a>
+      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">购买</a>
     </div>
   </section>
 
-  <!-- RIGHT: Play CTA -->
+  <!-- RIGHT: 开始游戏 -->
   <section class="col" aria-labelledby="playTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
         <img src="game/assets/cz-droid.png" alt="" />
       </div>
-      <h2 id="playTitle">Play ASTER OID</h2>
+      <h2 id="playTitle">开始玩 ASTER OID</h2>
     </div>
-    <p><strong>驾驶小行星，躲避碎片，收割市值。</strong></p>
+    <p><strong>操控小行星，躲避残骸，冲击市值。</strong></p>
 
-    <!-- ✅ Active button -->
-    <a class="btn" href="game/index.html" title="Play ASTER OID">Play ASTER OID</a>
+    <a class="btn" href="game/index.html" title="Play ASTER OID">开始游戏</a>
 
-    <!-- Restored subtext -->
     <p style="margin-top:10px; color:#90a0c0;">
-      截图你的得分并分享到社交媒体上，挑战其他社区。
+      截图你的分数并分享到社交媒体，向其他社区发起挑战。
     </p>
   </section>
 </div>
@@ -137,11 +131,11 @@
 <!-- HERO -->
 <div class="hero" aria-hidden="true">
   <div id="head"></div>
-  <div class="caption">他来了。</div>
+  <div class="caption">他要来了。</div>
 </div>
 
 <script>
-/* 星空背景 */
+/* 星星背景 */
 (() => {
   const c=document.getElementById('stars'),x=c.getContext('2d');
   const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
@@ -166,7 +160,7 @@
   resize(); addEventListener('resize',resize); tick();
 })();
 
-/* 头像跟随鼠标移动 */
+/* 头像跟随鼠标/触摸 */
 (() => {
   const head=document.getElementById('head');
   let vw=window.innerWidth,vh=window.innerHeight;
@@ -186,4 +180,3 @@
 </script>
 </body>
 </html>
-
