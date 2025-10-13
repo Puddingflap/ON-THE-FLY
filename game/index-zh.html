@@ -29,6 +29,10 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
       opacity:.95;
     }
+    /* ▶ spacer + rechter $4 icoon iets naar links */
+    .panel .spacer{ flex:1 1 auto; }
+    .hudRight{ margin-left:-6px; } /* pas hier evt. fijn af: -4px / -8px */
+
     .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
     .panel .sep{opacity:.3}
 
@@ -67,7 +71,6 @@
       height:34px; margin:2px auto 10px; display:block;
       filter: drop-shadow(0 3px 10px rgba(0,0,0,.45));
     }
-    /* 🔧 CZ-droid beter zichtbaar */
     .mascotLogo{
       position:absolute; right:12px; top:10px; width:96px;
       opacity:.32; pointer-events:none; z-index:0;
@@ -106,6 +109,9 @@
       <span class="pill">个人最佳：<span id="best">0</span></span>
       <span class="sep">•</span>
       <span class="pill">目标：<span id="targetsCollected">0</span></span>
+      <!-- ▶ 右侧 $4 徽标 -->
+      <span class="spacer"></span>
+      <img src="assets/four.png" alt="$4" class="hudLogo hudRight" />
     </div>
     <div class="title" id="title">
       <h1>ASTER OID</h1>
@@ -124,7 +130,7 @@
       <img src="assets/cz-droid.png" alt="CZ asteroid" class="mascotLogo">
 
       <h2 id="resTitle">游戏结束</h2>
-      <div id="resLine" class="scoreline">匿名 — 市值 $: 0B  •  $ASTER  $OID</div>
+      <div id="resLine" class="scoreline">匿名 — 市值 $: 0B  •  $ASTER  $OID  $4</div>
 
       <div class="nameRow">
         <input id="playerName" type="text" maxlength="24" placeholder="你的名字（用于截图）">
@@ -286,21 +292,22 @@
   function openResultModal(finalScore){
     const savedName = localStorage.getItem('aster-username') || '';
     playerNameI.value = savedName;
-    resLine.textContent = `${savedName || '匿名'} — 市值 $: ${finalScore}B  •  $ASTER  $OID`;
+    resLine.textContent = `${savedName || '匿名'} — 市值 $: ${finalScore}B  •  $ASTER  $OID  $4`;
     resultModal.classList.add('show');
   }
   function updateResLine(){
     const nm = playerNameI.value.trim() || '匿名';
-    resLine.textContent = `${nm} — 市值 $: ${score}B  •  $ASTER  $OID`;
+    resLine.textContent = `${nm} — 市值 $: ${score}B  •  $ASTER  $OID  $4`;
   }
   function closeResultModal(){ resultModal.classList.remove('show'); resultCard.classList.remove('clean'); }
   saveNameBtn.addEventListener('click', ()=>{ const nm = playerNameI.value.trim().slice(0,24); localStorage.setItem('aster-username', nm); updateResLine(); });
   toggleClean.addEventListener('click', ()=>{ resultCard.classList.toggle('clean'); });
   closeResBtn.addEventListener('click', closeResultModal);
 
+  // 分享到 X：加入 $4
   shareBtn.addEventListener('click', ()=>{
     const nm = (playerNameI.value.trim() || '匿名');
-    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID #ASTER #OID #BNB`;
+    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID $4 #ASTER #OID #BNB`;
     const url  = 'https://asteroidmeme.com/index-zh.html';
     const intent = new URL('https://twitter.com/intent/tweet');
     intent.searchParams.set('text', text); intent.searchParams.set('url', url);
