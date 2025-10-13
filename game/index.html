@@ -20,13 +20,17 @@
     .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
     .panel .sep{opacity:.3}
 
-    /* Klein logo links in het scorepaneel */
+    /* Logo’s in het scorepaneel */
     .panel .brand{
       height:22px; width:22px; border-radius:50%;
       flex:0 0 22px; object-fit:cover;
       filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));
       opacity:.95;
     }
+    /* ▼ nieuw: spacer + rechter badge */
+    .panel .spacer{ flex:1 1 auto; }
+    /* schuif het $4-icoon ~6px naar links */
+.panel .brand-right{ margin-left:-4px; }
 
     .btn{
       pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
@@ -58,7 +62,6 @@
       border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px;
       box-shadow: var(--shadow); text-align:center;
     }
-    /* ▼ Toegevoegd: titelrij met logo’s links/rechts */
     .cardHeader{
       display:flex; align-items:center; justify-content:center; gap:12px; margin:0 0 8px 0;
     }
@@ -98,6 +101,9 @@
       <span class="pill">Best: <span id="best">0</span></span>
       <span class="sep">•</span>
       <span class="pill">Targets: <span id="targetsCollected">0</span></span>
+      <!-- ▼ nieuw: $4 logo rechts -->
+      <span class="spacer"></span>
+      <img class="brand brand-right" src="assets/four.png" alt="$4 logo">
     </div>
     <div class="title" id="title">
       <h1>ASTER OID</h1>
@@ -112,14 +118,13 @@
   <!-- Results / Name & Score -->
   <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
     <div id="resultCard" class="card">
-      <!-- ▼ Nieuw: titel + logo’s -->
       <div class="cardHeader">
         <img class="badgeLogo" src="assets/aster.png" alt="$ASTER">
         <h2 id="resTitle">Game Over</h2>
         <img class="badgeLogo" src="assets/cz-droid.png" alt="$OID">
       </div>
 
-      <div id="resLine" class="scoreline">Anonymous — Mcap $: 0B  •  $ASTER  $OID</div>
+      <div id="resLine" class="scoreline">Anonymous — Mcap $: 0B  •  $ASTER  $OID  $4</div>
 
       <div class="nameRow">
         <input id="playerName" type="text" maxlength="24" placeholder="Your name (for the screenshot)">
@@ -317,13 +322,12 @@
       restart();
     }
   });
-  /* globale pointerdown (werkt ook met modal clean) */
   window.addEventListener('pointerdown', (e) => {
     const inCard = e.target.closest('.card');
     const inButton = e.target.closest('button,a');
     if (inCard || inButton) return;
 
-    if (state === 'dead' && resultModal.classList.contains('show')) { // modal open (clean)
+    if (state === 'dead' && resultModal.classList.contains('show')) {
       restart();
       return;
     }
@@ -348,12 +352,12 @@
   function openResultModal(finalScore){
     const savedName = localStorage.getItem('aster-username') || '';
     playerNameI.value = savedName;
-    resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID`;
+    resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID  $4`;
     resultModal.classList.add('show');
   }
   function updateResLine(){
     const nm = playerNameI.value.trim() || 'Anonymous';
-    resLine.textContent = `${nm} — Mcap $: ${score}B  •  $ASTER  $OID`;
+    resLine.textContent = `${nm} — Mcap $: ${score}B  •  $ASTER  $OID  $4`;
   }
   function closeResultModal(){
     resultModal.classList.remove('show');
@@ -370,7 +374,7 @@
   // Share to X
   shareBtn.addEventListener('click', ()=>{
     const nm = (playerNameI.value.trim() || 'Anonymous');
-    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID #ASTER #OID #BNB`;
+    const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID $4 #ASTER #OID #BNB`;
     const url  = 'https://asteroidmeme.com';
     const intent = new URL('https://twitter.com/intent/tweet');
     intent.searchParams.set('text', text);
