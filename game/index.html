@@ -4,6 +4,11 @@
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>SPACE OID</title>
+
+  <meta name="theme-color" content="#070b14">
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="apple-touch-icon" href="assets/cz-droid.png">
+
   <style>
     :root{
       --bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);
@@ -20,7 +25,6 @@
     .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
     .panel .sep{opacity:.3}
 
-    /* Logos in the score panel */
     .panel .brand{
       height:22px; width:22px; border-radius:50%;
       flex:0 0 22px; object-fit:cover;
@@ -28,7 +32,7 @@
       opacity:.95;
     }
     .panel .spacer{ flex:1 1 auto; }
-    .panel .brand-right{ margin-left:-6px; } /* small nudge left for symmetry */
+    .panel .brand-right{ margin-left:-6px; }
 
     .btn{
       pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));
@@ -49,7 +53,6 @@
     }
     .stageOverlay.show{opacity:1;}
 
-    /* Results modal */
     .modal{
       position:fixed; inset:0; display:none; align-items:center; justify-content:center;
       background: rgba(6, 10, 18, .65); backdrop-filter: blur(6px); pointer-events:auto; z-index:5;
@@ -67,7 +70,6 @@
       width:32px; height:32px; border-radius:50%; object-fit:cover;
       filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));
     }
-
     .card h2{margin:0; font-size:28px}
     .scoreline{font-size:22px; margin:8px 0 14px; font-weight:800; letter-spacing:.4px}
     .nameRow{display:flex; gap:10px; margin:10px 0 14px}
@@ -80,8 +82,6 @@
       padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);
       background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;
     }
-
-    /* Clean screenshot mode: just hide the name row */
     .card.clean .nameRow { display:none; }
     .card.clean .scoreline { font-size:28px; margin:4px 0 4px; }
     .card.clean h2 { margin-bottom:8px; }
@@ -100,7 +100,6 @@
       <span class="pill">Best: <span id="best">0</span></span>
       <span class="sep">•</span>
       <span class="pill">Targets: <span id="targetsCollected">0</span></span>
-      <!-- right badge: $4 -->
       <span class="spacer"></span>
       <img class="brand brand-right" src="assets/four.png" alt="$4 logo">
     </div>
@@ -114,7 +113,6 @@
     <div class="stageOverlay" id="stageOverlay"></div>
   </div>
 
-  <!-- Results / Name & Score -->
   <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
     <div id="resultCard" class="card">
       <div class="cardHeader">
@@ -122,16 +120,12 @@
         <h2 id="resTitle">Game Over</h2>
         <img class="badgeLogo" src="assets/cz-droid.png" alt="$OID">
       </div>
-
       <div id="resLine" class="scoreline">Anonymous — Mcap $: 0B  •  $ASTER  $OID  $4</div>
-
       <div class="nameRow">
         <input id="playerName" type="text" maxlength="24" placeholder="Your name (for the screenshot)">
         <button id="saveNameBtn" type="button">Save</button>
       </div>
-
       <div class="actions">
-        <!-- Clean Screenshot Mode button removed by design -->
         <button id="shareBtn" type="button">Share to X</button>
         <button id="closeResultBtn" type="button">Close</button>
       </div>
@@ -143,7 +137,6 @@
   const canvas = document.getElementById('game');
   const ctx = canvas.getContext('2d', { alpha: true });
 
-  /* --- audio --- */
   const music = new Audio('assets/intro.mp3');
   music.loop = true;
   let musicStarted = false;
@@ -151,24 +144,17 @@
   window.addEventListener('pointerdown', startMusic);
   window.addEventListener('keydown', e => { if(['Space','ArrowUp','KeyW'].includes(e.code)) startMusic(); });
 
-  /* --- assets (robust) --- */
   const SPRITE_SRC = 'assets/cz-droid.png';
-  const BADGE_SRC  = 'assets/asteroid-badge.png'; // optional
-
+  const BADGE_SRC  = 'assets/asteroid-badge.png';
   const spriteImg = new Image();
   const badge = new Image();
-
-  let spriteReady = false, spriteError = false;
-  let badgeReady  = false;
-
+  let spriteReady = false, spriteError = false, badgeReady  = false;
   spriteImg.onload = () => { spriteReady = true; };
   spriteImg.onerror = () => { spriteError = true; };
   badge.onload = () => { badgeReady = true; };
-
   spriteImg.src = SPRITE_SRC;
   badge.src = BADGE_SRC;
 
-  /* --- target images --- */
   const TARGET_FILES = ['assets/logo1.png','assets/logo2.png','assets/logo3.png','assets/logo4.png'];
   const targetImages = TARGET_FILES.map(src => { const im = new Image(); im.src = src; return im; });
   const getRandomLoadedTarget = () => {
@@ -176,7 +162,6 @@
     return loaded.length ? loaded[Math.floor(Math.random()*loaded.length)] : null;
   };
 
-  /* --- DPR & resize --- */
   const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
   function resize(){
     const r = canvas.getBoundingClientRect();
@@ -186,18 +171,15 @@
   resize();
   window.addEventListener('resize', () => { clearTimeout(resize._t); resize._t=setTimeout(resize,100); });
 
-  /* --- world & player --- */
   const G=2600, FLAP_VY=-850, MAX_DROP=1200;
   let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
   const PIPE_W=120, MARGIN_TOP=60;
   const AST = { r:28, x:200, y:300 };
 
-  const STAGES = [
-    "Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone",
-    "CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Final Impact"
-  ];
+  const STAGES = ["Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone","CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Final Impact"];
 
   let state='start'; 
+  let canRestart = true; // Variable to control restart
   let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
   let tPrev=0, speed=SCROLL_SPEED, paused=false;
   let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
@@ -221,14 +203,11 @@
     if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
   }
 
-  /* stars bg */
   const stars = Array.from({length:160},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:0.3+Math.random()*0.7,r:0.6+Math.random()*1.8}));
 
-  /* intro zoom */
   const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
   function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
 
-  /* player */
   let glowStrength = 0;
   const player = {
     x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,
@@ -277,7 +256,6 @@
     draw(){ this.drawAt(this.x, this.y, this.r*2); }
   };
 
-  /* obstacles & targets */
   const pipes=[], targets=[], explosions=[];
   const TARGET_CHANCE=0.2, TARGET_SIZE=22, TARGET_GAP=100, TARGET_SCORE_BONUS=5;
 
@@ -296,47 +274,31 @@
   }
   function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
 
-  /* input */
   function boost(){
     if (state==='start') beginIntro();
-    else if (state==='dead') restart();
+    else if (state==='dead' && canRestart) restart();
     else if (state==='playing') player.flap();
   }
   window.addEventListener('keydown', e => {
     const el = document.activeElement;
-    const typing = el && (
-      el.tagName === 'INPUT' ||
-      el.tagName === 'TEXTAREA' ||
-      el.isContentEditable
-    );
+    const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
     if (typing) return;
-
-    if (['Space','ArrowUp','KeyW'].includes(e.code)) {
-      e.preventDefault();
-      boost();
-    }
-    if (e.code === 'KeyR') {
-      restart();
-    }
+    if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
+    if (e.code === 'KeyR' && canRestart) { restart(); }
   });
   window.addEventListener('pointerdown', (e) => {
     const inCard = e.target.closest('.card');
     const inButton = e.target.closest('button,a');
     if (inCard || inButton) return;
-
-    if (state === 'dead' && resultModal.classList.contains('show')) {
-      restart();
-      return;
-    }
+    if (state === 'dead' && resultModal.classList.contains('show') && canRestart) { restart(); return; }
     if (state === 'start') { beginIntro(); return; }
-    if (state === 'dead')  { restart(); return; }
+    if (state === 'dead' && canRestart)  { restart(); return; }
     if (state === 'playing' && e.target === canvas) { player.flap(); }
   });
 
   document.getElementById('startBtn').addEventListener('click', boost);
   document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
 
-  /* result modal + share */
   const resultModal = document.getElementById('resultModal');
   const resultCard  = document.getElementById('resultCard');
   const resLine     = document.getElementById('resLine');
@@ -350,7 +312,6 @@
     playerNameI.value = savedName;
     resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID  $4`;
     resultModal.classList.add('show');
-    // ensure we start NOT in clean mode so the input is visible first
     resultCard.classList.remove('clean');
   }
   function updateResLine(){
@@ -360,19 +321,13 @@
   function closeResultModal(){
     resultModal.classList.remove('show');
   }
-
-  // Save name => auto clean screenshot mode
   saveNameBtn.addEventListener('click', ()=>{
     const nm = playerNameI.value.trim().slice(0,24);
     localStorage.setItem('aster-username', nm);
     updateResLine();
-    // enter clean mode automatically
     resultCard.classList.add('clean');
   });
-
   closeResBtn.addEventListener('click', closeResultModal);
-
-  // Share to X
   shareBtn.addEventListener('click', ()=>{
     const nm = (playerNameI.value.trim() || 'Anonymous');
     const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID $4 #ASTER #OID #BNB`;
@@ -382,15 +337,10 @@
     intent.searchParams.set('url', url);
     window.open(intent.toString(), '_blank', 'noopener');
   });
-
-  /* modal backdrop tap = restart in 'dead' */
   resultModal.addEventListener('click', (e) => {
-    if (e.target === resultModal && state === 'dead') {
-      restart();
-    }
+    if (e.target === resultModal && state === 'dead' && canRestart) { restart(); }
   });
 
-  /* state transitions */
   function beginIntro(){
     const cx = (canvas.width/DPR)*0.5;
     const cy = (canvas.height/DPR)*0.42;
@@ -413,12 +363,15 @@
   }
   function gameOver(){
     state='dead';
+    canRestart = false;
+    setTimeout(() => { canRestart = true; }, 500); // 500ms delay
     best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
     ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
     ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();
     openResultModal(score);
   }
   function restart(){
+    if (!canRestart) return;
     state='start';
     score = 0;
     ui.score.textContent = 0;
@@ -438,21 +391,17 @@
     setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);
   }
 
-  /* update */
   function update(dt){
     if (state==='intro' || paused) return;
-
     if (state==='playing'){
       if(pipesPassed>=10 && currentStage<STAGES.length){
         currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;
         resetPipes();
         showStageOverlay(currentStage);
       }
-
       speed += ACCEL*dt*100;
       player.update(dt);
       const move = speed*dt;
-
       if (!overlayActive){
         for(const p of pipes){ p.x -= move; }
         for(let i=0;i<pipes.length;i++){
@@ -477,12 +426,9 @@
     }
   }
 
-  /* draw */
   function draw(){
     ctx.clearRect(0,0,canvas.width,canvas.height);
     const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
-
-    // stars
     for(const s of stars){
       const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;
       s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
@@ -492,7 +438,6 @@
     }
     ctx.globalAlpha=1;
 
-    // obstacles & targets
     if ((state==='playing' || state==='dead') && !overlayActive){
       for(const p of pipes){
         const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;
@@ -524,7 +469,6 @@
       }
     }
 
-    // player / intro
     if (state==='start'){
       const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;
       const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;
@@ -541,12 +485,10 @@
       player.draw();
     }
 
-    // watermark when dead
     if (state === 'dead'){
       ctx.save();
-      const pad = 18 * DPR;
-      const s   = 48 * DPR;
-      const x   = pad, y = canvas.height - s - pad;
+      const pad = 18 * DPR, s = 48 * DPR;
+      const x = pad, y = canvas.height - s - pad;
       if (badgeReady){
         ctx.globalAlpha = 0.95;
         ctx.drawImage(badge, x, y, s, s);
@@ -576,10 +518,19 @@
   }
   setUI(); requestAnimationFrame(loop);
 
-  // live update name in result line
   playerNameI.addEventListener('input', updateResLine);
 
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
 })();
+</script>
+
+<script>
+  if ('serviceWorker' in navigator) {
+    navigator.serviceWorker.register('sw.js').catch(()=>{});
+  }
 </script>
 </body>
 </html>
+
