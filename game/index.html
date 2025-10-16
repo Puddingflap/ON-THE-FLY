@@ -110,11 +110,81 @@
   function gameOver(){state='dead';canRestart = false;setTimeout(() => { canRestart = true; }, 500);best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();openResultModal(score);}
   function restart(){if (!canRestart) return;state='start';score = 0;ui.score.textContent = 0;ui.targetsCollected.textContent = 0;speed = SCROLL_SPEED; tPrev = 0; canFlap = true;pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='Start'; setUI();closeResultModal();resultCard.classList.remove('clean');}
   function showStageOverlay(stageNum){if(stageNum<1 || stageNum>STAGES.length) return;const name = STAGES[stageNum-1];ui.stageOverlay.textContent = `Stage ${stageNum}: ${name}`;ui.stageOverlay.classList.add("show");overlayActive = true;setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);}
-  async function showLeaderboard(playerScore, playerName, playerId = null) {const leaderboardList = document.getElementById('leaderboardList');const leaderboardModal = document.getElementById('leaderboardModal');leaderboardList.innerHTML = "<li>Laden...</li>";if (!resultModal.classList.contains('clean')) {resultModal.classList.remove('show');}leaderboardModal.classList.add('show');try {const allScoresSnapshot = await db.collection('scores').orderBy('score', 'desc').get();let allScores = [];allScoresSnapshot.forEach(doc => {allScores.push({ id: doc.id, ...doc.data() });});if (playerId && playerScore !== -1) {const newEntry = { id: playerId, name: playerName, score: playerScore, isPlayer: true };allScores.push(newEntry);allScores.sort((a,b) => b.score - a.score);}allScores.forEach((s, i) => s.rank = i + 1);const playerRank = (allScores.find(s => s.isPlayer) || {rank: -1}).rank;const topScore = allScores.length > 0 ? allScores[0].score : (playerScore > 0 ? playerScore : 0);let displayEntriesMap = new Map();allScores.slice(0, 3).forEach(entry => displayEntriesMap.set(entry.id, entry));if (playerRank > 0) {const playerIndex = playerRank - 1;for(let i = -2; i <= 2; i++) {const neighborIndex = playerIndex + i;if(neighborIndex >= 0 && neighborIndex < allScores.length) {displayEntriesMap.set(allScores[neighborIndex].id, allScores[neighborIndex]);}}}let displayEntries = Array.from(displayEntriesMap.values()).sort((a,b) => a.rank - b.rank);let finalDisplay = [];let lastRank = 0;for (const entry of displayEntries) {if (lastRank > 0 && entry.rank > lastRank + 1) {finalDisplay.push({ name: '...' });}finalDisplay.push(entry);lastRank = entry.rank;}leaderboardList.innerHTML = finalDisplay.map(entry => {if (entry.name === '...') {return `<li class="leaderboard-entry" style="text-align:center;font-weight:bold;">...</li>`;}const isPlayer = entry.isPlayer || entry.id === playerId;const scorePercentage = (topScore > 0) ? (entry.score / topScore) * 100 : 0;return `
-          <li class="leaderboard-entry ${isPlayer ? 'is-player' : ''}">
-            <div><span class="rank-span">#${entry.rank}</span><span>${entry.name} - <strong>${entry.score}B</strong></span></div>
-            <div class="score-bar-container"><div class="score-bar" style="width: ${scorePercentage}%;"></div></div>
-          </li>`;}).join('');} catch (error) {console.error("Fout bij ophalen leaderboard: ", error);leaderboardList.innerHTML = "<li>Kon het leaderboard niet laden.</li>";}}
+  
+  async function showLeaderboard(playerScore, playerName, playerId = null) {
+    const leaderboardList = document.getElementById('leaderboardList');
+    const leaderboardModal = document.getElementById('leaderboardModal');
+    leaderboardList.innerHTML = "<li>Laden...</li>";
+    if (!resultModal.classList.contains('clean')) { resultModal.classList.remove('show'); }
+    leaderboardModal.classList.add('show');
+    try {
+        const allScoresSnapshot = await db.collection('scores').orderBy('score', 'desc').get();
+        let allScores = [];
+        allScoresSnapshot.forEach(doc => { allScores.push({ id: doc.id, ...doc.data() }); });
+
+        // --- START OF FIX ---
+        // Check if the player's score is already in the list fetched from the database.
+        const playerEntry = allScores.find(entry => entry.id === playerId);
+        if (playerEntry) {
+            // If it exists, just mark it as the player's entry.
+            playerEntry.isPlayer = true;
+        } else if (playerId && playerScore !== -1) {
+            // If it doesn't exist (due to a small database delay), add it locally for instant feedback.
+            const newEntry = { id: playerId, name: playerName, score: playerScore, isPlayer: true };
+            allScores.push(newEntry);
+        }
+        // Always sort the list after potential modifications.
+        allScores.sort((a, b) => b.score - a.score);
+        // --- END OF FIX ---
+
+        allScores.forEach((s, i) => s.rank = i + 1);
+        
+        const playerRank = (allScores.find(s => s.isPlayer) || {rank: -1}).rank;
+        const topScore = allScores.length > 0 ? allScores[0].score : (playerScore > 0 ? playerScore : 0);
+        
+        let displayEntriesMap = new Map();
+        allScores.slice(0, 3).forEach(entry => displayEntriesMap.set(entry.id, entry));
+        
+        if (playerRank > 0) {
+            const playerIndex = playerRank - 1;
+            for(let i = -2; i <= 2; i++) {
+                const neighborIndex = playerIndex + i;
+                if(neighborIndex >= 0 && neighborIndex < allScores.length) {
+                    displayEntriesMap.set(allScores[neighborIndex].id, allScores[neighborIndex]);
+                }
+            }
+        }
+        
+        let displayEntries = Array.from(displayEntriesMap.values()).sort((a, b) => a.rank - b.rank);
+        let finalDisplay = [];
+        let lastRank = 0;
+        
+        for (const entry of displayEntries) {
+            if (lastRank > 0 && entry.rank > lastRank + 1) {
+                finalDisplay.push({ name: '...' });
+            }
+            finalDisplay.push(entry);
+            lastRank = entry.rank;
+        }
+        
+        leaderboardList.innerHTML = finalDisplay.map(entry => {
+            if (entry.name === '...') {
+                return `<li class="leaderboard-entry" style="text-align:center;font-weight:bold;">...</li>`;
+            }
+            const isPlayer = entry.isPlayer || entry.id === playerId;
+            const scorePercentage = (topScore > 0) ? (entry.score / topScore) * 100 : 0;
+            return `
+              <li class="leaderboard-entry ${isPlayer ? 'is-player' : ''}">
+                <div><span class="rank-span">#${entry.rank}</span><span>${entry.name} - <strong>${entry.score}B</strong></span></div>
+                <div class="score-bar-container"><div class="score-bar" style="width: ${scorePercentage}%;"></div></div>
+              </li>`;
+        }).join('');
+    } catch (error) {
+        console.error("Fout bij ophalen leaderboard: ", error);
+        leaderboardList.innerHTML = "<li>Kon het leaderboard niet laden.</li>";
+    }
+  }
+
   document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {document.getElementById('leaderboardModal').classList.remove('show');});
   function update(dt){if (state==='intro' || paused) return;if (state==='playing'){if(pipesPassed>=10 && currentStage<STAGES.length){currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;if (currentStage > 10) {PIPE_GAP = 290 - (currentStage - 10) * 8; } else {PIPE_GAP = 290;}if (currentStage === 15) {speed += 30;PIPE_GAP -= 15;}resetPipes(); showStageOverlay(currentStage);}speed += ACCEL*dt*100;player.update(dt);const move = speed*dt;if (!overlayActive){for(const p of pipes){ p.x -= move; }for(let i=0;i<pipes.length;i++){const p=pipes[i];if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }}for(let i=0;i<targets.length;i++){const t=targets[i]; t.x -= move;const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);if(d<player.r+t.r && !t.hit){t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score; addExplosion(t.x,t.y);}if(t.x+t.r<-80){ targets.splice(i,1); i--; }}for(const p of pipes){const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();}}if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();}}
   function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);for(const s of stars){const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;if(s.x < -2){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*.7; }ctx.globalAlpha=0.5 + s.z*0.5;ctx.beginPath(); ctx.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); ctx.fillStyle='#e8f0ff'; ctx.fill();}ctx.globalAlpha=1;if ((state==='playing' || state==='dead') && !overlayActive){for(const p of pipes){const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;drawRockColumn(x,0,w,gy,true);drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);}const now=performance.now()*0.002;for(const t of targets){if(t.hit) continue;ctx.save();const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;ctx.translate(t.x*DPR, (t.y + wobble)*DPR);const img = t.img;if (img && img.complete && img.naturalWidth){const iw=img.naturalWidth, ih=img.naturalHeight;const target = t.r*2*DPR;const scale = Math.min(target/iw, target/ih);const dw = iw*scale, dh = ih*scale;ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;ctx.drawImage(img, -dw/2, -dh/2, dw, dh);}ctx.restore();}const timeNow=performance.now();for(let i=explosions.length-1;i>=0;i--){const e=explosions[i], el=(timeNow-e.startTime)/e.duration;if(el>=1){ explosions.splice(i,1); }else{ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }}}if (state==='start'){const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;player.drawAt(cx, cy, bigDiam);} else if (state==='intro'){const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);const p = easeInOutCubic(tt);const ix = intro.from.x + (intro.to.x - intro.from.x)*p;const iy = intro.from.y + (intro.to.y - intro.from.y)*p;const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;player.drawAt(ix, iy, id);if (tt>=1){ intro.active=false; startGame(); }} else {player.draw();}if (state === 'dead'){ctx.save();const pad = 18 * DPR, s = 48 * DPR;const x = pad, y = canvas.height - s - pad;if (badgeReady){ctx.globalAlpha = 0.95;ctx.drawImage(badge, x, y, s, s);}ctx.globalAlpha=1;ctx.font=`${16*DPR}px system-ui, sans-serif`;ctx.fillStyle='rgba(232,240,255,.95)';ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));ctx.restore();}}
@@ -130,4 +200,3 @@
 </script>
 </body>
 </html>
-
