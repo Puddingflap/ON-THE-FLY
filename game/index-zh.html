@@ -29,9 +29,8 @@
       filter: drop-shadow(0 2px 6px rgba(0,0,0,.35));
       opacity:.95;
     }
-    /* ▶ spacer + rechter $4 icoon iets naar links */
     .panel .spacer{ flex:1 1 auto; }
-    .hudRight{ margin-left:-6px; } /* pas hier evt. fijn af: -4px / -8px */
+    .hudRight{ margin-left:-6px; }
 
     .panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}
     .panel .sep{opacity:.3}
@@ -55,7 +54,6 @@
     }
     .stageOverlay.show{opacity:1;}
 
-    /* 结果弹窗 */
     .modal{
       position:fixed; inset:0; display:none; align-items:center; justify-content:center;
       background: rgba(6, 10, 18, .65); backdrop-filter: blur(6px); pointer-events:auto; z-index:5;
@@ -90,7 +88,8 @@
       padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);
       background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;
     }
-    .card.clean .nameRow, .card.clean .actions { display:none; }
+    .card.clean .nameRow { display:none; }
+    .card.clean .actions { display:none; } /* Added rule to hide actions in clean mode */
     .card.clean .scoreline { font-size:28px; margin:4px 0 4px; }
     .card.clean h2 { margin-bottom:8px; }
     .tiny{color:var(--muted); font-size:12px; margin-top:8px}
@@ -109,7 +108,6 @@
       <span class="pill">个人最佳：<span id="best">0</span></span>
       <span class="sep">•</span>
       <span class="pill">目标：<span id="targetsCollected">0</span></span>
-      <!-- ▶ 右侧 $4 徽标 -->
       <span class="spacer"></span>
       <img src="assets/four.png" alt="$4" class="hudLogo hudRight" />
     </div>
@@ -123,7 +121,6 @@
     <div class="stageOverlay" id="stageOverlay"></div>
   </div>
 
-  <!-- 结果 / 名称 & 分数 -->
   <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
     <div id="resultCard" class="card">
       <img src="assets/aster.png" alt="ASTER" class="brandLogo">
@@ -138,12 +135,11 @@
       </div>
 
       <div class="actions">
-        <button id="toggleCleanBtn" type="button">干净截图模式</button>
         <button id="shareBtn" type="button">分享到 X</button>
         <button id="closeResultBtn" type="button">关闭</button>
       </div>
 
-      <div class="tiny">提示：先启用 <em>干净截图模式</em>，再手动截屏。</div>
+      <div class="tiny">提示：保存名称以生成干净的屏幕截图。</div>
     </div>
   </div>
 
@@ -186,9 +182,10 @@
   const PIPE_W=120, MARGIN_TOP=60;
   const AST = { r:28, x:200, y:300 };
 
-  const STAGES = ["Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone","CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Final Impact"];
+  const STAGES = ["轨道进入","模因带","垃圾币风暴","流动性虚空","市场崩盘区","CZ之怒","熊市深渊","小行星季节","冲向月球","宇宙升天","银河边缘","量子飞跃","黑洞狂奔","天体终曲","无尽超越"];
 
   let state='start';
+  let canRestart = true;
   let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
   let tPrev=0, speed=SCROLL_SPEED, paused=false;
   let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
@@ -260,20 +257,24 @@
   }
   function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
 
-  function boost(){ if (state==='start') beginIntro(); else if (state==='dead') restart(); else if (state==='playing') player.flap(); }
+  function boost(){
+    if (state==='start') beginIntro();
+    else if (state==='dead' && canRestart) restart();
+    else if (state==='playing') player.flap();
+  }
   window.addEventListener('keydown', e => {
     const el = document.activeElement;
     const typing = el && (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA' || el.isContentEditable);
     if (typing) return;
     if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
-    if (e.code === 'KeyR') { restart(); }
+    if (e.code === 'KeyR' && canRestart) { restart(); }
   });
 
   window.addEventListener('pointerdown', (e) => {
     const inCard = e.target.closest('.card'); const inButton = e.target.closest('button,a'); if (inCard || inButton) return;
-    if (state === 'dead' && resultModal.classList.contains('show')) { restart(); return; }
+    if (state === 'dead' && resultModal.classList.contains('show') && canRestart) { restart(); return; }
     if (state === 'start') { beginIntro(); return; }
-    if (state === 'dead')  { restart(); return; }
+    if (state === 'dead' && canRestart)  { restart(); return; }
     if (state === 'playing' && e.target === canvas) { player.flap(); }
   });
 
@@ -285,7 +286,6 @@
   const resLine     = document.getElementById('resLine');
   const playerNameI = document.getElementById('playerName');
   const saveNameBtn = document.getElementById('saveNameBtn');
-  const toggleClean = document.getElementById('toggleCleanBtn');
   const shareBtn    = document.getElementById('shareBtn');
   const closeResBtn = document.getElementById('closeResultBtn');
 
@@ -294,17 +294,24 @@
     playerNameI.value = savedName;
     resLine.textContent = `${savedName || '匿名'} — 市值 $: ${finalScore}B  •  $ASTER  $OID  $4`;
     resultModal.classList.add('show');
+    resultCard.classList.remove('clean');
   }
   function updateResLine(){
     const nm = playerNameI.value.trim() || '匿名';
     resLine.textContent = `${nm} — 市值 $: ${score}B  •  $ASTER  $OID  $4`;
   }
   function closeResultModal(){ resultModal.classList.remove('show'); resultCard.classList.remove('clean'); }
-  saveNameBtn.addEventListener('click', ()=>{ const nm = playerNameI.value.trim().slice(0,24); localStorage.setItem('aster-username', nm); updateResLine(); });
-  toggleClean.addEventListener('click', ()=>{ resultCard.classList.toggle('clean'); });
+  
+  // --- AANGEPAST ---
+  saveNameBtn.addEventListener('click', ()=>{
+    const nm = playerNameI.value.trim().slice(0,24);
+    localStorage.setItem('aster-username', nm);
+    updateResLine();
+    resultCard.classList.add('clean'); // Deze regel activeert de schone weergave
+  });
+  
   closeResBtn.addEventListener('click', closeResultModal);
 
-  // 分享到 X：加入 $4
   shareBtn.addEventListener('click', ()=>{
     const nm = (playerNameI.value.trim() || '匿名');
     const text = `${nm} — Mcap $: ${score}B\n$ASTER $OID $4 #ASTER #OID #BNB`;
@@ -312,6 +319,10 @@
     const intent = new URL('https://twitter.com/intent/tweet');
     intent.searchParams.set('text', text); intent.searchParams.set('url', url);
     window.open(intent.toString(), '_blank', 'noopener');
+  });
+  
+  resultModal.addEventListener('click', (e) => {
+    if (e.target === resultModal && state === 'dead' && canRestart) { restart(); }
   });
 
   function beginIntro(){
@@ -322,19 +333,23 @@
     ui.titleH1.style.display='none'; ui.startBtn.style.display='none';
   }
   function startGame(){
-    state='playing'; score=0; speed=SCROLL_SPEED; tPrev=0; currentStage=1;
+    state='playing'; score=0; ui.score.textContent=0;
+    speed=SCROLL_SPEED; tPrev=0; currentStage=1;
     player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;
     PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0; resetPipes(); setUI();
     showStageOverlay(currentStage);
   }
   function gameOver(){
     state='dead';
+    canRestart = false;
+    setTimeout(() => { canRestart = true; }, 500);
     best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
     ui.titleH1.textContent='游戏结束'; ui.titleH1.style.display='';
     ui.hint.textContent='按空格或点击重新开始'; ui.startBtn.textContent='重新开始'; setUI();
     openResultModal(score);
   }
   function restart(){
+    if (!canRestart) return;
     state='start'; speed = SCROLL_SPEED; tPrev = 0; canFlap = true;
     pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;
     score=0; ui.score.textContent=0; ui.targetsCollected.textContent=0;
@@ -355,12 +370,27 @@
     if (state==='intro' || paused) return;
     if (state==='playing'){
       if(pipesPassed>=10 && currentStage<STAGES.length){
-        currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;
-        resetPipes(); showStageOverlay(currentStage);
-      }
-      speed += ACCEL*dt*100; player.update(dt);
-      const move = speed*dt;
+        currentStage++; pipesPassed=0; 
+        
+        speed = SCROLL_SPEED + (currentStage-1)*10;
+        
+        if (currentStage > 10) {
+            PIPE_GAP = 290 - (currentStage - 10) * 8; 
+        } else {
+            PIPE_GAP = 290;
+        }
 
+        if (currentStage === 15) {
+            speed += 30;
+            PIPE_GAP -= 15;
+        }
+
+        resetPipes();
+        showStageOverlay(currentStage);
+      }
+      speed += ACCEL*dt*100;
+      player.update(dt);
+      const move = speed*dt;
       if (!overlayActive){
         for(const p of pipes){ p.x -= move; }
         for(let i=0;i<pipes.length;i++){
@@ -481,4 +511,3 @@
 </script>
 </body>
 </html>
-
