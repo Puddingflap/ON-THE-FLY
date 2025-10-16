@@ -175,11 +175,12 @@
   let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
   const PIPE_W=120, MARGIN_TOP=60;
   const AST = { r:28, x:200, y:300 };
-
-  const STAGES = ["Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone","CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Final Impact"];
+  
+  // <-- AANPASSING: Nieuwe naam voor level 10
+  const STAGES = ["Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone","CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Cosmic Ascension","Galaxy's Edge","Quantum Leap","Black Hole Run","Celestial Finale","Infinite Beyond"];
 
   let state='start'; 
-  let canRestart = true; // Variable to control restart
+  let canRestart = true;
   let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
   let tPrev=0, speed=SCROLL_SPEED, paused=false;
   let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
@@ -364,7 +365,7 @@
   function gameOver(){
     state='dead';
     canRestart = false;
-    setTimeout(() => { canRestart = true; }, 500); // 500ms delay
+    setTimeout(() => { canRestart = true; }, 500);
     best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;
     ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';
     ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();
@@ -395,7 +396,22 @@
     if (state==='intro' || paused) return;
     if (state==='playing'){
       if(pipesPassed>=10 && currentStage<STAGES.length){
-        currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;
+        currentStage++; pipesPassed=0; 
+        
+        speed = SCROLL_SPEED + (currentStage-1)*10;
+        
+        if (currentStage > 10) {
+            PIPE_GAP = 290 - (currentStage - 10) * 8; 
+        } else {
+            PIPE_GAP = 290;
+        }
+
+        // <-- AANPASSING: Extra moeilijkheid voor level 15
+        if (currentStage === 15) {
+            speed += 30; // Extra snelheid
+            PIPE_GAP -= 15; // Nog kleinere opening
+        }
+
         resetPipes();
         showStageOverlay(currentStage);
       }
@@ -533,4 +549,3 @@
 </script>
 </body>
 </html>
-
