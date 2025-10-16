@@ -9,6 +9,9 @@
 <link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="nl" />
 <link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
 
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
 <style>
   :root{
     --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
@@ -76,6 +79,16 @@
     box-shadow:0 8px 24px rgba(0,0,0,.25);
   }
   .lang-switch:hover{ background:rgba(255,255,255,0.25); }
+  
+  /* STIJLEN VOOR HET LEADERBOARD */
+  #leaderboard-top5 { list-style: none; padding: 0; margin: 10px 0 0; }
+  .leaderboard-entry {
+    display: flex; align-items: center; gap: 12px;
+    margin-bottom: 12px; font-size: 15px;
+  }
+  .rank-span { font-weight: bold; width: 20px; text-align: right; color: var(--muted); }
+  .name-span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-span { font-weight: bold; }
 
   @media (max-width:640px){
     .wrap{padding-bottom:160px}
@@ -90,7 +103,6 @@
 <canvas id="stars"></canvas>
 
 <div class="wrap">
-  <!-- LEFT: ASTER / OID info -->
   <section class="col" aria-labelledby="infoTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
@@ -109,8 +121,7 @@
       <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">BUY</a>
        </div>
   </section>
-
-  <!-- RIGHT: Play CTA (active again, restored text) -->
+  
   <section class="col" aria-labelledby="playTitle">
     <div class="title-row">
       <div class="badge" aria-hidden="true">
@@ -119,18 +130,25 @@
       <h2 id="playTitle">Pilot CZ</h2>
     </div>
     <p><strong>Pilot CZ and get the highest MCap</strong></p>
-
-    <!-- ✅ Active button -->
     <a class="btn" href="game/index.html" title="Play Game">Play Game</a>
-
-    <!-- Restored subtext -->
     <p style="margin-top:10px; color:#90a0c0;">
       Share a screenshot of your score on socials with the $OID hashtag
     </p>
   </section>
+
+  <section class="col" aria-labelledby="leaderboardTitle">
+    <div class="title-row">
+      <div class="badge" aria-hidden="true">
+        🏆
+      </div>
+      <h2 id="leaderboardTitle">Top 5 Pilots</h2>
+    </div>
+    <ol id="leaderboard-top5">
+      <li>Laden...</li>
+    </ol>
+  </section>
 </div>
 
-<!-- HERO -->
 <div class="hero" aria-hidden="true">
   <div id="head"></div>
   <div class="caption">He is coming.</div>
@@ -180,14 +198,57 @@
   addEventListener('resize',()=>{vw=innerWidth;vh=innerHeight;});
 })();
 </script>
+
+<script>
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvssXnemI2JsDHLSUgngVfMkiaSErE6UU",
+    authDomain: "space-cz.firebaseapp.com",
+    projectId: "space-cz",
+    storageBucket: "space-cz.appspot.com",
+    messagingSenderId: "350516236483",
+    appId: "1:350516236483:web:893197f55f213d3d161276"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  async function fetchTop5() {
+    const listElement = document.getElementById('leaderboard-top5');
+    try {
+      const snapshot = await db.collection('scores').orderBy('score', 'desc').limit(5).get();
+
+      if (snapshot.empty) {
+        listElement.innerHTML = '<li>Be the first to set a score!</li>';
+        return;
+      }
+
+      let html = '';
+      let rank = 1;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && typeof data.name === 'string' && typeof data.score === 'number') {
+          html += `
+            <li class="leaderboard-entry">
+              <span class="rank-span">#${rank}</span>
+              <span class="name-span">${data.name}</span>
+              <span class="score-span">${data.score}B</span>
+            </li>
+          `;
+          rank++;
+        }
+      });
+      listElement.innerHTML = html;
+
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      listElement.innerHTML = '<li>Leaderboard could not be loaded.</li>';
+    }
+  }
+
+  fetchTop5();
+})();
+</script>
+
 </body>
 </html>
-
-
-
-
-
-
-
-
-
