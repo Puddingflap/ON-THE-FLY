@@ -1,0 +1,178 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>Leaderboard — asterOID</title>
+<link rel="icon" href="game/assets/cz-droid.png" type="image/png">
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<style>
+  :root{
+    --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
+    --accent:#6ee7ff; --card:rgba(10,14,24,.78); --line:rgba(255,255,255,.08);
+    --shadow:0 12px 40px rgba(0,0,0,.45);
+  }
+  *{box-sizing:border-box}
+  body{
+    margin:0; color:var(--fg);
+    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
+    background:linear-gradient(180deg,var(--bg),var(--bg2));
+    min-height: 100vh;
+  }
+  canvas#stars{position:fixed; inset:0; z-index:-1}
+
+  .leaderboard-wrap {
+    max-width: 600px;
+    margin: 40px auto;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 16px;
+    padding: 20px;
+    backdrop-filter: blur(6px);
+    box-shadow: var(--shadow);
+  }
+  .title-row{display:flex; align-items:center; gap:10px; margin-bottom:12px}
+  .badge{
+    height:28px; width:28px; border-radius:50%; overflow:hidden; flex:0 0 28px;
+    background:#0e1626; border:1px solid var(--line); display:grid; place-items:center;
+    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  }
+  h2{margin:0}
+  
+  .btn{
+    display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
+    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
+    color:var(--fg); text-decoration:none; font-weight:700;
+    transition:transform .12s ease, background .2s ease;
+  }
+  .btn:hover{background:rgba(110,231,255,.25)}
+
+  #leaderboard-full-list { list-style: none; padding: 0; margin: 20px 0 0; }
+  
+  /* --- START AANPASSINGEN --- */
+  .leaderboard-entry {
+    display: flex; align-items: center; 
+    gap: 8px;           /* Was 12px */
+    margin-bottom: 8px; /* Was 12px */
+    font-size: 14px;    /* Was 15px */
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px; /* Was 10px */
+  }
+  /* --- EINDE AANPASSINGEN --- */
+
+  .leaderboard-entry:last-child { border-bottom: none; }
+  .rank-span { font-weight: bold; width: 35px; text-align: right; color: var(--muted); }
+  .name-span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .score-span { font-weight: bold; }
+
+  /* --- NIEUWE MEDIA QUERY VOOR MOBIEL --- */
+  @media (max-width: 640px) {
+    .leaderboard-wrap {
+      margin: 15px; /* Minder marge op mobiel */
+      padding: 15px; /* Minder padding op mobiel */
+    }
+  }
+</style>
+</head>
+<body>
+
+<canvas id="stars"></canvas>
+
+<div class="leaderboard-wrap">
+  <div class="title-row">
+    <div class="badge" aria-hidden="true">
+      🏆
+    </div>
+    <h2 id="leaderboardTitle">Top 200 Pilots</h2>
+  </div>
+  
+  <a class="btn" href="index.html" style="background: rgba(255,255,255,0.04); border-color: var(--line);">&larr; Back to Home</a>
+  
+  <ol id="leaderboard-full-list">
+    <li>Loading leaderboard...</li>
+  </ol>
+</div>
+
+<script>
+/* sterren */
+(() => {
+  const c=document.getElementById('stars'),x=c.getContext('2d');
+  const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
+  let w,h,stars;
+  function resize(){
+    w=c.width=innerWidth*DPR; h=c.height=innerHeight*DPR;
+    stars=Array.from({length:160},()=>({
+      x:Math.random()*w,y:Math.random()*h,z:.3+Math.random()*.7,r:.6+Math.random()*1.6
+    }));
+  }
+  function tick(){
+    x.clearRect(0,0,w,h);
+    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
+    for(const s of stars){
+      s.x-=(25*s.z*0.08);
+      if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
+      x.globalAlpha=0.5+s.z*0.5;
+      x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+  resize(); addEventListener('resize',resize); tick();
+})();
+</script>
+
+<script>
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvssXnemI2JsDHLSUgngVfMkiaSErE6UU",
+    authDomain: "space-cz.firebaseapp.com",
+    projectId: "space-cz",
+    storageBucket: "space-cz.appspot.com",
+    messagingSenderId: "350516236483",
+    appId: "1:350516236483:web:893197f55f213d3d161276"
+  };
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  async function fetchTop200() {
+    const listElement = document.getElementById('leaderboard-full-list');
+    try {
+      const snapshot = await db.collection('scores').orderBy('score', 'desc').limit(200).get();
+
+      if (snapshot.empty) {
+        listElement.innerHTML = '<li>Be the first to set a score!</li>';
+        return;
+      }
+
+      let html = '';
+      let rank = 1;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && typeof data.name === 'string' && typeof data.score === 'number') {
+          html += `
+            <li class="leaderboard-entry">
+              <span class="rank-span">#${rank}</span>
+              <span class="name-span">${data.name}</span>
+              <span class_score-span">${data.score}B</span>
+            </li>
+          `;
+          rank++;
+        }
+      });
+      listElement.innerHTML = html;
+
+    } catch (error) {
+      console.error("Error fetching leaderboard:", error);
+      listElement.innerHTML = '<li>Leaderboard could not be loaded.</li>';
+    }
+  }
+
+  fetchTop200();
+})();
+</script>
+
+</body>
+</html>
