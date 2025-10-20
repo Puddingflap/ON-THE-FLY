@@ -146,8 +146,9 @@
     <ol id="leaderboard-top5">
       <li>加载中...</li>
     </ol>
+    <a class="btn" href="leaderboard.html" style="margin-top: 15px;">查看前 200 名</a>
   </section>
-</div>
+  </div>
 
 <div class="hero" aria-hidden="true">
   <div id="head"></div>
@@ -190,7 +191,7 @@
     const dx=(p.clientX-vw/2)/(vw/2);
     const dy=(p.clientY-vh/2)/(vh/2);
     const tx=dx*drift, ty=dy*drift;
-    const rx=dy*maxTilt, ry=-dx*maxTilt;
+    const rx=dy*maxTilt, ry=-dx*maxT_tilt;
     head.style.transform=`translate(${tx}px,${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
   }
   addEventListener('mousemove',onMove,{passive:true});
@@ -232,7 +233,7 @@
             <li class="leaderboard-entry">
               <span class="rank-span">#${rank}</span>
               <span class="name-span">${data.name}</span>
-              <span class="score-span">${data.score}B</span>
+              <span class_score-span">${data.score}B</span>
             </li>
           `;
           rank++;
