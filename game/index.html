@@ -72,7 +72,15 @@
   const G=2600, FLAP_VY=-850, MAX_DROP=1200;
   let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
   const PIPE_W=120, MARGIN_TOP=60; const AST = { r:21, x:200, y:300 };
-  const STAGES = ["Orbit Entry","Meme Belt","Shitcoin Storm","Liquidity Void","Market Crash Zone","CZ’s Wrath","Bear Market Abyss","Asteroid Season","To the Moon","Cosmic Ascension","Galaxy's Edge","Quantum Leap","Black Hole Run","Celestial Finale","Infinite Beyond"];
+
+  // --- STAGES LIJST AANGEPAST (20 LEVELS) ---
+  const STAGES = [
+    "Orbit Entry", "Meme Belt", "Shitcoin Storm", "Liquidity Void", "Market Crash Zone",
+    "CZ’s Wrath", "Bear Market Abyss", "Asteroid Season", "To the Moon", "Cosmic Ascension",
+    "Galaxy's Edge", "Quantum Leap", "Black Hole Run", "Celestial Finale", "Infinite Beyond",
+    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "Final CeaZon" // Nieuwe levels 16-20
+  ];
+
   let state='start'; let canRestart = true;
   let score=0, best=+(localStorage.getItem('flappy-asteroid-best')||0);
   let tPrev=0, speed=SCROLL_SPEED, paused=false;
@@ -104,20 +112,7 @@
   function closeResultModal(){resultModal.classList.remove('show');document.getElementById('leaderboardModal').classList.remove('show');}
   saveNameBtn.addEventListener('click', async () => {const nm = playerNameI.value.trim().slice(0, 24) || 'Anonymous';if(nm === '') return;const finalScore = score;saveNameBtn.disabled = true;localStorage.setItem('aster-username', nm);try {const scoresRef = db.collection('scores');const thresholdQuery = await scoresRef.orderBy('score', 'desc').limit(1000).get();let isHighEnough = false;if (thresholdQuery.size < 1000) {isHighEnough = true;} else {const thresholdScore = thresholdQuery.docs[thresholdQuery.size - 1].data().score;if (finalScore >= thresholdScore) {isHighEnough = true;}}updateResLine();resultCard.classList.add('clean');if (isHighEnough) {const docRef = await db.collection("scores").add({name: nm,score: finalScore,timestamp: firebase.firestore.FieldValue.serverTimestamp()});console.log("Score was high enough and has been saved with ID:", docRef.id);showLeaderboard(finalScore, nm, docRef.id);} else {alert("Sorry! Your score of " + finalScore + "B wasn't high enough for the Top 1000.");showLeaderboard(-1, nm);}} catch (error) {console.error("Error checking/saving score: ", error);alert("Could not check score. Please try again.");} finally {saveNameBtn.disabled = false;}});
   closeResBtn.addEventListener('click', closeResultModal);
-  
-  // --- START AANPASSING STRATEGIE 3 ---
-  shareBtn.addEventListener('click', ()=>{
-    const nm = (playerNameI.value.trim() || 'Anonymous');
-    // Dynamische tekst met score, uitdaging, en alle gevraagde tickers/hashtags
-    const text = `${nm} just hit ${score}B Mcap piloting CZ!\n\nThink you can beat my score?\n\nPlay Pilot CZ now! Sharing scores *will* matter!\n$ASTER $OID $4 #ASTER #OID #BNB`;
-    const url  = 'https://asteroidmeme.com/game/index.html'; // Directe link naar de game
-    const intent = new URL('https://twitter.com/intent/tweet');
-    intent.searchParams.set('text', text);
-    intent.searchParams.set('url', url);
-    window.open(intent.toString(), '_blank', 'noopener');
-  });
-  // --- EINDE AANPASSING STRATEGIE 3 ---
-
+  shareBtn.addEventListener('click', ()=>{ const nm = (playerNameI.value.trim() || 'Anonymous'); const text = `${nm} just hit ${score}B Mcap piloting CZ!\n\nThink you can beat my score?\n\nPlay Pilot CZ now! Sharing scores *will* matter!\n$ASTER $OID $4 #ASTER #OID #BNB`; const url  = 'https://asteroidmeme.com/game/index.html'; const intent = new URL('https://twitter.com/intent/tweet'); intent.searchParams.set('text', text); intent.searchParams.set('url', url); window.open(intent.toString(), '_blank', 'noopener'); });
   resultModal.addEventListener('click', (e) => {if (e.target === resultModal && state === 'dead' && canRestart) { restart(); }});
   document.getElementById('leaderboardModal').addEventListener('click', (e) => {if (e.target.id === 'leaderboardModal' && state === 'dead' && canRestart) { restart(); }});
   function beginIntro(){const cx = (canvas.width/DPR)*0.5;const cy = (canvas.height/DPR)*0.42;const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;intro.from = { x:cx, y:cy, diam:bigDiam };intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };intro.active = true; intro.t0 = performance.now(); state='intro';ui.titleH1.style.display='none';ui.startBtn.style.display='none';}
@@ -188,14 +183,76 @@
 
   document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {document.getElementById('leaderboardModal').classList.remove('show');});
   
-  // --- START GECORRIGEERDE FUNCTIE ---
-  function update(dt){if (state==='intro' || paused) return;if (state==='playing'){if(pipesPassed>=10 && currentStage<STAGES.length){currentStage++; pipesPassed=0; speed = SCROLL_SPEED + (currentStage-1)*10;if (currentStage > 10) {PIPE_GAP = 290 - (currentStage - 10) * 8; } else {PIPE_GAP = 290;}if (currentStage === 15) {speed += 30;PIPE_GAP -= 15;}resetPipes(); showStageOverlay(currentStage);}speed += ACCEL*dt*100;player.update(dt);const move = speed*dt;if (!overlayActive){for(const p of pipes){ p.x -= move; }for(let i=0;i<pipes.length;i++){const p=pipes[i];if(!p.passed && player.x>p.x+PIPE_W/2){ p.passed=true; score++; pipesPassed++; ui.score.textContent=score; }if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }}
+  // --- UPDATE FUNCTIE AANGEPAST (DIFFICULTY LOGIC) ---
+  function update(dt){
+    if (state==='intro' || paused) return;
+    if (state==='playing'){
+      // Stage transitie logica (nu tot max STAGES.length)
+      if(pipesPassed>=10 && currentStage<STAGES.length){
+        currentStage++;
+        pipesPassed=0;
+        // Basis snelheid verhoogt consistent
+        speed = SCROLL_SPEED + (currentStage-1)*10;
+        // Opening verkleint consistent vanaf stage 11
+        if (currentStage > 10) {
+          PIPE_GAP = 290 - (currentStage - 10) * 8;
+        } else {
+          PIPE_GAP = 290; // Standaard opening voor stages 1-10
+        }
+        // Zorg dat de opening niet te klein wordt (minimum waarde)
+        PIPE_GAP = Math.max(180, PIPE_GAP); // Bijvoorbeeld minimum 180px
+
+        resetPipes();
+        showStageOverlay(currentStage);
+      }
+
+      // Snelheid kan eventueel nog verder verhoogd worden (optioneel)
+      // speed += ACCEL*dt*100; // Deze stond al in je code, mogelijk niet nodig?
+
+      player.update(dt);
+      const move = speed*dt;
+      
+      if (!overlayActive){
+        // Pipes verplaatsen
+        for(const p of pipes){ p.x -= move; }
+        for(let i=0;i<pipes.length;i++){
+          const p=pipes[i];
+          if(!p.passed && player.x>p.x+PIPE_W/2){
+             p.passed=true; score++; pipesPassed++; ui.score.textContent=score;
+          }
+          if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
+        }
+
+        // Targets verplaatsen
+        for(let i=0;i<targets.length;i++){
+          const t=targets[i];
+          t.x -= move;
+          const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);
+          if(d<player.r+t.r && !t.hit){
+            t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score; addExplosion(t.x,t.y);
+          }
+          if(t.x+t.r<-80){ targets.splice(i,1); i--; }
+        }
   
-  // HIER ZAT DE FOUT: 'TAREgts.length' is nu 'targets.length'
-  for(let i=0;i<targets.length;i++){const t=targets[i]; t.x -= move;const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);if(d<player.r+t.r && !t.hit){t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score; addExplosion(t.x,t.y);}if(t.x+t.r<-80){ targets.splice(i,1); i--; }}
-  
-  for(const p of pipes){const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();}}if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();}}
-  // --- EINDE GECORRIGEERDE FUNCTIE ---
+        // Explosies updaten
+        const timeNow=performance.now();
+        for(let i=explosions.length-1;i>=0;i--){
+            const e=explosions[i], el=(timeNow-e.startTime)/e.duration;
+            if(el>=1){ explosions.splice(i,1); }
+        }
+
+        // Collision check met pipes
+        for(const p of pipes){
+          const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
+          if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
+        }
+      } // Einde !overlayActive
+
+      // Collision check met boven/onderkant scherm
+      if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
+    } // Einde state === 'playing'
+  }
+  // --- EINDE AANGEPASTE UPDATE FUNCTIE ---
   
   function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
   
@@ -211,11 +268,17 @@
         }
     }
 
-    ctx.globalAlpha=1;if ((state==='playing' || state==='dead') && !overlayActive){for(const p of pipes){const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;drawRockColumn(x,0,w,gy,true);drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);}const now=performance.now()*0.002;for(const t of targets){if(t.hit) continue;ctx.save();const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;ctx.translate(t.x*DPR, (t.y + wobble)*DPR);const img = t.img;if (img && img.complete && img.naturalWidth){const iw=img.naturalWidth, ih=img.naturalHeight;const target = t.r*2*DPR;const scale = Math.min(target/iw, target/ih);const dw = iw*scale, dh = ih*scale;ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;ctx.drawImage(img, -dw/2, -dh/2, dw, dh);}ctx.restore();}const timeNow=performance.now();for(let i=explosions.length-1;i>=0;i--){const e=explosions[i], el=(timeNow-e.startTime)/e.duration;if(el>=1){ explosions.splice(i,1); }else{ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }}}if (state==='start'){const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;player.drawAt(cx, cy, bigDiam);} else if (state==='intro'){const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);const p = easeInOutCubic(tt);const ix = intro.from.x + (intro.to.x - intro.from.x)*p;const iy = intro.from.y + (intro.to.y - intro.from.y)*p;const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;player.drawAt(ix, iy, id);if (tt>=1){ intro.active=false; startGame(); }} else {player.draw();}if (state === 'dead'){ctx.save();const pad = 18 * DPR, s = 48 * DPR;const x = pad, y = canvas.height - s - pad;if (badgeReady){ctx.globalAlpha = 0.95;ctx.drawImage(badge, x, y, s, s);}ctx.globalAlpha=1;ctx.font=`${16*DPR}px system-ui, sans-serif`;ctx.fillStyle='rgba(232,240,255,.95)';ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));ctx.restore();}}
+    ctx.globalAlpha=1;if ((state==='playing' || state==='dead') && !overlayActive){for(const p of pipes){const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;drawRockColumn(x,0,w,gy,true);drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);}const now=performance.now()*0.002;for(const t of targets){if(t.hit) continue;ctx.save();const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;ctx.translate(t.x*DPR, (t.y + wobble)*DPR);const img = t.img;if (img && img.complete && img.naturalWidth){const iw=img.naturalWidth, ih=img.naturalHeight;const target = t.r*2*DPR;const scale = Math.min(target/iw, target/ih);const dw = iw*scale, dh = ih*scale;ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;ctx.drawImage(img, -dw/2, -dh/2, dw, dh);}ctx.restore();}const timeNow=performance.now();for(let i=explosions.length-1;i>=0;i--){const e=explosions[i], el=(timeNow-e.startTime)/e.duration;if(el<1){ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }}}if (state==='start'){const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;player.drawAt(cx, cy, bigDiam);} else if (state==='intro'){const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);const p = easeInOutCubic(tt);const ix = intro.from.x + (intro.to.x - intro.from.x)*p;const iy = intro.from.y + (intro.to.y - intro.from.y)*p;const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;player.drawAt(ix, iy, id);if (tt>=1){ intro.active=false; startGame(); }} else {player.draw();}if (state === 'dead'){ctx.save();const pad = 18 * DPR, s = 48 * DPR;const x = pad, y = canvas.height - s - pad;if (badgeReady){ctx.globalAlpha = 0.95;ctx.drawImage(badge, x, y, s, s);}ctx.globalAlpha=1;ctx.font=`${16*DPR}px system-ui, sans-serif`;ctx.fillStyle='rgba(232,240,255,.95)';ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));ctx.restore();}}
   function drawRockColumn(x,y,w,h,fromTop){ctx.save(); ctx.beginPath();const step=32*DPR, rough=18*DPR, start=y, end=y+h;ctx.moveTo(x,start);for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }ctx.lineTo(x,end); ctx.closePath();const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();}
   
-  // HIER ZAT DE EERSTE FOUT: 'TPrev' is nu 'tPrev'
-  function loop(ts){if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;update(dt); draw(); requestAnimationFrame(loop);}
+  function loop(ts){
+    // HIER ZAT DE EERSTE FOUT: 'TPrev' is nu 'tPrev'
+    if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
+    const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
+    update(dt); 
+    draw(); 
+    requestAnimationFrame(loop);
+  }
   
   setUI(); requestAnimationFrame(loop);
   playerNameI.addEventListener('input', updateResLine);
