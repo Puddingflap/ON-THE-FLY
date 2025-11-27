@@ -7,7 +7,8 @@
   <meta name="theme-color" content="#070b14">
 
   <meta name="twitter:card" content="player" />
-  <meta name="twitter:site" content="@AsteroidMeme" /> <meta name="twitter:title" content="SPACE OID" />
+  <meta name="twitter:site" content="@AsteroidMeme" />
+  <meta name="twitter:title" content="SPACE OID" />
   <meta name="twitter:description" content="Fly CZ through the crypto cosmos! Can you beat the high score?" />
   <meta name="twitter:image" content="https://asteroidmeme.com/game/assets/cz-droid.png" />
   <meta name="twitter:player" content="https://asteroidmeme.com/game/index.html" />
@@ -53,16 +54,25 @@
   let musicStarted = false;
   function startMusic(){ if(!musicStarted){ music.play().catch(()=>{}); musicStarted = true; } }
   window.addEventListener('pointerdown', startMusic);
+  
   window.addEventListener('keydown', e => {
     const el = document.activeElement; const typing = el && el.tagName === 'INPUT'; if (typing) return;
     if (['Space','ArrowUp','KeyW'].includes(e.code)) { e.preventDefault(); boost(); }
     if (e.code === 'KeyR' && canRestart) { restart(); }
   });
+
   window.addEventListener('pointerdown', (e) => {
+    // --- FIX VOOR DESKTOP PLAYER CARD: FOCUS FORCEREN ---
+    window.focus(); 
+    // ----------------------------------------------------
     const inCard = e.target.closest('.card'); const inButton = e.target.closest('button,a'); if (inCard || inButton) return;
     if (state === 'start') { beginIntro(); return; }
-    if (state === 'playing' && e.target === canvas) { player.flap(); }
+    
+    // --- AANPASSING: KLIKKEN WERKT ALTIJD (NIET ALLEEN OP CANVAS) ---
+    if (state === 'playing') { player.flap(); }
+    // ----------------------------------------------------------------
   });
+
   const SPRITE_SRC = 'assets/cz-droid.png'; const BADGE_SRC  = 'assets/asteroid-badge.png';
   const spriteImg = new Image(); const badge = new Image();
   const fourLogoImg = new Image();
@@ -81,12 +91,12 @@
   let PIPE_GAP=290, PIPE_SPACING=420, SCROLL_SPEED=180, ACCEL=0;
   const PIPE_W=120, MARGIN_TOP=60; const AST = { r:21, x:200, y:300 };
 
-  // --- STAGES LIJST AANGEPAST (20 LEVELS) ---
+  // --- STAGES LIJST (20 LEVELS) ---
   const STAGES = [
     "Orbit Entry", "Meme Belt", "Shitcoin Storm", "Liquidity Void", "Market Crash Zone",
     "CZ’s Wrath", "Bear Market Abyss", "Asteroid Season", "To the Moon", "Cosmic Ascension",
     "Galaxy's Edge", "Quantum Leap", "Black Hole Run", "Celestial Finale", "Infinite Beyond",
-    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "The Singularity" // Nieuwe levels 16-20
+    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "The Singularity"
   ];
 
   let state='start'; let canRestart = true;
@@ -111,7 +121,13 @@
   function resetPipes(){ pipes.length=0; targets.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
   function addObstacle(){const lastX = pipes.length + targets.length ? Math.max(pipes.at(-1)?.x ?? -Infinity, targets.at(-1)?.x ?? -Infinity) : canvas.width/DPR + 300;const x = lastX + PIPE_SPACING;if (Math.random()<TARGET_CHANCE){const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - TARGET_GAP);targets.push({ x, y:gapY+TARGET_GAP/2, r:TARGET_SIZE, hit:false, img:getRandomLoadedTarget(), wobbleSeed:Math.random()*Math.PI*2 });PIPE_SPACING += TARGET_GAP;} else {const gapY = MARGIN_TOP + Math.random()*(canvas.height/DPR - 2*MARGIN_TOP - PIPE_GAP);pipes.push({x, gapY, passed:false}); PIPE_SPACING=420;}}
   function addExplosion(x,y){ explosions.push({x,y,startTime:performance.now(),duration:500,maxRadius:50}); }
-  function boost(){if (state==='start') beginIntro();else if (state==='dead' && canRestart) restart();else if (state==='playing') player.flap();}
+  
+  // --- BOOST FUNCTIE OOK AANGEPAST MET FOCUS ---
+  function boost(){
+    window.focus(); // Zorg dat focus altijd op de game staat
+    if (state==='start') beginIntro();else if (state==='dead' && canRestart) restart();else if (state==='playing') player.flap();
+  }
+  
   document.getElementById('startBtn').addEventListener('click', boost);
   document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
   const resultModal = document.getElementById('resultModal');const resultCard  = document.getElementById('resultCard');const resLine     = document.getElementById('resLine');const playerNameI = document.getElementById('playerName');const saveNameBtn = document.getElementById('saveNameBtn');const shareBtn    = document.getElementById('shareBtn');const closeResBtn = document.getElementById('closeResultBtn');
@@ -191,37 +207,28 @@
 
   document.getElementById('closeLeaderboardBtn').addEventListener('click', () => {document.getElementById('leaderboardModal').classList.remove('show');});
   
-  // --- UPDATE FUNCTIE AANGEPAST (DIFFICULTY LOGIC) ---
   function update(dt){
     if (state==='intro' || paused) return;
     if (state==='playing'){
-      // Stage transitie logica (nu tot max STAGES.length)
       if(pipesPassed>=10 && currentStage<STAGES.length){
         currentStage++;
         pipesPassed=0;
-        // Basis snelheid verhoogt consistent
         speed = SCROLL_SPEED + (currentStage-1)*10;
-        // Opening verkleint consistent vanaf stage 11
         if (currentStage > 10) {
           PIPE_GAP = 290 - (currentStage - 10) * 8;
         } else {
-          PIPE_GAP = 290; // Standaard opening voor stages 1-10
+          PIPE_GAP = 290; 
         }
-        // Zorg dat de opening niet te klein wordt (minimum waarde)
-        PIPE_GAP = Math.max(180, PIPE_GAP); // Bijvoorbeeld minimum 180px
+        PIPE_GAP = Math.max(180, PIPE_GAP);
 
         resetPipes();
         showStageOverlay(currentStage);
       }
 
-      // Snelheid kan eventueel nog verder verhoogd worden (optioneel)
-      // speed += ACCEL*dt*100; // Deze stond al in je code, mogelijk niet nodig?
-
       player.update(dt);
       const move = speed*dt;
       
       if (!overlayActive){
-        // Pipes verplaatsen
         for(const p of pipes){ p.x -= move; }
         for(let i=0;i<pipes.length;i++){
           const p=pipes[i];
@@ -231,7 +238,6 @@
           if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
         }
 
-        // Targets verplaatsen
         for(let i=0;i<targets.length;i++){
           const t=targets[i];
           t.x -= move;
@@ -242,25 +248,21 @@
           if(t.x+t.r<-80){ targets.splice(i,1); i--; }
         }
   
-        // Explosies updaten
         const timeNow=performance.now();
         for(let i=explosions.length-1;i>=0;i--){
             const e=explosions[i], el=(timeNow-e.startTime)/e.duration;
             if(el>=1){ explosions.splice(i,1); }
         }
 
-        // Collision check met pipes
         for(const p of pipes){
           const inX = player.x+player.r>p.x && player.x-player.r<p.x+PIPE_W;
           if(inX && (player.y-player.r<p.gapY || player.y+player.r>p.gapY+PIPE_GAP)) return gameOver();
         }
-      } // Einde !overlayActive
+      }
 
-      // Collision check met boven/onderkant scherm
       if(player.y-player.r<0 || player.y+player.r>canvas.height/DPR) return gameOver();
-    } // Einde state === 'playing'
+    }
   }
-  // --- EINDE AANGEPASTE UPDATE FUNCTIE ---
   
   function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
   
@@ -280,7 +282,6 @@
   function drawRockColumn(x,y,w,h,fromTop){ctx.save(); ctx.beginPath();const step=32*DPR, rough=18*DPR, start=y, end=y+h;ctx.moveTo(x,start);for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }ctx.lineTo(x,end); ctx.closePath();const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();}
   
   function loop(ts){
-    // HIER ZAT DE EERSTE FOUT: 'TPrev' is nu 'tPrev'
     if(paused){ tPrev=ts; requestAnimationFrame(loop); return; }
     const dt=Math.min(0.033,(tPrev?(ts-tPrev)/1000:0.016)); tPrev=ts;
     update(dt); 
