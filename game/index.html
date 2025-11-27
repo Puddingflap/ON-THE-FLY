@@ -5,6 +5,14 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
   <title>SPACE OID</title>
   <meta name="theme-color" content="#070b14">
+
+  <meta name="twitter:card" content="player" />
+  <meta name="twitter:site" content="@AsteroidMeme" /> <meta name="twitter:title" content="SPACE OID" />
+  <meta name="twitter:description" content="Fly CZ through the crypto cosmos! Can you beat the high score?" />
+  <meta name="twitter:image" content="https://asteroidmeme.com/game/assets/cz-droid.png" />
+  <meta name="twitter:player" content="https://asteroidmeme.com/game/index.html" />
+  <meta name="twitter:player:width" content="640" />
+  <meta name="twitter:player:height" content="360" />
   <link rel="manifest" href="manifest.webmanifest">
   <link rel="apple-touch-icon" href="assets/cz-droid.png">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
@@ -78,7 +86,7 @@
     "Orbit Entry", "Meme Belt", "Shitcoin Storm", "Liquidity Void", "Market Crash Zone",
     "CZ’s Wrath", "Bear Market Abyss", "Asteroid Season", "To the Moon", "Cosmic Ascension",
     "Galaxy's Edge", "Quantum Leap", "Black Hole Run", "Celestial Finale", "Infinite Beyond",
-    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "Final CeaZon" // Nieuwe levels 16-20
+    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "The Singularity" // Nieuwe levels 16-20
   ];
 
   let state='start'; let canRestart = true;
@@ -116,7 +124,7 @@
   resultModal.addEventListener('click', (e) => {if (e.target === resultModal && state === 'dead' && canRestart) { restart(); }});
   document.getElementById('leaderboardModal').addEventListener('click', (e) => {if (e.target.id === 'leaderboardModal' && state === 'dead' && canRestart) { restart(); }});
   function beginIntro(){const cx = (canvas.width/DPR)*0.5;const cy = (canvas.height/DPR)*0.42;const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;intro.from = { x:cx, y:cy, diam:bigDiam };intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };intro.active = true; intro.t0 = performance.now(); state='intro';ui.titleH1.style.display='none';ui.startBtn.style.display='none';}
-  function startGame(){state='playing';score = 0;ui.score.textContent = 0;speed=SCROLL_SPEED; tPrev=0; currentStage=1;player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0;resetPipes(); setUI();showStageOverlay(currentStage);}
+  function startGame(){state='playing';score = 0;ui.score.textContent = 0;speed=SCROLL_SPEED; tPrev=0; currentStage=1;player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0;pipesPassed=0;resetPipes(); setUI();showStageOverlay(currentStage);}
   function gameOver(){state='dead';canRestart = false;setTimeout(() => { canRestart = true; }, 500);best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();openResultModal(score);}
   function restart(){if (!canRestart) return;state='start';score = 0;ui.score.textContent = 0;ui.targetsCollected.textContent = 0;speed = SCROLL_SPEED; tPrev = 0; canFlap = true;pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='Start'; setUI();closeResultModal();resultCard.classList.remove('clean');}
   function showStageOverlay(stageNum){if(stageNum<1 || stageNum>STAGES.length) return;const name = STAGES[stageNum-1];ui.stageOverlay.textContent = `Stage ${stageNum}: ${name}`;ui.stageOverlay.classList.add("show");overlayActive = true;setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);}
