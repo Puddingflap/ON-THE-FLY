@@ -176,6 +176,10 @@
     line-height:.88;
     letter-spacing:0;
   }
+  .hero-break{
+    display:block;
+    white-space:nowrap;
+  }
   .hero-copy{
     max-width:730px;
     margin:0;
@@ -596,7 +600,11 @@
     .nav-links{gap:6px}
     .nav-links a,.lang-switch{font-size:12px; padding:7px 9px}
     h1{font-size:47px}
-    .hero-copy{font-size:17px}
+    .hero-break{
+    display:block;
+    white-space:nowrap;
+  }
+  .hero-copy{font-size:17px}
     .ticker{grid-template-columns:1fr}
     .feature-list{grid-template-columns:1fr}
     .identity{grid-template-columns:68px 1fr}
@@ -629,7 +637,10 @@
     <div class="hero-inner">
       <div>
         <div class="eyebrow"><span class="pulse"></span> Onarıcı İnovasyon ve Deva</div>
-        <h1>Meme motorlu tıbbi yapay zekâ.</h1>
+        <h1>
+  Yapay zekâ destekli tıp.
+  <span class="hero-break">#topluluk tarafından inşa edildi.</span>
+</h1>
         <p class="hero-copy">
           <strong>OID</strong>, yapay zekâ destekli tanı, araştırma,
           tedavi keşfi, topluluk finansmanı ve fazlasıyla ciddi bir grafik.
