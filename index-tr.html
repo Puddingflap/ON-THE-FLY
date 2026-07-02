@@ -1,0 +1,952 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="OID Medical AI - Onarıcı İnovasyon ve Deva. İstanbul'dan dünyaya uzanan restoratif inovasyon, tıbbi zekâ ve şifa vizyonu." />
+<title>OID Medical AI - Onarıcı İnovasyon ve Deva</title>
+<link rel="icon" href="game/assets/oid-medical-logo.png" type="image/png">
+
+<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="en" />
+<link rel="alternate" href="https://asteroidmeme.com/index-tr.html" hreflang="tr" />
+
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
+<script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
+
+<style>
+  :root{
+    --bg:#04111f;
+    --bg2:#071a2f;
+    --fg:#f4fbff;
+    --muted:#a9c6d8;
+    --soft:#d9f8ff;
+    --blue:#19a8ff;
+    --cyan:#42f3d0;
+    --teal:#24d7c3;
+    --gold:#d7b955;
+    --card:rgba(5,20,35,.72);
+    --card2:rgba(7,32,52,.88);
+    --line:rgba(186,239,255,.18);
+    --shadow:0 24px 70px rgba(0,0,0,.42);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(66,243,208,.16), transparent 32%),
+      radial-gradient(circle at 80% 10%, rgba(25,168,255,.18), transparent 30%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 48%, #03101d);
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.72), transparent 82%);
+  }
+  canvas#signals{position:fixed; inset:0; z-index:-1; opacity:.58}
+  a{color:inherit}
+  .page{min-height:100vh}
+  .nav{
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    width:min(1160px, calc(100% - 28px));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    background:rgba(3,13,24,.62);
+    backdrop-filter:blur(18px);
+    box-shadow:0 18px 52px rgba(0,0,0,.28);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    text-decoration:none;
+    font-weight:850;
+    letter-spacing:.08em;
+  }
+  .brand img{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,.24);
+  }
+  .brand span{white-space:nowrap}
+  .nav-links{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .nav-links a,
+  .lang-switch{
+    text-decoration:none;
+    color:var(--soft);
+    font-size:13px;
+    font-weight:750;
+    padding:8px 11px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(255,255,255,.045);
+  }
+  .nav-links a:hover,
+  .lang-switch:hover{background:rgba(255,255,255,.1)}
+  .buy-link{
+    color:#00131b !important;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff) !important;
+    border-color:transparent !important;
+  }
+
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:grid;
+    align-items:end;
+    padding:112px 22px 46px;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(90deg, rgba(2,12,24,.78) 0%, rgba(2,12,24,.46) 42%, rgba(2,12,24,.1) 100%),
+      linear-gradient(0deg, rgba(4,17,31,1) 0%, rgba(4,17,31,.12) 42%),
+      url("game/assets/oid-hero-ai-diagnosis.jpg") center/cover no-repeat;
+    transform:scale(1.01);
+  }
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    width:min(1160px,100%);
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:minmax(0,1.08fr) minmax(300px,.62fr);
+    gap:28px;
+    align-items:end;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    width:max-content;
+    max-width:100%;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    color:#e8fbff;
+    background:rgba(4,21,37,.6);
+    backdrop-filter:blur(14px);
+    font-size:12px;
+    font-weight:850;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .pulse{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
+  }
+  h1{
+    max-width:850px;
+    margin:18px 0 12px;
+    font-size:clamp(44px,7.2vw,100px);
+    line-height:.88;
+    letter-spacing:0;
+  }
+  .hero-copy{
+    max-width:730px;
+    margin:0;
+    color:#d3eff8;
+    font-size:clamp(17px,2.1vw,23px);
+    line-height:1.45;
+  }
+  .hero-copy strong{color:#fff}
+  .cta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:26px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:12px 16px;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:850;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:#eefcff;
+    transition:transform .14s ease, background .18s ease, border-color .18s ease;
+  }
+  .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
+  .btn.primary{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#8defff);
+    border-color:transparent;
+    box-shadow:0 16px 44px rgba(31,231,214,.22);
+  }
+  .btn.gold{
+    color:#120f02;
+    background:linear-gradient(135deg,#f5dd73,var(--gold));
+    border-color:transparent;
+  }
+  .hero-panel{
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(5,22,38,.72),rgba(6,22,34,.88));
+    backdrop-filter:blur(16px);
+    box-shadow:var(--shadow);
+    padding:16px;
+  }
+  .identity{
+    display:grid;
+    grid-template-columns:82px 1fr;
+    gap:14px;
+    align-items:center;
+  }
+  .identity img{
+    width:82px;
+    height:82px;
+    object-fit:cover;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);
+    box-shadow:0 0 42px rgba(66,243,208,.18);
+  }
+  .identity h2{
+    margin:0;
+    font-size:25px;
+    letter-spacing:.04em;
+  }
+  .identity p{
+    margin:5px 0 0;
+    color:var(--muted);
+    line-height:1.35;
+  }
+  .ticker{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:16px;
+  }
+  .metric{
+    padding:12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.045);
+  }
+  .metric b{
+    display:block;
+    color:#fff;
+    font-size:22px;
+  }
+  .metric span{
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .section{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:76px 0;
+  }
+  .section-head{
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:22px;
+  }
+  .section h2{
+    margin:0;
+    font-size:clamp(30px,4.2vw,58px);
+    line-height:.95;
+  }
+  .section-lede{
+    max-width:560px;
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    align-items:stretch;
+  }
+  .grid > .card{min-height:214px}
+  .card{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--card);
+    box-shadow:0 18px 50px rgba(0,0,0,.2);
+    padding:20px;
+    overflow:hidden;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .card h3{
+    margin:0 0 9px;
+    font-size:21px;
+    line-height:1.15;
+  }
+  .card p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .tag{
+    display:inline-flex;
+    width:max-content;
+    padding:6px 9px;
+    margin-bottom:12px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#061522;
+    background:linear-gradient(135deg,var(--cyan),#b9fbff);
+  }
+  .story{
+    display:grid;
+    grid-template-columns:.82fr 1.18fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .story-media{
+    min-height:420px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:url("game/assets/ekrem-istanbul.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .manifesto{
+    background:linear-gradient(180deg,rgba(8,35,55,.9),rgba(4,17,31,.82));
+  }
+  .quote{
+    margin:0 0 18px;
+    font-size:clamp(28px,3.2vw,42px);
+    line-height:1.08;
+    font-weight:900;
+  }
+  .definition{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+  }
+  .definition div{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 0;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .definition b{color:#fff}
+  .definition span{color:var(--muted); text-align:right}
+  .founder-copy{
+    display:grid;
+    gap:14px;
+  }
+  .founder-copy p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.62;
+  }
+  .founder-copy strong{color:#fff}
+  .mission-lines{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+  }
+  .mission-lines div{
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+    color:#e9fbff;
+    font-weight:800;
+  }
+  .campaign-split{
+    display:grid;
+    grid-template-columns:1.04fr .96fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .media-frame{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:rgba(255,255,255,.045);
+    box-shadow:var(--shadow);
+    height:100%;
+    min-height:100%;
+  }
+  .media-frame img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .media-frame.poster{
+    display:grid;
+    place-items:center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(66,243,208,.12), transparent 34%),
+      linear-gradient(180deg, rgba(5,20,35,.92), rgba(3,13,24,.96));
+  }
+  .media-frame.poster img{
+    height:100%;
+    object-fit:contain;
+  }
+  .campaign-split > .media-frame{min-height:420px}
+  .campaign-split > .card{min-height:420px}
+  .campaign-split .quote{font-size:clamp(28px,3.15vw,44px)}
+  .feature-list{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-top:auto;
+    padding-top:20px;
+  }
+  .feature-list div{
+    padding:14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.045);
+    min-height:98px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .feature-list b{
+    display:block;
+    color:#fff;
+    margin-bottom:4px;
+  }
+  .feature-list span{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.4;
+  }
+  .campaign-banner{
+    margin-bottom:18px;
+    aspect-ratio:3 / 1;
+    min-height:260px;
+  }
+  .community-stage{
+    display:grid;
+    grid-template-columns:.92fr 1.08fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .community-stage > .card,
+  .community-stage > .media-frame{min-height:560px}
+  .final-banner{
+    position:relative;
+    min-height:280px;
+    display:grid;
+    align-items:end;
+    padding:24px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:url("game/assets/oid-istanbul-world.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .final-banner::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(3,12,22,.8), rgba(3,12,22,.26), rgba(3,12,22,.12));
+  }
+  .final-banner > div{
+    position:relative;
+    z-index:1;
+    max-width:560px;
+  }
+  .final-banner h2{
+    margin:0 0 8px;
+    font-size:clamp(32px,5vw,64px);
+  }
+  .final-banner p{
+    margin:0;
+    color:#d9f8ff;
+    line-height:1.5;
+  }
+
+  .leaderboard-wrap{
+    display:grid;
+    grid-template-columns:1fr .78fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  #leaderboard-top5{
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:10px;
+  }
+  .leaderboard-entry{
+    display:grid;
+    grid-template-columns:54px 1fr auto;
+    align-items:center;
+    gap:12px;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+  }
+  .rank-span{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff);
+    border-radius:999px;
+    text-align:center;
+    font-weight:950;
+    padding:6px 8px;
+  }
+  .name-span{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:750;
+  }
+  .score-span{
+    font-weight:950;
+    color:#fff;
+  }
+  .oracle{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:15px;
+    align-items:center;
+    height:100%;
+  }
+  #ekremHead{
+    width:120px;
+    aspect-ratio:1;
+    border-radius:50%;
+    background:url("game/assets/ekrem-gold.jpg") center 18%/cover no-repeat;
+    border:1px solid rgba(215,185,85,.4);
+    filter:drop-shadow(0 26px 42px rgba(0,0,0,.42));
+    transition:transform .12s ease-out;
+  }
+  .footer{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:22px 0 38px;
+    color:#7fa2b8;
+    font-size:12px;
+    line-height:1.5;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+
+  @media (max-width:880px){
+    .nav{align-items:flex-start; border-radius:22px}
+    .nav-links a:nth-child(4){display:none}
+    .hero{padding-top:132px; min-height:auto}
+    .hero-inner,
+    .story,
+    .campaign-split,
+    .community-stage,
+    .leaderboard-wrap{grid-template-columns:1fr}
+    .hero-panel{max-width:520px}
+    .grid{grid-template-columns:1fr}
+    .section-head{display:block}
+    .section-lede{margin-top:10px}
+    .story-media{min-height:300px}
+    .media-frame img{height:auto; object-fit:contain}
+    .campaign-split > .media-frame,
+    .campaign-split > .card,
+    .community-stage > .card,
+    .community-stage > .media-frame{min-height:0}
+    .campaign-banner{aspect-ratio:auto; min-height:0}
+  }
+  @media (max-width:560px){
+    .brand span{font-size:13px}
+    .nav{position:absolute}
+    .nav-links{gap:6px}
+    .nav-links a,.lang-switch{font-size:12px; padding:7px 9px}
+    h1{font-size:47px}
+    .hero-copy{font-size:17px}
+    .ticker{grid-template-columns:1fr}
+    .feature-list{grid-template-columns:1fr}
+    .identity{grid-template-columns:68px 1fr}
+    .identity img{width:68px;height:68px}
+    .oracle{grid-template-columns:1fr}
+    #ekremHead{width:132px}
+  }
+</style>
+</head>
+<body>
+<canvas id="signals"></canvas>
+
+<nav class="nav" aria-label="Primary navigation">
+  <a class="brand" href="#top">
+    <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI logo" />
+    <span>OID MEDICAL AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="#utility">Fayda</a>
+    <a href="#founder">Kurucu</a>
+    <a href="#play-to-live">Yaşamak İçin Oyna</a>
+    <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DEX</a>
+    <a href="index.html" class="lang-switch">EN</a>
+    <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener" class="buy-link">SATIN AL</a>
+  </div>
+</nav>
+
+<main class="page" id="top">
+  <section class="hero" aria-label="OID Medical AI hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Onarıcı İnovasyon ve Deva</div>
+        <h1>Meme motorlu tıbbi yapay zekâ.</h1>
+        <p class="hero-copy">
+          <strong>OID</strong>, kurgusal bir tıbbi zekâ hareketi inşa ediyor: yapay zekâ destekli tanı, araştırma,
+          tedavi keşfi, topluluk finansmanı ve fazlasıyla ciddi bir grafik.
+        </p>
+        <div class="cta-row">
+          <a class="btn primary" href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">$OID SATIN AL</a>
+          <a class="btn" href="#utility">Faydayı Gör</a>
+          <a class="btn" href="#founder">Kurucu Vizyonu</a>
+          <a class="btn" href="game/index.html">Yaşamak İçin Oyna</a>
+          <a class="btn" href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
+          <a class="btn" href="https://t.me/OID_BNB" target="_blank" rel="noopener">Telegram</a>
+        </div>
+      </div>
+
+      <aside class="hero-panel" aria-label="OID identity card">
+        <div class="identity">
+          <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI emblem" />
+          <div>
+            <h2>OID</h2>
+            <p>Onarıcı İnovasyon ve Deva. Türkiye'de doğdu, dünya için tasarlandı.</p>
+          </div>
+        </div>
+        <div class="ticker">
+          <div class="metric"><b>AI</b><span>tıbbi zekâ katmanı</span></div>
+          <div class="metric"><b>Klinik</b><span>gelecekteki uluslararası erişim modeli</span></div>
+          <div class="metric"><b>Yakım</b><span>net kârla geri alım anlatısı</span></div>
+          <div class="metric"><b>Kredi</b><span>Yaşamak İçin Oyna skor ekonomisi</span></div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" id="what-is">
+    <div class="campaign-split">
+      <div class="media-frame poster">
+        <img src="game/assets/oid-what-is.jpg" alt="OID Nedir kampanya görseli" />
+      </div>
+      <article class="card manifesto">
+        <span class="tag">OID Nedir</span>
+        <p class="quote">Gerçek dünyada şifa için inşa edilen Türkiye doğumlu bir tıbbi zekâ sistemi.</p>
+        <p>
+          OID, memeyi temiz bir ürün evrenine dönüştürür: yapay zekâ sağlık asistanı, kişiselleştirilmiş planlar,
+          erişilebilir testler, klinik ortaklıklar ve nadir hastalık araştırmaları; hepsi fazlasıyla iddialı bir
+          İstanbul health-tech anlatısının içinde.
+        </p>
+        <div class="feature-list">
+          <div><b>AI Sağlık Asistanı</b><span>Her an açık sağlık karar desteği.</span></div>
+          <div><b>Kişiselleştirilmiş Planlar</b><span>Sadece semptomlar değil, hasta bağlamı.</span></div>
+          <div><b>Erişilebilir Testler</b><span>Gelecekteki fayda anlatısı olarak klinik erişimi.</span></div>
+          <div><b>Nadir Hastalık Araştırması</b><span>Göz ardı edilen vakalar için umut.</span></div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="utility">
+    <div class="section-head">
+      <h2>Fayda</h2>
+      <p class="section-lede">
+        OID, faydayı sağlık öncelikli bir ekonomik döngü olarak konumlandırır: yapay zekâ tıbbi ürünleri, sağlık hizmetleri ve gelecekteki
+        uluslararası klinik modeli değer yaratır; ardından net kârların $OID satın alımı ve yakımı için kullanılması hedeflenir.
+      </p>
+    </div>
+    <div class="grid">
+      <article class="card">
+        <span class="tag">Klinik Modeli</span>
+        <h3>Önce Sağlık Hizmetleri</h3>
+        <p>OID, yapay zekâ destekli testlerin, tanıların ve tedavi erişiminin faydanın görünür yüzü hâline geldiği uluslararası bir sağlık kliniği hayal eder.</p>
+      </article>
+      <article class="card">
+        <span class="tag">Al ve Yak</span>
+        <h3>Yakım Misyonu Takip Eder</h3>
+        <p>OID uluslararası sağlık kliniği faaliyetlerinden doğacak net kârların OID satın almak ve yakmak için kullanılması hedeflenir. Önce şifa, sonra değer.</p>
+      </article>
+      <article class="card">
+        <span class="tag">Topluluk</span>
+        <h3>Kolektif Tıbbi Alfa</h3>
+        <p>Topluluk; tıbbi zekâ altyapısı için finansman, güç, inanç ve farkındalık kaynağı olarak konumlandırılır.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="founder">
+    <div class="story">
+      <div class="story-media" aria-label="Ekrem Doğan in Istanbul"></div>
+      <article class="card manifesto">
+        <span class="tag">Kurucu</span>
+        <p class="quote">Ekrem Doğan'ın vizyonu insan sağlığının geleceğiyle başlar.</p>
+        <div class="founder-copy">
+          <p><strong>OID; projenin kurucusu, CEO'su ve vizyoneri Ekrem Doğan tarafından yönetilmektedir.</strong></p>
+          <p>Modern tıbbın hâlâ çaresiz dediği hastalıkların sonsuza dek umudun dışında kalmaması gerektiğine inanır. Tanı daha hızlı, tedavi daha kişisel olmalı; nadir hastalıklar artık görmezden gelinmemeli ve hastalar yavaş, parçalı, pahalı sistemlerin içinde yalnız bırakılmamalıdır.</p>
+          <p>Ekrem'in liderliğinde OID, Türkiye doğumlu bir tıbbi zekâ hareketine dönüşmektedir: yapay zekâyı, tıp bilimini, hasta verilerini, küresel araştırmayı, tedavi keşfini ve gelecekteki klinik erişimi tek bir yaşayan sistemde birleştiren bir proje.</p>
+          <p>Ekrem için faydanın gerçek anlamı budur. <strong>Gerçek fayda hayat kurtarmaktır.</strong></p>
+          <p>Türkiye'de doğup İstanbul'dan dünyaya uzanan Ekrem'in vizyonu, küresel iddia taşıyan milli bir ruha sahiptir. Türk zekâsının, hırsının ve bilimsel cesaretinin tıbbın bir sonraki bölümünü şekillendirmeye yardımcı olabileceğine inanır.</p>
+          <p>Ekonomik model misyonu takip eder. OID'nin yapay zekâ tıbbi ürünlerinden, sağlık hizmetlerinden ve gelecekteki uluslararası klinik modelinden elde edilecek kârların OID tokenını satın almak ve yakmak için kullanılması hedeflenir. Ancak yakım amaç değildir; amacın gerçekleşmesinin sonucudur.</p>
+        </div>
+        <div class="mission-lines">
+          <div>Hastalara yardım edildi. Testler sunuldu. Araştırma ilerledi.</div>
+          <div>Önce şifa, sonra değer. Önce fayda, sonra ödül.</div>
+          <div>Sağlıklı bir gelecek. Birlikte inşa ediyoruz.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="play-to-live">
+    <div class="section-head">
+      <h2>Yaşamak İçin Oyna</h2>
+      <p class="section-lede">
+        OID oyun skorları, OID uluslararası kliniği açıldığında testler ve tedaviler için kullanılabilir olması planlanan Sağlık Kredilerine katkı sağlar.
+        Oyna, skor yap ve grafiğini geleceğe hazırla.
+      </p>
+    </div>
+    <div class="media-frame poster campaign-banner">
+      <img src="game/assets/oid-play-to-live.jpg" alt="Yaşamak İçin Oyna kampanya görseli" />
+    </div>
+    <div class="leaderboard-wrap">
+      <article class="card">
+        <span class="tag">Kazanılan Sağlık Kredileri</span>
+        <ol id="leaderboard-top5">
+          <li>Sağlık kredileri yükleniyor...</li>
+        </ol>
+        <div class="cta-row">
+          <a class="btn primary" href="game/index.html">Yaşamak İçin Oyna</a>
+          <a class="btn" href="leaderboard.html">İlk 200'ü Gör</a>
+        </div>
+      </article>
+      <aside class="card">
+        <div class="oracle">
+          <div id="ekremHead" aria-hidden="true"></div>
+          <div>
+            <span class="tag">Kurucu Modu</span>
+            <h3>Ekrem hem grafiği hem hastayı izler.</h3>
+            <p>Skorunu $OID etiketiyle paylaş. Her puan, BNB üzerindeki en iddialı klinik anlatısında geleceğin Sağlık Kredisine dönüşür.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" id="community">
+    <div class="community-stage">
+      <article class="card manifesto">
+        <span class="tag">Topluluk</span>
+        <p class="quote">Sadece holder değil. Geleceğin hastaları, inşa edenleri, inananları ve fazlasıyla online tıbbi altyapı meraklıları.</p>
+        <p>
+          OID community lore makes the mission feel bigger than a chart: science, solidarity, Turkish ambition, and healing at meme speed.
+        </p>
+        <div class="mission-lines">
+          <div>Topluluk first.</div>
+          <div>İyilik için bilim.</div>
+          <div>Birlikte şifa, iddiaya göre.</div>
+        </div>
+      </article>
+      <div class="media-frame poster">
+        <img src="game/assets/oid-community.jpg" alt="Topluluğun Gücü kampanya görseli" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="final-banner">
+      <div>
+        <span class="tag">İstanbul'dan Dünyaya</span>
+        <h2>Sağlıklı bir gelecek. Birlikte inşa ediyoruz.</h2>
+        <p>
+          OID, Türk bayrağını yapay zekânın, topluluğun, klinik anlatısının
+          ve piyasa inancının aynı anda imkânsızı çözüyormuş gibi yaptığı kurgusal bir geleceğe taşır.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  OID bir meme-token anlatısı ve kurgusal health-tech evrenidir. Şu anda tıbbi tavsiye, tanı,
+  tedavi, araştırma hizmeti, klinik hizmet, kullanılabilir kredi veya finansal tavsiye sunmaz. Gelecekteki klinik, kredi, geri alım
+  ve yakım ifadeleri proje anlatısını ve niyetini açıklar; garanti değildir.
+</footer>
+
+<script>
+(() => {
+  const c = document.getElementById('signals');
+  const x = c.getContext('2d');
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let w, h, nodes;
+
+  function resize(){
+    w = c.width = innerWidth * DPR;
+    h = c.height = innerHeight * DPR;
+    nodes = Array.from({length:84}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (-.32 + Math.random() * .64) * DPR,
+      vy: (-.22 + Math.random() * .44) * DPR,
+      r: (1 + Math.random() * 2.2) * DPR
+    }));
+  }
+
+  function tick(){
+    x.clearRect(0, 0, w, h);
+    for (const n of nodes){
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < -20 || n.x > w + 20) n.vx *= -1;
+      if (n.y < -20 || n.y > h + 20) n.vy *= -1;
+    }
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 155 * DPR){
+          x.globalAlpha = (1 - d / (155 * DPR)) * .22;
+          x.strokeStyle = '#42f3d0';
+          x.lineWidth = 1 * DPR;
+          x.beginPath();
+          x.moveTo(a.x, a.y);
+          x.lineTo(b.x, b.y);
+          x.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      x.globalAlpha = .62;
+      x.fillStyle = '#d9fbff';
+      x.beginPath();
+      x.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      x.fill();
+    }
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  addEventListener('resize', resize);
+  tick();
+})();
+</script>
+
+<script>
+(() => {
+  const head = document.getElementById('ekremHead');
+  let vw = window.innerWidth, vh = window.innerHeight;
+  const drift = 16, maxTilt = 8;
+
+  function onMove(e){
+    const p = e.touches ? e.touches[0] : e;
+    const dx = (p.clientX - vw / 2) / (vw / 2);
+    const dy = (p.clientY - vh / 2) / (vh / 2);
+    head.style.transform = `translate(${dx * drift}px,${dy * drift}px) rotateX(${dy * maxTilt}deg) rotateY(${-dx * maxTilt}deg)`;
+  }
+
+  addEventListener('mousemove', onMove, {passive:true});
+  addEventListener('touchmove', onMove, {passive:true});
+  addEventListener('resize', () => { vw = innerWidth; vh = innerHeight; });
+})();
+</script>
+
+<script>
+(() => {
+  const firebaseConfig = {
+    apiKey: "AIzaSyAvssXnemI2JsDHLSUgngVfMkiaSErE6UU",
+    authDomain: "space-cz.firebaseapp.com",
+    projectId: "space-cz",
+    storageBucket: "space-cz.appspot.com",
+    messagingSenderId: "350516236483",
+    appId: "1:350516236483:web:893197f55f213d3d161276"
+  };
+
+  function escapeHTML(value){
+    return String(value).replace(/[&<>"']/g, char => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#039;'
+    }[char]));
+  }
+
+  firebase.initializeApp(firebaseConfig);
+  const db = firebase.firestore();
+
+  async function fetchTop5(){
+    const listElement = document.getElementById('leaderboard-top5');
+    try{
+      const snapshot = await db.collection('scores').orderBy('score', 'desc').limit(5).get();
+
+      if (snapshot.empty){
+        listElement.innerHTML = '<li>Sağlık Kredisi kazanan ilk oyuncu ol.</li>';
+        return;
+      }
+
+      let html = '';
+      let rank = 1;
+      snapshot.forEach(doc => {
+        const data = doc.data();
+        if (data && typeof data.name === 'string' && typeof data.score === 'number'){
+          html += `
+            <li class="leaderboard-entry">
+              <span class="rank-span">#${rank}</span>
+              <span class="name-span">${escapeHTML(data.name)}</span>
+              <span class="score-span">${Number(data.score).toLocaleString('en-US')} HC</span>
+            </li>
+          `;
+          rank++;
+        }
+      });
+      listElement.innerHTML = html || '<li>Henüz geçerli skor bulunamadı.</li>';
+    }catch(error){
+      console.error("Error fetching leaderboard:", error);
+      listElement.innerHTML = '<li>Liderlik tablosu yüklenemedi.</li>';
+    }
+  }
+
+  fetchTop5();
+})();
+</script>
+
+</body>
+</html>
