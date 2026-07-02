@@ -3,200 +3,888 @@
 <head>
 <meta charset="utf-8" />
 <meta name="viewport" content="width=device-width, initial-scale=1" />
-<title>ASTER OID — asterOID</title>
-<link rel="icon" href="game/assets/cz-droid.png" type="image/png">
+<meta name="description" content="OID Medical AI - Onarıcı İnovasyon ve Deva. Restorative Innovation and Cure from Istanbul to the world." />
+<title>OID Medical AI - Onarıcı İnovasyon ve Deva</title>
+<link rel="icon" href="game/assets/oid-medical-logo.png" type="image/png">
 
-<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="nl" />
-<link rel="alternate" href="https://asteroidmeme.com/index-zh.html" hreflang="zh-CN" />
+<link rel="alternate" href="https://asteroidmeme.com/index.html" hreflang="en" />
+<link rel="alternate" href="https://asteroidmeme.com/index-tr.html" hreflang="tr" />
 
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
 <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
 
 <style>
   :root{
-    --bg:#070b14; --bg2:#0b1220; --fg:#e8f0ff; --muted:#90a0c0;
-    --accent:#6ee7ff; --card:rgba(10,14,24,.78); --line:rgba(255,255,255,.08);
-    --shadow:0 12px 40px rgba(0,0,0,.45);
+    --bg:#04111f;
+    --bg2:#071a2f;
+    --fg:#f4fbff;
+    --muted:#a9c6d8;
+    --soft:#d9f8ff;
+    --blue:#19a8ff;
+    --cyan:#42f3d0;
+    --teal:#24d7c3;
+    --gold:#d7b955;
+    --card:rgba(5,20,35,.72);
+    --card2:rgba(7,32,52,.88);
+    --line:rgba(186,239,255,.18);
+    --shadow:0 24px 70px rgba(0,0,0,.42);
+    --radius:18px;
   }
   *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
   body{
-    margin:0; color:var(--fg);
-    font-family:system-ui,-apple-system,Segoe UI,Roboto,Inter,Arial,sans-serif;
-    background:linear-gradient(180deg,var(--bg),var(--bg2));
+    margin:0;
+    color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 20% 0%, rgba(66,243,208,.16), transparent 32%),
+      radial-gradient(circle at 80% 10%, rgba(25,168,255,.18), transparent 30%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 48%, #03101d);
     overflow-x:hidden;
   }
-  canvas#stars{position:fixed; inset:0; z-index:-1}
-
-  .wrap{
-    display:flex; justify-content:center; gap:24px; flex-wrap:wrap;
-    padding:40px 20px 240px; position:relative; z-index:1;
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.72), transparent 82%);
   }
-  .col{
-    background:var(--card); border:1px solid var(--line); border-radius:16px;
-    padding:20px; backdrop-filter: blur(6px); box-shadow:var(--shadow);
-    max-width:420px; flex:1 1 320px;
+  canvas#signals{position:fixed; inset:0; z-index:-1; opacity:.58}
+  a{color:inherit}
+  .page{min-height:100vh}
+  .nav{
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    width:min(1160px, calc(100% - 28px));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    background:rgba(3,13,24,.62);
+    backdrop-filter:blur(18px);
+    box-shadow:0 18px 52px rgba(0,0,0,.28);
   }
-  h2{margin:0}
-  p{color:var(--muted)}
-  .pill{padding:6px 10px; border:1px solid var(--line); border-radius:999px; margin:2px; display:inline-block}
-  .links{margin-top:10px; display:flex; gap:8px; flex-wrap:wrap}
-  .links a{padding:8px 12px; border-radius:12px; border:1px solid var(--line);
-    text-decoration:none; color:var(--fg); background:rgba(255,255,255,.04)}
-  .title-row{display:flex; align-items:center; gap:10px; margin-bottom:12px}
-  .badge{
-    height:28px; width:28px; border-radius:50%; overflow:hidden; flex:0 0 28px;
-    background:#0e1626; border:1px solid var(--line); display:grid; place-items:center;
-    box-shadow:0 6px 18px rgba(0,0,0,.35);
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    text-decoration:none;
+    font-weight:850;
+    letter-spacing:.08em;
   }
-  .badge img{height:100%; width:100%; object-fit:contain}
-
-  .btn{
-    display:inline-block; padding:12px 16px; margin-top:8px; border-radius:14px;
-    background:rgba(110,231,255,.15); border:1px solid rgba(110,231,255,.45);
-    color:var(--fg); text-decoration:none; font-weight:700;
-    transition:transform .12s ease, background .2s ease;
+  .brand img{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,.24);
   }
-  .btn:hover{background:rgba(110,231,255,.25)}
-  .hero{
-    display:flex; flex-direction:column; align-items:center; justify-content:center;
-    margin-top:-160px;
+  .brand span{white-space:nowrap}
+  .nav-links{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
   }
-  #head{
-    width:clamp(200px,34vmin,360px); aspect-ratio:1/1;
-    background:url("game/assets/cz-droid.png") center/contain no-repeat;
-    filter:drop-shadow(0 40px 80px rgba(0,0,0,.55));
-    transition: transform .12s ease-out;
-  }
-  .caption{margin-top:12px; font-weight:700; opacity:.8}
-
+  .nav-links a,
   .lang-switch{
-    position:fixed; top:14px; right:14px; z-index:1000;
-    background:rgba(255,255,255,0.12);
-    border:1px solid rgba(255,255,255,0.3);
-    padding:6px 12px; border-radius:999px;
-    color:#fff; font-weight:600; text-decoration:none;
-    backdrop-filter: blur(6px);
-    box-shadow:0 8px 24px rgba(0,0,0,.25);
+    text-decoration:none;
+    color:var(--soft);
+    font-size:13px;
+    font-weight:750;
+    padding:8px 11px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(255,255,255,.045);
   }
-  .lang-switch:hover{ background:rgba(255,255,255,0.25); }
-  
-  /* STIJLEN VOOR HET LEADERBOARD */
-  #leaderboard-top5 { list-style: none; padding: 0; margin: 10px 0 0; }
-  .leaderboard-entry {
-    display: flex; align-items: center; gap: 12px;
-    margin-bottom: 12px; font-size: 15px;
+  .nav-links a:hover,
+  .lang-switch:hover{background:rgba(255,255,255,.1)}
+  .buy-link{
+    color:#00131b !important;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff) !important;
+    border-color:transparent !important;
   }
-  .rank-span { font-weight: bold; width: 20px; text-align: right; color: var(--muted); }
-  .name-span { flex: 1; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
-  .score-span { font-weight: bold; }
 
-  @media (max-width:640px){
-    .wrap{padding-bottom:160px}
-    .hero{ margin-top:-60px; }
-    #head{ width:clamp(180px,46vw,300px); }
+  .hero{
+    position:relative;
+    min-height:100vh;
+    display:grid;
+    align-items:end;
+    padding:112px 22px 46px;
+    overflow:hidden;
+  }
+  .hero::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:
+      linear-gradient(90deg, rgba(2,12,24,.78) 0%, rgba(2,12,24,.46) 42%, rgba(2,12,24,.1) 100%),
+      linear-gradient(0deg, rgba(4,17,31,1) 0%, rgba(4,17,31,.12) 42%),
+      url("game/assets/oid-hero-ai-diagnosis.jpg") center/cover no-repeat;
+    transform:scale(1.01);
+  }
+  .hero-inner{
+    position:relative;
+    z-index:2;
+    width:min(1160px,100%);
+    margin:0 auto;
+    display:grid;
+    grid-template-columns:minmax(0,1.08fr) minmax(300px,.62fr);
+    gap:28px;
+    align-items:end;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    width:max-content;
+    max-width:100%;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    color:#e8fbff;
+    background:rgba(4,21,37,.6);
+    backdrop-filter:blur(14px);
+    font-size:12px;
+    font-weight:850;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .pulse{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
+  }
+  h1{
+    max-width:850px;
+    margin:18px 0 12px;
+    font-size:clamp(44px,7.2vw,100px);
+    line-height:.88;
+    letter-spacing:0;
+  }
+  .hero-copy{
+    max-width:730px;
+    margin:0;
+    color:#d3eff8;
+    font-size:clamp(17px,2.1vw,23px);
+    line-height:1.45;
+  }
+  .hero-copy strong{color:#fff}
+  .cta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:26px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:12px 16px;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:850;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:#eefcff;
+    transition:transform .14s ease, background .18s ease, border-color .18s ease;
+  }
+  .btn:hover{transform:translateY(-1px); background:rgba(255,255,255,.12)}
+  .btn.primary{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#8defff);
+    border-color:transparent;
+    box-shadow:0 16px 44px rgba(31,231,214,.22);
+  }
+  .btn.gold{
+    color:#120f02;
+    background:linear-gradient(135deg,#f5dd73,var(--gold));
+    border-color:transparent;
+  }
+  .hero-panel{
+    border:1px solid rgba(255,255,255,.18);
+    border-radius:var(--radius);
+    background:linear-gradient(180deg,rgba(5,22,38,.72),rgba(6,22,34,.88));
+    backdrop-filter:blur(16px);
+    box-shadow:var(--shadow);
+    padding:16px;
+  }
+  .identity{
+    display:grid;
+    grid-template-columns:82px 1fr;
+    gap:14px;
+    align-items:center;
+  }
+  .identity img{
+    width:82px;
+    height:82px;
+    object-fit:cover;
+    border-radius:50%;
+    border:1px solid rgba(255,255,255,.2);
+    box-shadow:0 0 42px rgba(66,243,208,.18);
+  }
+  .identity h2{
+    margin:0;
+    font-size:25px;
+    letter-spacing:.04em;
+  }
+  .identity p{
+    margin:5px 0 0;
+    color:var(--muted);
+    line-height:1.35;
+  }
+  .ticker{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:10px;
+    margin-top:16px;
+  }
+  .metric{
+    padding:12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.045);
+  }
+  .metric b{
+    display:block;
+    color:#fff;
+    font-size:22px;
+  }
+  .metric span{
+    color:var(--muted);
+    font-size:12px;
+  }
+
+  .section{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:76px 0;
+  }
+  .section-head{
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:22px;
+  }
+  .section h2{
+    margin:0;
+    font-size:clamp(30px,4.2vw,58px);
+    line-height:.95;
+  }
+  .section-lede{
+    max-width:560px;
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+    align-items:stretch;
+  }
+  .grid > .card{min-height:214px}
+  .card{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--card);
+    box-shadow:0 18px 50px rgba(0,0,0,.2);
+    padding:20px;
+    overflow:hidden;
+    height:100%;
+    display:flex;
+    flex-direction:column;
+  }
+  .card h3{
+    margin:0 0 9px;
+    font-size:21px;
+    line-height:1.15;
+  }
+  .card p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .tag{
+    display:inline-flex;
+    width:max-content;
+    padding:6px 9px;
+    margin-bottom:12px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#061522;
+    background:linear-gradient(135deg,var(--cyan),#b9fbff);
+  }
+  .story{
+    display:grid;
+    grid-template-columns:.82fr 1.18fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .story-media{
+    min-height:420px;
+    border-radius:var(--radius);
+    border:1px solid var(--line);
+    background:url("game/assets/ekrem-istanbul.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .manifesto{
+    background:linear-gradient(180deg,rgba(8,35,55,.9),rgba(4,17,31,.82));
+  }
+  .quote{
+    margin:0 0 18px;
+    font-size:clamp(28px,3.2vw,42px);
+    line-height:1.08;
+    font-weight:900;
+  }
+  .definition{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+  }
+  .definition div{
+    display:flex;
+    justify-content:space-between;
+    gap:16px;
+    padding:12px 0;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .definition b{color:#fff}
+  .definition span{color:var(--muted); text-align:right}
+  .founder-copy{
+    display:grid;
+    gap:14px;
+  }
+  .founder-copy p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.62;
+  }
+  .founder-copy strong{color:#fff}
+  .mission-lines{
+    display:grid;
+    gap:10px;
+    margin-top:18px;
+  }
+  .mission-lines div{
+    padding:12px 14px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+    color:#e9fbff;
+    font-weight:800;
+  }
+  .campaign-split{
+    display:grid;
+    grid-template-columns:1.04fr .96fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .media-frame{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:rgba(255,255,255,.045);
+    box-shadow:var(--shadow);
+    height:100%;
+    min-height:100%;
+  }
+  .media-frame img{
+    display:block;
+    width:100%;
+    height:100%;
+    object-fit:cover;
+  }
+  .media-frame.poster{
+    display:grid;
+    place-items:center;
+    background:
+      radial-gradient(circle at 20% 20%, rgba(66,243,208,.12), transparent 34%),
+      linear-gradient(180deg, rgba(5,20,35,.92), rgba(3,13,24,.96));
+  }
+  .media-frame.poster img{
+    height:100%;
+    object-fit:contain;
+  }
+  .campaign-split > .media-frame{min-height:420px}
+  .campaign-split > .card{min-height:420px}
+  .campaign-split .quote{font-size:clamp(28px,3.15vw,44px)}
+  .feature-list{
+    display:grid;
+    grid-template-columns:repeat(2,1fr);
+    gap:12px;
+    margin-top:auto;
+    padding-top:20px;
+  }
+  .feature-list div{
+    padding:14px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.045);
+    min-height:98px;
+    display:flex;
+    flex-direction:column;
+    justify-content:center;
+  }
+  .feature-list b{
+    display:block;
+    color:#fff;
+    margin-bottom:4px;
+  }
+  .feature-list span{
+    color:var(--muted);
+    font-size:13px;
+    line-height:1.4;
+  }
+  .campaign-banner{
+    margin-bottom:18px;
+    aspect-ratio:3 / 1;
+    min-height:260px;
+  }
+  .community-stage{
+    display:grid;
+    grid-template-columns:.92fr 1.08fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  .community-stage > .card,
+  .community-stage > .media-frame{min-height:560px}
+  .final-banner{
+    position:relative;
+    min-height:280px;
+    display:grid;
+    align-items:end;
+    padding:24px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    overflow:hidden;
+    background:url("game/assets/oid-istanbul-world.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .final-banner::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(3,12,22,.8), rgba(3,12,22,.26), rgba(3,12,22,.12));
+  }
+  .final-banner > div{
+    position:relative;
+    z-index:1;
+    max-width:560px;
+  }
+  .final-banner h2{
+    margin:0 0 8px;
+    font-size:clamp(32px,5vw,64px);
+  }
+  .final-banner p{
+    margin:0;
+    color:#d9f8ff;
+    line-height:1.5;
+  }
+
+  .leaderboard-wrap{
+    display:grid;
+    grid-template-columns:1fr .78fr;
+    gap:18px;
+    align-items:stretch;
+  }
+  #leaderboard-top5{
+    list-style:none;
+    padding:0;
+    margin:0;
+    display:grid;
+    gap:10px;
+  }
+  .leaderboard-entry{
+    display:grid;
+    grid-template-columns:54px 1fr auto;
+    align-items:center;
+    gap:12px;
+    padding:13px;
+    border:1px solid rgba(255,255,255,.12);
+    border-radius:14px;
+    background:rgba(255,255,255,.045);
+  }
+  .rank-span{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff);
+    border-radius:999px;
+    text-align:center;
+    font-weight:950;
+    padding:6px 8px;
+  }
+  .name-span{
+    min-width:0;
+    overflow:hidden;
+    text-overflow:ellipsis;
+    white-space:nowrap;
+    font-weight:750;
+  }
+  .score-span{
+    font-weight:950;
+    color:#fff;
+  }
+  .oracle{
+    display:grid;
+    grid-template-columns:120px 1fr;
+    gap:15px;
+    align-items:center;
+    height:100%;
+  }
+  #ekremHead{
+    width:120px;
+    aspect-ratio:1;
+    border-radius:50%;
+    background:url("game/assets/ekrem-gold.jpg") center 18%/cover no-repeat;
+    border:1px solid rgba(215,185,85,.4);
+    filter:drop-shadow(0 26px 42px rgba(0,0,0,.42));
+    transition:transform .12s ease-out;
+  }
+  .footer{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:22px 0 38px;
+    color:#7fa2b8;
+    font-size:12px;
+    line-height:1.5;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+
+  @media (max-width:880px){
+    .nav{align-items:flex-start; border-radius:22px}
+    .nav-links a:nth-child(4){display:none}
+    .hero{padding-top:132px; min-height:auto}
+    .hero-inner,
+    .story,
+    .campaign-split,
+    .community-stage,
+    .leaderboard-wrap{grid-template-columns:1fr}
+    .hero-panel{max-width:520px}
+    .grid{grid-template-columns:1fr}
+    .section-head{display:block}
+    .section-lede{margin-top:10px}
+    .story-media{min-height:300px}
+    .media-frame img{height:auto; object-fit:contain}
+    .campaign-split > .media-frame,
+    .campaign-split > .card,
+    .community-stage > .card,
+    .community-stage > .media-frame{min-height:0}
+    .campaign-banner{aspect-ratio:auto; min-height:0}
+  }
+  @media (max-width:560px){
+    .brand span{font-size:13px}
+    .nav{position:absolute}
+    .nav-links{gap:6px}
+    .nav-links a,.lang-switch{font-size:12px; padding:7px 9px}
+    h1{font-size:47px}
+    .hero-copy{font-size:17px}
+    .ticker{grid-template-columns:1fr}
+    .feature-list{grid-template-columns:1fr}
+    .identity{grid-template-columns:68px 1fr}
+    .identity img{width:68px;height:68px}
+    .oracle{grid-template-columns:1fr}
+    #ekremHead{width:132px}
   }
 </style>
 </head>
 <body>
+<canvas id="signals"></canvas>
 
-<a class="lang-switch" href="index-zh.html">中文</a>
-<canvas id="stars"></canvas>
+<nav class="nav" aria-label="Primary navigation">
+  <a class="brand" href="#top">
+    <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI logo" />
+    <span>OID MEDICAL AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="#utility">Utility</a>
+    <a href="#founder">Founder</a>
+    <a href="#play-to-live">Play To Live</a>
+    <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DEX</a>
+    <a href="index-tr.html" class="lang-switch">TR</a>
+    <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener" class="buy-link">BUY</a>
+  </div>
+</nav>
 
-<div class="wrap">
-  <section class="col" aria-labelledby="infoTitle">
-    <div class="title-row">
-      <div class="badge" aria-hidden="true">
-        <img src="game/assets/aster.png" alt="" />
+<main class="page" id="top">
+  <section class="hero" aria-label="OID Medical AI hero">
+    <div class="hero-inner">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Onarıcı İnovasyon ve Deva</div>
+        <h1>Medical AI with a meme engine.</h1>
+        <p class="hero-copy">
+          <strong>OID</strong> is building a fictional medical intelligence movement: AI-powered diagnosis, research,
+          treatment discovery, community funding, and one extremely serious chart.
+        </p>
+        <div class="cta-row">
+          <a class="btn primary" href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">BUY $OID</a>
+          <a class="btn" href="#utility">View Utility</a>
+          <a class="btn" href="#founder">Founder Vision</a>
+          <a class="btn" href="game/index.html">Play To Live</a>
+          <a class="btn" href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
+          <a class="btn" href="https://t.me/OID_BNB" target="_blank" rel="noopener">Telegram</a>
+        </div>
       </div>
-      <h2 id="infoTitle"> asterOID</h2>
+
+      <aside class="hero-panel" aria-label="OID identity card">
+        <div class="identity">
+          <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI emblem" />
+          <div>
+            <h2>OID</h2>
+            <p>Restorative Innovation and Cure. Born in Türkiye, calibrated for the world.</p>
+          </div>
+        </div>
+        <div class="ticker">
+          <div class="metric"><b>AI</b><span>medical intelligence layer</span></div>
+          <div class="metric"><b>Clinic</b><span>future international access model</span></div>
+          <div class="metric"><b>Burn</b><span>net-profit buyback narrative</span></div>
+          <div class="metric"><b>Credits</b><span>Play To Live score economy</span></div>
+        </div>
+      </aside>
     </div>
-    <p><strong>The first ASTER meme</strong></p>
-    <div>
-      </div>
-    <div class="links">
-      <a href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
-      <a href="https://t.me/OID_BNB" target="_blank" rel="noopener">TG</a>
-      <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DEX</a>
-      <a href="https://bscscan.com/token/0x5f992abf5bc1725f6b0dfd116031c31aebb54444" target="_blank" rel="noopener">BSCScan</a>
-      <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">BUY</a>
-       </div>
-  </section>
-  
-  <section class="col" aria-labelledby="playTitle">
-    <div class="title-row">
-      <div class="badge" aria-hidden="true">
-        <img src="game/assets/cz-droid.png" alt="" />
-      </div>
-      <h2 id="playTitle">Pilot CZ</h2>
-    </div>
-    <p><strong>Pilot CZ and get the highest MCap</strong></p>
-    <a class="btn" href="game/index.html" title="Play Game">Play Game</a>
-    <p style="margin-top:10px; color:#90a0c0;">
-      Share a screenshot of your score on socials with the $OID hashtag
-    </p>
   </section>
 
-  <section class="col" aria-labelledby="leaderboardTitle">
-    <div class="title-row">
-      <div class="badge" aria-hidden="true">
-        🏆
+  <section class="section" id="what-is">
+    <div class="campaign-split">
+      <div class="media-frame poster">
+        <img src="game/assets/oid-what-is.jpg" alt="What OID Is campaign visual" />
       </div>
-      <h2 id="leaderboardTitle">Top 5 Pilots</h2>
+      <article class="card manifesto">
+        <span class="tag">What OID Is</span>
+        <p class="quote">A Turkish-born medical intelligence system built for real-world healing.</p>
+        <p>
+          OID turns the meme into a clean product universe: AI health assistance, personalized plans,
+          accessible testing, clinical partnerships, and rare disease research, all wrapped inside one
+          wildly ambitious Istanbul health-tech narrative.
+        </p>
+        <div class="feature-list">
+          <div><b>AI Health Assistant</b><span>Always-on health decision support.</span></div>
+          <div><b>Personalized Plans</b><span>Not just symptoms, but patient context.</span></div>
+          <div><b>Affordable Testing</b><span>Clinic access as future utility lore.</span></div>
+          <div><b>Rare Disease Research</b><span>Hope for cases that get ignored.</span></div>
+        </div>
+      </article>
     </div>
-    <ol id="leaderboard-top5">
-      <li>Laden...</li>
-    </ol>
-    <a class="btn" href="leaderboard.html" style="margin-top: 15px;">See Top 200</a>
   </section>
-</div>
 
-<div class="hero" aria-hidden="true">
-  <div id="head"></div>
-  <div class="caption">He is coming.</div>
-</div>
+  <section class="section" id="utility">
+    <div class="section-head">
+      <h2>Utility</h2>
+      <p class="section-lede">
+        OID frames utility as a health-first economic loop: AI medical products, health services, and a future
+        international clinic model create value, then net profits are intended to buy and burn $OID.
+      </p>
+    </div>
+    <div class="grid">
+      <article class="card">
+        <span class="tag">Clinic Model</span>
+        <h3>Health Services First</h3>
+        <p>OID imagines an international health clinic where AI-supported tests, diagnostics, and treatment access become the visible face of utility.</p>
+      </article>
+      <article class="card">
+        <span class="tag">Buy & Burn</span>
+        <h3>The Burn Follows the Mission</h3>
+        <p>Net profits from OID international health clinic activity are intended to buy and burn OID. First healing, then value.</p>
+      </article>
+      <article class="card">
+        <span class="tag">Community</span>
+        <h3>Collective Medical Alpha</h3>
+        <p>The community is positioned as a source of funding, force, faith, and awareness for medical intelligence infrastructure.</p>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="founder">
+    <div class="story">
+      <div class="story-media" aria-label="Ekrem Doğan in Istanbul"></div>
+      <article class="card manifesto">
+        <span class="tag">Founder</span>
+        <p class="quote">Ekrem Doğan's vision begins with the future of human health.</p>
+        <div class="founder-copy">
+          <p><strong>OID is led by Ekrem Doğan, founder, CEO, and visionary of the project.</strong></p>
+          <p>He believes the diseases modern medicine still calls incurable should not remain beyond hope forever. Diagnosis should become faster, treatment should become more personal, rare diseases should no longer be ignored, and patients should not be left alone inside slow, fragmented, expensive systems.</p>
+          <p>Under Ekrem's leadership, OID is being shaped into a Turkish-born medical intelligence movement: a project that brings together artificial intelligence, medical science, patient data, global research, treatment discovery, and future clinical access into one living system.</p>
+          <p>For Ekrem, this is the real meaning of utility. <strong>Real utility is saving lives.</strong></p>
+          <p>Born in Türkiye and reaching from Istanbul to the world, Ekrem's vision carries a national spirit with global ambition. He believes Turkish intelligence, ambition, and scientific courage can help shape the next chapter of medicine.</p>
+          <p>The economic model follows the mission. Profits from OID's AI medical products, health services, and future international clinic model are intended to buy and burn the OID token. But the burn is not the purpose. It is the consequence of the purpose being fulfilled.</p>
+        </div>
+        <div class="mission-lines">
+          <div>Patients helped. Tests delivered. Research advanced.</div>
+          <div>First healing, then value. First usefulness, then reward.</div>
+          <div>A healthy future. Built together.</div>
+        </div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="play-to-live">
+    <div class="section-head">
+      <h2>Play To Live</h2>
+      <p class="section-lede">
+        OID game scores contribute toward Health Credits planned to be redeemable for tests and treatments when
+        the OID international clinic opens. Play, score, and prepare your chart for the future.
+      </p>
+    </div>
+    <div class="media-frame poster campaign-banner">
+      <img src="game/assets/oid-play-to-live.jpg" alt="Play To Live campaign visual" />
+    </div>
+    <div class="leaderboard-wrap">
+      <article class="card">
+        <span class="tag">Health Credits Earned</span>
+        <ol id="leaderboard-top5">
+          <li>Loading health credits...</li>
+        </ol>
+        <div class="cta-row">
+          <a class="btn primary" href="game/index.html">Play To Live</a>
+          <a class="btn" href="leaderboard.html">See Top 200</a>
+        </div>
+      </article>
+      <aside class="card">
+        <div class="oracle">
+          <div id="ekremHead" aria-hidden="true"></div>
+          <div>
+            <span class="tag">Founder Mode</span>
+            <h3>Ekrem watches the chart and the patient.</h3>
+            <p>Share your score with the $OID hashtag. Every point becomes a future Health Credit in the most ambitious clinic lore on BNB.</p>
+          </div>
+        </div>
+      </aside>
+    </div>
+  </section>
+
+  <section class="section" id="community">
+    <div class="community-stage">
+      <article class="card manifesto">
+        <span class="tag">Community</span>
+        <p class="quote">Not just holders. Future patients, builders, believers, and very online medical infrastructure enthusiasts.</p>
+        <p>
+          OID community lore makes the mission feel bigger than a chart: science, solidarity, Turkish ambition, and healing at meme speed.
+        </p>
+        <div class="mission-lines">
+          <div>Community first.</div>
+          <div>Science for good.</div>
+          <div>Healing together, allegedly.</div>
+        </div>
+      </article>
+      <div class="media-frame poster">
+        <img src="game/assets/oid-community.jpg" alt="The Power of Community campaign visual" />
+      </div>
+    </div>
+  </section>
+
+  <section class="section">
+    <div class="final-banner">
+      <div>
+        <span class="tag">Istanbul To The World</span>
+        <h2>A healthy future. Built together.</h2>
+        <p>
+          OID carries the Turkish flag into a fictional future where AI, community, clinic lore,
+          and market belief all pretend to solve the impossible at the same time.
+        </p>
+      </div>
+    </div>
+  </section>
+</main>
+
+<footer class="footer">
+  OID is a meme-token narrative and fictional health-tech lore. It does not currently provide medical advice, diagnosis,
+  treatment, research services, clinical services, redeemable credits, or financial advice. Future clinic, credit, buyback,
+  and burn language describes project lore and intent, not a guarantee.
+</footer>
 
 <script>
-/* sterren */
 (() => {
-  const c=document.getElementById('stars'),x=c.getContext('2d');
-  const DPR=Math.max(1,Math.min(2,window.devicePixelRatio||1));
-  let w,h,stars;
+  const c = document.getElementById('signals');
+  const x = c.getContext('2d');
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let w, h, nodes;
+
   function resize(){
-    w=c.width=innerWidth*DPR; h=c.height=innerHeight*DPR;
-    stars=Array.from({length:160},()=>({
-      x:Math.random()*w,y:Math.random()*h,z:.3+Math.random()*.7,r:.6+Math.random()*1.6
+    w = c.width = innerWidth * DPR;
+    h = c.height = innerHeight * DPR;
+    nodes = Array.from({length:84}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (-.32 + Math.random() * .64) * DPR,
+      vy: (-.22 + Math.random() * .44) * DPR,
+      r: (1 + Math.random() * 2.2) * DPR
     }));
   }
+
   function tick(){
-    x.clearRect(0,0,w,h);
-    x.fillStyle="#05070f";x.fillRect(0,0,w,h);
-    for(const s of stars){
-      s.x-=(25*s.z*0.08);
-      if(s.x<-2){s.x=w+Math.random()*40;s.y=Math.random()*h;s.z=.3+Math.random()*.7;}
-      x.globalAlpha=0.5+s.z*0.5;
-      x.beginPath(); x.arc(s.x,s.y,s.r*DPR,0,Math.PI*2); x.fillStyle='#e8f0ff'; x.fill();
+    x.clearRect(0, 0, w, h);
+    for (const n of nodes){
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < -20 || n.x > w + 20) n.vx *= -1;
+      if (n.y < -20 || n.y > h + 20) n.vy *= -1;
+    }
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 155 * DPR){
+          x.globalAlpha = (1 - d / (155 * DPR)) * .22;
+          x.strokeStyle = '#42f3d0';
+          x.lineWidth = 1 * DPR;
+          x.beginPath();
+          x.moveTo(a.x, a.y);
+          x.lineTo(b.x, b.y);
+          x.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      x.globalAlpha = .62;
+      x.fillStyle = '#d9fbff';
+      x.beginPath();
+      x.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      x.fill();
     }
     requestAnimationFrame(tick);
   }
-  resize(); addEventListener('resize',resize); tick();
-})();
 
-/* hoofd volgt muis */
+  resize();
+  addEventListener('resize', resize);
+  tick();
+})();
+</script>
+
+<script>
 (() => {
-  const head=document.getElementById('head');
-  let vw=window.innerWidth,vh=window.innerHeight;
-  const drift=20,maxTilt=10;
+  const head = document.getElementById('ekremHead');
+  let vw = window.innerWidth, vh = window.innerHeight;
+  const drift = 16, maxTilt = 8;
+
   function onMove(e){
-    const p=e.touches?e.touches[0]:e;
-    const dx=(p.clientX-vw/2)/(vw/2);
-    const dy=(p.clientY-vh/2)/(vh/2);
-    const tx=dx*drift, ty=dy*drift;
-    const rx=dy*maxTilt, ry=-dx*maxTilt;
-    head.style.transform=`translate(${tx}px,${ty}px) rotateX(${rx}deg) rotateY(${ry}deg)`;
+    const p = e.touches ? e.touches[0] : e;
+    const dx = (p.clientX - vw / 2) / (vw / 2);
+    const dy = (p.clientY - vh / 2) / (vh / 2);
+    head.style.transform = `translate(${dx * drift}px,${dy * drift}px) rotateX(${dy * maxTilt}deg) rotateY(${-dx * maxTilt}deg)`;
   }
-  addEventListener('mousemove',onMove,{passive:true});
-  addEventListener('touchmove',onMove,{passive:true});
-  addEventListener('resize',()=>{vw=innerWidth;vh=innerHeight;});
+
+  addEventListener('mousemove', onMove, {passive:true});
+  addEventListener('touchmove', onMove, {passive:true});
+  addEventListener('resize', () => { vw = innerWidth; vh = innerHeight; });
 })();
 </script>
 
@@ -211,16 +899,26 @@
     appId: "1:350516236483:web:893197f55f213d3d161276"
   };
 
+  function escapeHTML(value){
+    return String(value).replace(/[&<>"']/g, char => ({
+      '&':'&amp;',
+      '<':'&lt;',
+      '>':'&gt;',
+      '"':'&quot;',
+      "'":'&#039;'
+    }[char]));
+  }
+
   firebase.initializeApp(firebaseConfig);
   const db = firebase.firestore();
 
-  async function fetchTop5() {
+  async function fetchTop5(){
     const listElement = document.getElementById('leaderboard-top5');
-    try {
+    try{
       const snapshot = await db.collection('scores').orderBy('score', 'desc').limit(5).get();
 
-      if (snapshot.empty) {
-        listElement.innerHTML = '<li>Be the first to set a score!</li>';
+      if (snapshot.empty){
+        listElement.innerHTML = '<li>Be the first player to earn Health Credits.</li>';
         return;
       }
 
@@ -228,20 +926,19 @@
       let rank = 1;
       snapshot.forEach(doc => {
         const data = doc.data();
-        if (data && typeof data.name === 'string' && typeof data.score === 'number') {
+        if (data && typeof data.name === 'string' && typeof data.score === 'number'){
           html += `
             <li class="leaderboard-entry">
               <span class="rank-span">#${rank}</span>
-              <span class="name-span">${data.name}</span>
-              <span class="score-span">${data.score}B</span>
+              <span class="name-span">${escapeHTML(data.name)}</span>
+              <span class="score-span">${Number(data.score).toLocaleString('en-US')} HC</span>
             </li>
           `;
           rank++;
         }
       });
-      listElement.innerHTML = html;
-
-    } catch (error) {
+      listElement.innerHTML = html || '<li>No valid scores found yet.</li>';
+    }catch(error){
       console.error("Error fetching leaderboard:", error);
       listElement.innerHTML = '<li>Leaderboard could not be loaded.</li>';
     }
