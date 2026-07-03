@@ -170,22 +170,24 @@
     box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
   }
   h1{
-    max-width:850px;
-    margin:18px 0 12px;
-    font-size:clamp(44px,7.2vw,100px);
-    line-height:.88;
-    letter-spacing:0;
+    max-width:900px;
+    margin:18px 0 18px;
+    font-size:clamp(40px,6vw,82px);
+    line-height:.96;
+    letter-spacing:-.03em;
   }
   .hero-break{
     display:block;
-    white-space:nowrap;
+    margin-top:.12em;
+    font-size:.88em;
+    white-space:normal;
   }
   .hero-copy{
-    max-width:730px;
-    margin:0;
+    max-width:720px;
+    margin:24px 0 0;
     color:#d3eff8;
     font-size:clamp(17px,2.1vw,23px);
-    line-height:1.45;
+    line-height:1.55;
   }
   .hero-copy strong{color:#fff}
   .cta-row{
@@ -599,12 +601,18 @@
     .nav{position:absolute}
     .nav-links{gap:6px}
     .nav-links a,.lang-switch{font-size:12px; padding:7px 9px}
-    h1{font-size:47px}
+    h1{
+      font-size:clamp(42px,11vw,58px);
+      line-height:.98;
+    }
     .hero-break{
-    display:block;
-    white-space:nowrap;
-  }
-  .hero-copy{font-size:17px}
+      white-space:normal;
+    }
+    .hero-copy{
+      font-size:18px;
+      line-height:1.55;
+      max-width:100%;
+    }
     .ticker{grid-template-columns:1fr}
     .feature-list{grid-template-columns:1fr}
     .identity{grid-template-columns:68px 1fr}
@@ -638,12 +646,14 @@
       <div>
         <div class="eyebrow"><span class="pulse"></span> Onarıcı İnovasyon ve Deva</div>
         <h1>
-  Yapay zekâ destekli tıp.
-  <span class="hero-break">#topluluk tarafından inşa edildi.</span>
-</h1>
+          Yapay zekâ destekli tıp.
+          <span class="hero-break">#topluluk tarafından inşa edildi.</span>
+        </h1>
         <p class="hero-copy">
-          <strong>OID</strong>, yapay zekâ destekli tanı, araştırma,
-          tedavi keşfi, topluluk finansmanı ve fazlasıyla ciddi bir grafik.
+          <strong>OID</strong>, daha erken teşhis, kişiselleştirilmiş sağlık rehberliği,
+          tedavi keşfi ve gelecekte klinik erişim için Türk tıbbi zekâ ekosistemi inşa ediyor —
+          yapay zekâyı, tıp bilimini ve küresel topluluk sahipliğini daha sağlıklı bir gelecek için
+          bir araya getiriyor.
         </p>
         <div class="cta-row">
           <a class="btn primary" href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">$OID SATIN AL</a>
@@ -787,12 +797,13 @@
         <span class="tag">Topluluk</span>
         <p class="quote">Sadece holder değil. Geleceğin hastaları, inşa edenleri, inananları ve fazlasıyla online tıbbi altyapı meraklıları.</p>
         <p>
-          OID community lore makes the mission feel bigger than a chart: science, solidarity, Turkish ambition, and healing at meme speed.
+          OID topluluğu, misyonu yalnızca bir grafiğin ötesine taşır: bilim,
+          dayanışma, Türk vizyonu ve şifayı tek bir hareket altında birleştirir.
         </p>
         <div class="mission-lines">
-          <div>Topluluk first.</div>
-          <div>İyilik için bilim.</div>
-          <div>Birlikte şifa, iddiaya göre.</div>
+          <div>Önce topluluk.</div>
+          <div>İnsanlık için bilim.</div>
+          <div>Birlikte iyileşiyoruz.</div>
         </div>
       </article>
       <div class="media-frame poster">
