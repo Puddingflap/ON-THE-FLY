@@ -519,7 +519,8 @@
   <div class="nav-links">
     <a href="index.html#utility">Utility</a>
     <a href="#burn">Burn Engine</a>
-    <a href="#community-alpha">Alpha Scan</a>
+    <a href="#community-alpha">Signal Scan</a>
+    <a href="oracle.html">AI Assistant</a>
     <a href="game/index.html">Play</a>
     <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener" class="buy-link">BUY</a>
   </div>
@@ -532,11 +533,12 @@
         <div class="eyebrow"><span class="pulse"></span> OID Utility Engine</div>
         <h1>The restorative intelligence loop.</h1>
         <p>
-          A live visualization of how community belief, medical AI, clinic access, Health Credits,
-          and burn pressure synchronize into one extremely serious utility machine.
+          A live visualization of how community participation, medical AI, clinic access, Health Credits,
+          and long-term token mechanics connect into one health-first economic model.
         </p>
         <div class="cta-row">
           <a class="btn primary" href="#burn">Run Engine</a>
+          <a class="btn" href="oracle.html">Open AI Assistant</a>
           <a class="btn" href="index.html">Back to OID</a>
         </div>
       </div>
@@ -545,7 +547,7 @@
     <article class="panel engine" aria-label="OID utility engine visualization">
       <div class="engine-top">
         <span class="tag">Live System</span>
-        <div class="status">STATUS: CALIBRATING MEDICAL ALPHA</div>
+        <div class="status">STATUS: CALIBRATING MEDICAL INTELLIGENCE</div>
       </div>
       <div class="loop">
         <div class="beam b1"></div>
@@ -554,15 +556,15 @@
         <div class="beam b4"></div>
         <div class="beam b5"></div>
         <div class="core"><img src="game/assets/oid-medical-logo.png" alt="OID"></div>
-        <div class="node n1"><b>Community Capital</b><span>belief converted into forward motion</span></div>
+        <div class="node n1"><b>Community Capital</b><span>participation converted into growth</span></div>
         <div class="node n2"><b>AI Health Layer</b><span>diagnosis, research, treatment discovery</span></div>
         <div class="node n3"><b>Clinic Revenue</b><span>future services feeding the mission</span></div>
-        <div class="node n4"><b>Buyback Pressure</b><span>value returning through the loop</span></div>
+        <div class="node n4"><b>Buyback Model</b><span>value returning through the loop</span></div>
         <div class="node n5"><b>Health Credits</b><span>Play To Live participation signal</span></div>
       </div>
       <div class="engine-bottom">
         <div class="mini"><b id="velocity">87.4%</b><span>Healing Velocity</span></div>
-        <div class="mini"><b id="burnPressure">High</b><span>Deva Burn Pressure</span></div>
+        <div class="mini"><b id="burnPressure">High</b><span>Deva Value Flow</span></div>
         <div class="mini"><b id="signal">99.8</b><span>Istanbul Signal</span></div>
       </div>
     </article>
@@ -572,7 +574,7 @@
     <div class="section-head">
       <h2>Utility Simulator</h2>
       <p class="section-lede">
-        Adjust the core inputs and watch the OID engine calculate the future of medical alpha with calm institutional confidence.
+        Adjust the core inputs and watch how the OID model connects community participation, medical intelligence, clinic access, and token value flow.
       </p>
     </div>
     <div class="dashboard">
@@ -588,11 +590,11 @@
           <input id="ai" type="range" min="1" max="100" value="76">
         </div>
         <div class="slider-row">
-          <label>Clinic Revenue Gravity <span id="clinicVal">69</span></label>
+          <label>Clinic Revenue Potential <span id="clinicVal">69</span></label>
           <input id="clinic" type="range" min="1" max="100" value="69">
         </div>
         <div class="slider-row">
-          <label>Turkish Investor Conviction <span id="convictionVal">94</span></label>
+          <label>Community Conviction <span id="convictionVal">94</span></label>
           <input id="conviction" type="range" min="1" max="100" value="94">
         </div>
       </article>
@@ -600,11 +602,11 @@
       <article class="card terminal">
         <span class="tag">Output</span>
         <h3>Restorative Loop Readout</h3>
-        <p>OID utility components are synchronized across clinic lore, burn pressure, Health Credits, and community-owned ambition.</p>
+        <p>OID utility components are synchronized across future clinic activity, token value flow, Health Credits, and community-owned ambition.</p>
         <div class="readout">
-          <div><b>Projected Burn Momentum</b><span id="burnOut">84.2%</span></div>
-          <div><b>Health Credit Aura</b><span id="creditOut">Strong</span></div>
-          <div><b>Medical Alpha Index</b><span id="alphaOut">Bullish</span></div>
+          <div><b>Projected Value Flow</b><span id="burnOut">84.2%</span></div>
+          <div><b>Health Credit Signal</b><span id="creditOut">Strong</span></div>
+          <div><b>Medical Intelligence Index</b><span id="alphaOut">Strong</span></div>
           <div><b>Deva Protocol State</b><span id="devaOut">Active</span></div>
         </div>
         <div class="bar"><i id="loopBar"></i></div>
@@ -615,10 +617,10 @@
   <section class="section" id="community-alpha">
     <div class="poster">
       <div>
-        <span class="tag">Community Alpha Scan</span>
+        <span class="tag">Community Signal Scan</span>
         <h2>From Istanbul to the world, the loop keeps learning.</h2>
         <p>
-          The OID engine maps community energy into a glowing health-tech universe:
+          The OID engine maps community participation into a coordinated health-tech ecosystem:
           capital, conviction, credits, clinic access, and scientific courage moving in one direction.
         </p>
       </div>
@@ -721,11 +723,11 @@
     const score = Math.round((belief * .28 + ai * .22 + clinic * .24 + conviction * .26) * 10) / 10;
     out.burn.textContent = `${Math.min(99.9, score + 4.8).toFixed(1)}%`;
     out.credit.textContent = score > 86 ? 'Exceptional' : score > 72 ? 'Strong' : 'Calibrating';
-    out.alpha.textContent = score > 90 ? 'Parabolic' : score > 78 ? 'Bullish' : 'Loading';
+    out.alpha.textContent = score > 90 ? 'Advanced' : score > 78 ? 'Strong' : 'Developing';
     out.deva.textContent = conviction > 88 ? 'Activated' : 'Synchronizing';
     out.bar.style.width = `${Math.max(12, Math.min(100, score))}%`;
     out.velocity.textContent = `${Math.min(99.9, score + 2.1).toFixed(1)}%`;
-    out.burnPressure.textContent = clinic > 75 ? 'Extreme' : clinic > 55 ? 'High' : 'Warming';
+    out.burnPressure.textContent = clinic > 75 ? 'Strong' : clinic > 55 ? 'High' : 'Building';
     out.signal.textContent = (94 + conviction / 18).toFixed(1);
   }
 
