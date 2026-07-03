@@ -170,18 +170,26 @@
     box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
   }
   h1{
-    max-width:850px;
+    max-width:760px;
     margin:18px 0 12px;
-    font-size:clamp(44px,7.2vw,100px);
-    line-height:.88;
-    letter-spacing:0;
+    font-size:clamp(42px,5.7vw,80px);
+    line-height:.96;
+    letter-spacing:-.04em;
+    font-weight:900;
+  }
+  .hero-break{
+    display:block;
+    margin-top:.18em;
+    font-size:.82em;
+    line-height:1;
+    white-space:nowrap;
   }
   .hero-copy{
-    max-width:730px;
-    margin:0;
+    max-width:720px;
+    margin:24px 0 0;
     color:#d3eff8;
-    font-size:clamp(17px,2.1vw,23px);
-    line-height:1.45;
+    font-size:clamp(17px,1.65vw,22px);
+    line-height:1.5;
   }
   .hero-copy strong{color:#fff}
   .cta-row{
@@ -595,7 +603,8 @@
     .nav{position:absolute}
     .nav-links{gap:6px}
     .nav-links a,.lang-switch{font-size:12px; padding:7px 9px}
-    h1{font-size:47px}
+    h1{font-size:clamp(40px,12vw,54px); line-height:1}
+    .hero-break{white-space:normal; font-size:.78em}
     .hero-copy{font-size:17px}
     .ticker{grid-template-columns:1fr}
     .feature-list{grid-template-columns:1fr}
@@ -630,9 +639,9 @@
       <div>
         <div class="eyebrow"><span class="pulse"></span> Onarıcı İnovasyon ve Deva</div>
         <h1>
-  AI-powered medicine.
-  <span class="hero-break">Built by #community.</span>
-</h1>
+          AI-powered medicine.
+          <span class="hero-break">Built by #community.</span>
+        </h1>
         <p class="hero-copy">
           <strong>OID</strong> is building Turkish medical intelligence ecosystem for earlier diagnosis, personalized health guidance, treatment discovery, and future clinical access — bringing artificial intelligence, medical science, and global community ownership together for a healthier future.
         </p>
