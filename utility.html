@@ -1,0 +1,737 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="OID Utility Engine - the restorative intelligence loop for OID Medical AI." />
+<title>OID Utility Engine</title>
+<link rel="icon" href="game/assets/oid-medical-logo.png" type="image/png">
+<style>
+  :root{
+    --bg:#04111f;
+    --bg2:#071a2f;
+    --fg:#f4fbff;
+    --muted:#a9c6d8;
+    --soft:#d9f8ff;
+    --blue:#19a8ff;
+    --cyan:#42f3d0;
+    --teal:#24d7c3;
+    --gold:#d7b955;
+    --card:rgba(5,20,35,.72);
+    --card2:rgba(7,32,52,.88);
+    --line:rgba(186,239,255,.18);
+    --shadow:0 24px 70px rgba(0,0,0,.42);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 16% 0%, rgba(66,243,208,.18), transparent 32%),
+      radial-gradient(circle at 86% 8%, rgba(25,168,255,.18), transparent 30%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 48%, #03101d);
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.72), transparent 82%);
+  }
+  canvas#engineSignals{position:fixed; inset:0; z-index:-1; opacity:.62}
+  a{color:inherit}
+  .nav{
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    width:min(1160px, calc(100% - 28px));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    background:rgba(3,13,24,.62);
+    backdrop-filter:blur(18px);
+    box-shadow:0 18px 52px rgba(0,0,0,.28);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    text-decoration:none;
+    font-weight:850;
+    letter-spacing:.08em;
+  }
+  .brand img{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,.24);
+  }
+  .brand span{white-space:nowrap}
+  .nav-links{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .nav-links a{
+    text-decoration:none;
+    color:var(--soft);
+    font-size:13px;
+    font-weight:750;
+    padding:8px 11px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(255,255,255,.045);
+  }
+  .nav-links a:hover{background:rgba(255,255,255,.1)}
+  .buy-link{
+    color:#00131b !important;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff) !important;
+    border-color:transparent !important;
+  }
+  .page{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:118px 0 44px;
+  }
+  .hero{
+    min-height:calc(100vh - 118px);
+    display:grid;
+    grid-template-columns:minmax(0,.9fr) minmax(380px,1.1fr);
+    gap:22px;
+    align-items:stretch;
+  }
+  .panel,
+  .card{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--card);
+    box-shadow:0 18px 50px rgba(0,0,0,.2);
+    overflow:hidden;
+  }
+  .intro{
+    position:relative;
+    min-height:560px;
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    background:
+      linear-gradient(180deg, rgba(4,17,31,.12), rgba(4,17,31,.92)),
+      url("game/assets/oid-hero-ai-diagnosis.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    width:max-content;
+    max-width:100%;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    color:#e8fbff;
+    background:rgba(4,21,37,.6);
+    backdrop-filter:blur(14px);
+    font-size:12px;
+    font-weight:850;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .pulse{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
+  }
+  h1{
+    max-width:720px;
+    margin:18px 0 12px;
+    font-size:clamp(42px,5.7vw,78px);
+    line-height:.94;
+    letter-spacing:-.04em;
+    font-weight:900;
+  }
+  .intro p{
+    max-width:660px;
+    margin:0;
+    color:#d3eff8;
+    font-size:clamp(17px,1.55vw,21px);
+    line-height:1.52;
+  }
+  .cta-row{
+    display:flex;
+    flex-wrap:wrap;
+    gap:10px;
+    margin-top:24px;
+  }
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:12px 16px;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:850;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:#eefcff;
+  }
+  .btn.primary{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#8defff);
+    border-color:transparent;
+    box-shadow:0 16px 44px rgba(31,231,214,.22);
+  }
+  .engine{
+    min-height:560px;
+    padding:18px;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    gap:14px;
+    background:
+      radial-gradient(circle at 50% 42%, rgba(66,243,208,.12), transparent 38%),
+      linear-gradient(180deg,rgba(8,35,55,.9),rgba(4,17,31,.82));
+  }
+  .engine-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tag{
+    display:inline-flex;
+    width:max-content;
+    padding:6px 9px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#061522;
+    background:linear-gradient(135deg,var(--cyan),#b9fbff);
+  }
+  .status{
+    color:var(--soft);
+    font-size:13px;
+    font-weight:850;
+  }
+  .loop{
+    position:relative;
+    min-height:360px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    background:rgba(255,255,255,.03);
+    overflow:hidden;
+  }
+  .loop::before{
+    content:"";
+    position:absolute;
+    inset:14%;
+    border:2px solid rgba(66,243,208,.24);
+    border-radius:50%;
+    filter:drop-shadow(0 0 22px rgba(66,243,208,.22));
+    animation:spin 18s linear infinite;
+  }
+  .loop::after{
+    content:"";
+    position:absolute;
+    inset:25%;
+    border:1px dashed rgba(215,185,85,.42);
+    border-radius:50%;
+    animation:spinReverse 24s linear infinite;
+  }
+  .core{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:132px;
+    height:132px;
+    transform:translate(-50%,-50%);
+    display:grid;
+    place-items:center;
+    border-radius:50%;
+    background:radial-gradient(circle, rgba(66,243,208,.22), rgba(7,32,52,.9) 62%);
+    border:1px solid rgba(66,243,208,.38);
+    box-shadow:0 0 54px rgba(66,243,208,.18);
+    z-index:3;
+  }
+  .core img{
+    width:86px;
+    height:86px;
+    border-radius:50%;
+    object-fit:cover;
+  }
+  .node{
+    position:absolute;
+    width:154px;
+    min-height:70px;
+    padding:12px;
+    border:1px solid rgba(255,255,255,.14);
+    border-radius:16px;
+    background:rgba(5,20,35,.82);
+    backdrop-filter:blur(10px);
+    box-shadow:0 14px 36px rgba(0,0,0,.2);
+    animation:float 4.8s ease-in-out infinite;
+    z-index:4;
+  }
+  .node b{
+    display:block;
+    color:#fff;
+    font-size:15px;
+    margin-bottom:3px;
+  }
+  .node span{
+    display:block;
+    color:var(--muted);
+    font-size:12px;
+    line-height:1.3;
+  }
+  .n1{left:7%; top:9%}
+  .n2{right:6%; top:10%; animation-delay:-.8s}
+  .n3{right:4%; bottom:15%; animation-delay:-1.7s}
+  .n4{left:8%; bottom:12%; animation-delay:-2.4s}
+  .n5{left:50%; top:4%; transform:translateX(-50%); animation-delay:-3.2s}
+  .beam{
+    position:absolute;
+    left:50%;
+    top:50%;
+    width:42%;
+    height:2px;
+    transform-origin:left center;
+    background:linear-gradient(90deg, rgba(66,243,208,.8), transparent);
+    opacity:.55;
+    z-index:2;
+  }
+  .b1{transform:rotate(24deg)}
+  .b2{transform:rotate(102deg)}
+  .b3{transform:rotate(178deg)}
+  .b4{transform:rotate(252deg)}
+  .b5{transform:rotate(318deg)}
+  .engine-bottom{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:10px;
+  }
+  .mini{
+    padding:12px;
+    border-radius:14px;
+    border:1px solid rgba(255,255,255,.12);
+    background:rgba(255,255,255,.045);
+  }
+  .mini b{
+    display:block;
+    color:#fff;
+    font-size:22px;
+  }
+  .mini span{
+    color:var(--muted);
+    font-size:12px;
+  }
+  .section{
+    padding:76px 0 0;
+  }
+  .section-head{
+    display:flex;
+    align-items:end;
+    justify-content:space-between;
+    gap:18px;
+    margin-bottom:22px;
+  }
+  .section h2{
+    margin:0;
+    font-size:clamp(30px,4.2vw,58px);
+    line-height:.95;
+  }
+  .section-lede{
+    max-width:560px;
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .dashboard{
+    display:grid;
+    grid-template-columns:.86fr 1.14fr;
+    gap:18px;
+  }
+  .card{
+    padding:20px;
+    display:flex;
+    flex-direction:column;
+    gap:14px;
+  }
+  .card h3{
+    margin:0;
+    font-size:23px;
+  }
+  .card p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .slider-row{
+    display:grid;
+    gap:8px;
+  }
+  .slider-row label{
+    display:flex;
+    justify-content:space-between;
+    gap:12px;
+    color:#fff;
+    font-weight:800;
+  }
+  input[type=range]{
+    width:100%;
+    accent-color:var(--cyan);
+  }
+  .terminal{
+    min-height:100%;
+    background:
+      linear-gradient(180deg, rgba(5,20,35,.78), rgba(4,17,31,.92)),
+      url("game/assets/oid-what-is.jpg") center/cover no-repeat;
+    position:relative;
+  }
+  .terminal::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:linear-gradient(90deg, rgba(4,17,31,.9), rgba(4,17,31,.62));
+  }
+  .terminal > *{position:relative; z-index:1}
+  .readout{
+    display:grid;
+    gap:10px;
+    margin-top:4px;
+  }
+  .readout div{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:12px 0;
+    border-top:1px solid rgba(255,255,255,.1);
+  }
+  .readout b{color:#fff}
+  .readout span{color:var(--cyan); font-weight:900; text-align:right}
+  .bar{
+    height:10px;
+    border-radius:999px;
+    background:rgba(255,255,255,.09);
+    overflow:hidden;
+  }
+  .bar i{
+    display:block;
+    width:70%;
+    height:100%;
+    border-radius:999px;
+    background:linear-gradient(90deg,var(--cyan),var(--gold));
+    box-shadow:0 0 24px rgba(66,243,208,.2);
+    transition:width .24s ease;
+  }
+  .poster{
+    margin-top:18px;
+    min-height:280px;
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:
+      linear-gradient(90deg, rgba(4,17,31,.82), rgba(4,17,31,.22)),
+      url("game/assets/oid-istanbul-world.jpg") center/cover no-repeat;
+    box-shadow:var(--shadow);
+    padding:24px;
+    display:grid;
+    align-items:end;
+  }
+  .poster h2{
+    margin:8px 0;
+    max-width:640px;
+  }
+  .poster p{
+    margin:0;
+    max-width:560px;
+    color:#d3eff8;
+    line-height:1.5;
+  }
+  .footer{
+    padding:34px 0 0;
+    color:#7fa2b8;
+    font-size:12px;
+  }
+  @keyframes spin{to{transform:rotate(360deg)}}
+  @keyframes spinReverse{to{transform:rotate(-360deg)}}
+  @keyframes float{
+    0%,100%{translate:0 0}
+    50%{translate:0 -8px}
+  }
+  @media (max-width:920px){
+    .nav{align-items:flex-start; border-radius:22px}
+    .hero,.dashboard{grid-template-columns:1fr}
+    .intro,.engine{min-height:520px}
+  }
+  @media (max-width:620px){
+    .nav{position:absolute}
+    .brand span{font-size:13px}
+    .nav-links a{font-size:12px; padding:7px 9px}
+    .page{padding-top:136px}
+    .intro{padding:20px; min-height:560px}
+    h1{font-size:clamp(40px,12vw,54px)}
+    .engine-bottom{grid-template-columns:1fr}
+    .loop{min-height:560px}
+    .node{width:138px}
+    .n1{left:5%; top:8%}
+    .n2{right:5%; top:24%}
+    .n3{right:5%; bottom:18%}
+    .n4{left:5%; bottom:7%}
+    .n5{left:50%; top:43%; transform:translate(-50%,-50%)}
+    .core{width:104px; height:104px}
+    .core img{width:70px; height:70px}
+    .section-head{display:block}
+    .section-lede{margin-top:10px}
+  }
+</style>
+</head>
+<body>
+<canvas id="engineSignals"></canvas>
+
+<nav class="nav" aria-label="Primary navigation">
+  <a class="brand" href="index.html">
+    <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI logo" />
+    <span>OID MEDICAL AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html#utility">Utility</a>
+    <a href="#burn">Burn Engine</a>
+    <a href="#community-alpha">Alpha Scan</a>
+    <a href="game/index.html">Play</a>
+    <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener" class="buy-link">BUY</a>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <article class="panel intro">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> OID Utility Engine</div>
+        <h1>The restorative intelligence loop.</h1>
+        <p>
+          A live visualization of how community belief, medical AI, clinic access, Health Credits,
+          and burn pressure synchronize into one extremely serious utility machine.
+        </p>
+        <div class="cta-row">
+          <a class="btn primary" href="#burn">Run Engine</a>
+          <a class="btn" href="index.html">Back to OID</a>
+        </div>
+      </div>
+    </article>
+
+    <article class="panel engine" aria-label="OID utility engine visualization">
+      <div class="engine-top">
+        <span class="tag">Live System</span>
+        <div class="status">STATUS: CALIBRATING MEDICAL ALPHA</div>
+      </div>
+      <div class="loop">
+        <div class="beam b1"></div>
+        <div class="beam b2"></div>
+        <div class="beam b3"></div>
+        <div class="beam b4"></div>
+        <div class="beam b5"></div>
+        <div class="core"><img src="game/assets/oid-medical-logo.png" alt="OID"></div>
+        <div class="node n1"><b>Community Capital</b><span>belief converted into forward motion</span></div>
+        <div class="node n2"><b>AI Health Layer</b><span>diagnosis, research, treatment discovery</span></div>
+        <div class="node n3"><b>Clinic Revenue</b><span>future services feeding the mission</span></div>
+        <div class="node n4"><b>Buyback Pressure</b><span>value returning through the loop</span></div>
+        <div class="node n5"><b>Health Credits</b><span>Play To Live participation signal</span></div>
+      </div>
+      <div class="engine-bottom">
+        <div class="mini"><b id="velocity">87.4%</b><span>Healing Velocity</span></div>
+        <div class="mini"><b id="burnPressure">High</b><span>Deva Burn Pressure</span></div>
+        <div class="mini"><b id="signal">99.8</b><span>Istanbul Signal</span></div>
+      </div>
+    </article>
+  </section>
+
+  <section class="section" id="burn">
+    <div class="section-head">
+      <h2>Utility Simulator</h2>
+      <p class="section-lede">
+        Adjust the core inputs and watch the OID engine calculate the future of medical alpha with calm institutional confidence.
+      </p>
+    </div>
+    <div class="dashboard">
+      <article class="card">
+        <span class="tag">Control Room</span>
+        <h3>Protocol Inputs</h3>
+        <div class="slider-row">
+          <label>Community Belief <span id="beliefVal">82</span></label>
+          <input id="belief" type="range" min="1" max="100" value="82">
+        </div>
+        <div class="slider-row">
+          <label>AI Diagnosis Speed <span id="aiVal">76</span></label>
+          <input id="ai" type="range" min="1" max="100" value="76">
+        </div>
+        <div class="slider-row">
+          <label>Clinic Revenue Gravity <span id="clinicVal">69</span></label>
+          <input id="clinic" type="range" min="1" max="100" value="69">
+        </div>
+        <div class="slider-row">
+          <label>Turkish Investor Conviction <span id="convictionVal">94</span></label>
+          <input id="conviction" type="range" min="1" max="100" value="94">
+        </div>
+      </article>
+
+      <article class="card terminal">
+        <span class="tag">Output</span>
+        <h3>Restorative Loop Readout</h3>
+        <p>OID utility components are synchronized across clinic lore, burn pressure, Health Credits, and community-owned ambition.</p>
+        <div class="readout">
+          <div><b>Projected Burn Momentum</b><span id="burnOut">84.2%</span></div>
+          <div><b>Health Credit Aura</b><span id="creditOut">Strong</span></div>
+          <div><b>Medical Alpha Index</b><span id="alphaOut">Bullish</span></div>
+          <div><b>Deva Protocol State</b><span id="devaOut">Active</span></div>
+        </div>
+        <div class="bar"><i id="loopBar"></i></div>
+      </article>
+    </div>
+  </section>
+
+  <section class="section" id="community-alpha">
+    <div class="poster">
+      <div>
+        <span class="tag">Community Alpha Scan</span>
+        <h2>From Istanbul to the world, the loop keeps learning.</h2>
+        <p>
+          The OID engine maps community energy into a glowing health-tech universe:
+          capital, conviction, credits, clinic access, and scientific courage moving in one direction.
+        </p>
+      </div>
+    </div>
+  </section>
+
+  <div class="footer">
+    OID Medical AI · Onarıcı İnovasyon ve Deva · Utility Engine
+  </div>
+</main>
+
+<script>
+(() => {
+  const c = document.getElementById('engineSignals');
+  const x = c.getContext('2d');
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let w, h, nodes;
+
+  function resize(){
+    w = c.width = innerWidth * DPR;
+    h = c.height = innerHeight * DPR;
+    nodes = Array.from({length:90}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (-.34 + Math.random() * .68) * DPR,
+      vy: (-.24 + Math.random() * .48) * DPR,
+      r: (1 + Math.random() * 2.3) * DPR
+    }));
+  }
+
+  function tick(){
+    x.clearRect(0, 0, w, h);
+    for (const n of nodes){
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < -20 || n.x > w + 20) n.vx *= -1;
+      if (n.y < -20 || n.y > h + 20) n.vy *= -1;
+    }
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 150 * DPR){
+          x.globalAlpha = (1 - d / (150 * DPR)) * .22;
+          x.strokeStyle = '#42f3d0';
+          x.lineWidth = 1 * DPR;
+          x.beginPath();
+          x.moveTo(a.x, a.y);
+          x.lineTo(b.x, b.y);
+          x.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      x.globalAlpha = .42;
+      x.fillStyle = '#d9f8ff';
+      x.beginPath();
+      x.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      x.fill();
+    }
+    x.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  addEventListener('resize', resize);
+  tick();
+})();
+
+(() => {
+  const inputs = ['belief','ai','clinic','conviction'].map(id => document.getElementById(id));
+  const labels = {
+    belief: document.getElementById('beliefVal'),
+    ai: document.getElementById('aiVal'),
+    clinic: document.getElementById('clinicVal'),
+    conviction: document.getElementById('convictionVal')
+  };
+  const out = {
+    burn: document.getElementById('burnOut'),
+    credit: document.getElementById('creditOut'),
+    alpha: document.getElementById('alphaOut'),
+    deva: document.getElementById('devaOut'),
+    bar: document.getElementById('loopBar'),
+    velocity: document.getElementById('velocity'),
+    burnPressure: document.getElementById('burnPressure'),
+    signal: document.getElementById('signal')
+  };
+
+  function update(){
+    const belief = +document.getElementById('belief').value;
+    const ai = +document.getElementById('ai').value;
+    const clinic = +document.getElementById('clinic').value;
+    const conviction = +document.getElementById('conviction').value;
+    labels.belief.textContent = belief;
+    labels.ai.textContent = ai;
+    labels.clinic.textContent = clinic;
+    labels.conviction.textContent = conviction;
+
+    const score = Math.round((belief * .28 + ai * .22 + clinic * .24 + conviction * .26) * 10) / 10;
+    out.burn.textContent = `${Math.min(99.9, score + 4.8).toFixed(1)}%`;
+    out.credit.textContent = score > 86 ? 'Exceptional' : score > 72 ? 'Strong' : 'Calibrating';
+    out.alpha.textContent = score > 90 ? 'Parabolic' : score > 78 ? 'Bullish' : 'Loading';
+    out.deva.textContent = conviction > 88 ? 'Activated' : 'Synchronizing';
+    out.bar.style.width = `${Math.max(12, Math.min(100, score))}%`;
+    out.velocity.textContent = `${Math.min(99.9, score + 2.1).toFixed(1)}%`;
+    out.burnPressure.textContent = clinic > 75 ? 'Extreme' : clinic > 55 ? 'High' : 'Warming';
+    out.signal.textContent = (94 + conviction / 18).toFixed(1);
+  }
+
+  inputs.forEach(input => input.addEventListener('input', update));
+  update();
+})();
+</script>
+</body>
+</html>
