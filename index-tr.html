@@ -327,6 +327,22 @@
     color:var(--muted);
     line-height:1.55;
   }
+  .card-link{
+    color:inherit;
+    text-decoration:none;
+    transition:transform .16s ease, border-color .18s ease, background .18s ease;
+  }
+  .card-link:hover{
+    transform:translateY(-3px);
+    border-color:rgba(66,243,208,.46);
+    background:linear-gradient(180deg,rgba(8,35,55,.86),rgba(5,20,35,.74));
+  }
+  .utility-action{
+    margin-top:16px;
+    color:var(--cyan);
+    font-weight:850;
+    letter-spacing:.02em;
+  }
   .tag{
     display:inline-flex;
     width:max-content;
@@ -631,7 +647,7 @@
     <span>OID MEDICAL AI</span>
   </a>
   <div class="nav-links">
-    <a href="#utility">Fayda</a>
+    <a href="utility-tr.html">Fayda</a>
     <a href="#founder">Kurucu</a>
     <a href="#play-to-live">Yaşamak İçin Oyna</a>
     <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DEX</a>
@@ -657,7 +673,7 @@
         </p>
         <div class="cta-row">
           <a class="btn primary" href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">$OID SATIN AL</a>
-          <a class="btn" href="#utility">Faydayı Gör</a>
+          <a class="btn" href="utility-tr.html">Fayda Motorunu Gör</a>
           <a class="btn" href="#founder">Kurucu Vizyonu</a>
           <a class="btn" href="game/index.html">Yaşamak İçin Oyna</a>
           <a class="btn" href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
@@ -715,21 +731,24 @@
       </p>
     </div>
     <div class="grid">
-      <article class="card">
+      <a class="card card-link" href="utility-tr.html">
         <span class="tag">Klinik Modeli</span>
         <h3>Önce Sağlık Hizmetleri</h3>
         <p>OID, yapay zekâ destekli testlerin, tanıların ve tedavi erişiminin faydanın görünür yüzü hâline geldiği uluslararası bir sağlık kliniği hayal eder.</p>
-      </article>
-      <article class="card">
+        <div class="utility-action">Klinik Döngüsünü Aç →</div>
+      </a>
+      <a class="card card-link" href="utility-tr.html#burn">
         <span class="tag">Al ve Yak</span>
         <h3>Yakım Misyonu Takip Eder</h3>
         <p>OID uluslararası sağlık kliniği faaliyetlerinden doğacak net kârların OID satın almak ve yakmak için kullanılması hedeflenir. Önce şifa, sonra değer.</p>
-      </article>
-      <article class="card">
+        <div class="utility-action">Yakım Motorunu Çalıştır →</div>
+      </a>
+      <a class="card card-link" href="utility-tr.html#community-alpha">
         <span class="tag">Topluluk</span>
         <h3>Kolektif Tıbbi Alfa</h3>
         <p>Topluluk; tıbbi zekâ altyapısı için finansman, güç, inanç ve farkındalık kaynağı olarak konumlandırılır.</p>
-      </article>
+        <div class="utility-action">Topluluk Alfasını Tara →</div>
+      </a>
     </div>
   </section>
 
