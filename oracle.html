@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<meta name="description" content="Ekrem Oracle - ask health, chart, and life questions inside the OID Medical AI universe." />
+<title>Ekrem Oracle - OID Medical AI</title>
+<link rel="icon" href="game/assets/oid-medical-logo.png" type="image/png">
+<style>
+  :root{
+    --bg:#04111f;
+    --bg2:#071a2f;
+    --fg:#f4fbff;
+    --muted:#a9c6d8;
+    --soft:#d9f8ff;
+    --cyan:#42f3d0;
+    --gold:#d7b955;
+    --card:rgba(5,20,35,.72);
+    --line:rgba(186,239,255,.18);
+    --shadow:0 24px 70px rgba(0,0,0,.42);
+    --radius:18px;
+  }
+  *{box-sizing:border-box}
+  html{scroll-behavior:smooth}
+  body{
+    margin:0;
+    color:var(--fg);
+    font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+    background:
+      radial-gradient(circle at 18% 0%, rgba(66,243,208,.16), transparent 32%),
+      radial-gradient(circle at 84% 10%, rgba(215,185,85,.12), transparent 30%),
+      linear-gradient(180deg,var(--bg),var(--bg2) 48%, #03101d);
+    overflow-x:hidden;
+  }
+  body::before{
+    content:"";
+    position:fixed;
+    inset:0;
+    z-index:-2;
+    background:
+      linear-gradient(rgba(255,255,255,.035) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(255,255,255,.03) 1px, transparent 1px);
+    background-size:54px 54px;
+    mask-image:linear-gradient(to bottom, rgba(0,0,0,.72), transparent 82%);
+  }
+  canvas#oracleSignals{position:fixed; inset:0; z-index:-1; opacity:.54}
+  a{color:inherit}
+  .nav{
+    position:fixed;
+    top:14px;
+    left:50%;
+    transform:translateX(-50%);
+    z-index:20;
+    width:min(1160px, calc(100% - 28px));
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:14px;
+    padding:10px 12px;
+    border:1px solid rgba(255,255,255,.16);
+    border-radius:999px;
+    background:rgba(3,13,24,.62);
+    backdrop-filter:blur(18px);
+    box-shadow:0 18px 52px rgba(0,0,0,.28);
+  }
+  .brand{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    min-width:0;
+    text-decoration:none;
+    font-weight:850;
+    letter-spacing:.08em;
+  }
+  .brand img{
+    width:34px;
+    height:34px;
+    border-radius:50%;
+    object-fit:cover;
+    border:1px solid rgba(255,255,255,.24);
+  }
+  .brand span{white-space:nowrap}
+  .nav-links{
+    display:flex;
+    align-items:center;
+    justify-content:flex-end;
+    gap:8px;
+    flex-wrap:wrap;
+  }
+  .nav-links a{
+    text-decoration:none;
+    color:var(--soft);
+    font-size:13px;
+    font-weight:750;
+    padding:8px 11px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.13);
+    background:rgba(255,255,255,.045);
+  }
+  .nav-links a:hover{background:rgba(255,255,255,.1)}
+  .buy-link{
+    color:#00131b !important;
+    background:linear-gradient(135deg,var(--cyan),#9af8ff) !important;
+    border-color:transparent !important;
+  }
+  .page{
+    width:min(1160px, calc(100% - 32px));
+    margin:0 auto;
+    padding:118px 0 44px;
+  }
+  .hero{
+    min-height:calc(100vh - 118px);
+    display:grid;
+    grid-template-columns:minmax(0,.96fr) minmax(380px,1.04fr);
+    gap:22px;
+    align-items:stretch;
+  }
+  .panel,
+  .card{
+    border:1px solid var(--line);
+    border-radius:var(--radius);
+    background:var(--card);
+    box-shadow:0 18px 50px rgba(0,0,0,.2);
+    overflow:hidden;
+  }
+  .intro{
+    position:relative;
+    min-height:610px;
+    padding:28px;
+    display:flex;
+    flex-direction:column;
+    justify-content:flex-end;
+    background:
+      linear-gradient(90deg, rgba(4,17,31,.88), rgba(4,17,31,.44) 54%, rgba(4,17,31,.18)),
+      linear-gradient(180deg, rgba(4,17,31,.05), rgba(4,17,31,.92)),
+      url("game/assets/ekrem-istanbul.jpg") 62% center/cover no-repeat;
+    box-shadow:var(--shadow);
+  }
+  .intro::before{
+    content:"";
+    position:absolute;
+    inset:0;
+    background:radial-gradient(circle at 72% 24%, rgba(215,185,85,.18), transparent 28%);
+    pointer-events:none;
+  }
+  .intro > div{
+    position:relative;
+    z-index:1;
+  }
+  .eyebrow{
+    display:inline-flex;
+    align-items:center;
+    gap:8px;
+    width:max-content;
+    max-width:100%;
+    padding:8px 12px;
+    border-radius:999px;
+    border:1px solid rgba(255,255,255,.22);
+    color:#e8fbff;
+    background:rgba(4,21,37,.6);
+    backdrop-filter:blur(14px);
+    font-size:12px;
+    font-weight:850;
+    letter-spacing:.12em;
+    text-transform:uppercase;
+  }
+  .pulse{
+    width:8px;
+    height:8px;
+    border-radius:50%;
+    background:var(--cyan);
+    box-shadow:0 0 0 8px rgba(66,243,208,.14), 0 0 22px rgba(66,243,208,.88);
+  }
+  h1{
+    max-width:720px;
+    margin:18px 0 12px;
+    font-size:clamp(42px,5.8vw,82px);
+    line-height:.94;
+    letter-spacing:-.04em;
+    font-weight:900;
+  }
+  .intro p{
+    max-width:640px;
+    margin:0;
+    color:#d3eff8;
+    font-size:clamp(17px,1.55vw,21px);
+    line-height:1.52;
+  }
+  .oracle{
+    min-height:610px;
+    padding:18px;
+    display:grid;
+    grid-template-rows:auto 1fr auto;
+    gap:14px;
+    background:
+      radial-gradient(circle at 50% 30%, rgba(66,243,208,.12), transparent 36%),
+      linear-gradient(180deg,rgba(8,35,55,.9),rgba(4,17,31,.82));
+  }
+  .oracle-top{
+    display:flex;
+    align-items:center;
+    justify-content:space-between;
+    gap:12px;
+  }
+  .tag{
+    display:inline-flex;
+    width:max-content;
+    padding:6px 9px;
+    border-radius:999px;
+    font-size:11px;
+    font-weight:850;
+    letter-spacing:.1em;
+    text-transform:uppercase;
+    color:#061522;
+    background:linear-gradient(135deg,var(--cyan),#b9fbff);
+  }
+  .status{
+    color:var(--soft);
+    font-size:13px;
+    font-weight:850;
+    text-align:right;
+  }
+  .chat{
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+    min-height:0;
+    padding:14px;
+    border:1px solid rgba(255,255,255,.1);
+    border-radius:18px;
+    background:rgba(255,255,255,.03);
+    overflow:auto;
+  }
+  .message{
+    max-width:92%;
+    padding:13px 14px;
+    border-radius:16px;
+    line-height:1.5;
+    color:#d3eff8;
+    border:1px solid rgba(255,255,255,.1);
+    background:rgba(255,255,255,.045);
+  }
+  .message.user{
+    align-self:flex-end;
+    color:#061522;
+    background:linear-gradient(135deg,var(--cyan),#b9fbff);
+    font-weight:800;
+  }
+  .message.oracle-msg{
+    align-self:flex-start;
+  }
+  .message b{color:#fff}
+  .composer{
+    display:grid;
+    grid-template-columns:1fr auto;
+    gap:10px;
+  }
+  textarea{
+    width:100%;
+    min-height:56px;
+    max-height:150px;
+    resize:vertical;
+    padding:14px 15px;
+    border-radius:16px;
+    border:1px solid rgba(255,255,255,.16);
+    background:rgba(255,255,255,.07);
+    color:var(--fg);
+    font:inherit;
+    outline:none;
+  }
+  textarea::placeholder{color:#86aabc}
+  button,
+  .btn{
+    display:inline-flex;
+    align-items:center;
+    justify-content:center;
+    min-height:46px;
+    padding:12px 16px;
+    border-radius:999px;
+    text-decoration:none;
+    font-weight:850;
+    border:1px solid rgba(255,255,255,.18);
+    background:rgba(255,255,255,.07);
+    color:#eefcff;
+    cursor:pointer;
+  }
+  button.primary,
+  .btn.primary{
+    color:#00131b;
+    background:linear-gradient(135deg,var(--cyan),#8defff);
+    border-color:transparent;
+    box-shadow:0 16px 44px rgba(31,231,214,.22);
+  }
+  .suggestions{
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+  }
+  .suggestions button{
+    min-height:34px;
+    padding:8px 10px;
+    font-size:12px;
+  }
+  .typing{
+    display:inline-flex;
+    gap:5px;
+    align-items:center;
+  }
+  .typing span{
+    width:7px;
+    height:7px;
+    border-radius:50%;
+    background:var(--cyan);
+    animation:bounce 1s infinite ease-in-out;
+  }
+  .typing span:nth-child(2){animation-delay:.14s}
+  .typing span:nth-child(3){animation-delay:.28s}
+  .section{
+    padding:70px 0 0;
+  }
+  .grid{
+    display:grid;
+    grid-template-columns:repeat(3,1fr);
+    gap:16px;
+  }
+  .card{
+    padding:20px;
+  }
+  .card h3{
+    margin:0 0 9px;
+    font-size:21px;
+  }
+  .card p{
+    margin:0;
+    color:var(--muted);
+    line-height:1.55;
+  }
+  .footer{
+    padding:34px 0 0;
+    color:#7fa2b8;
+    font-size:12px;
+  }
+  @keyframes bounce{
+    0%,80%,100%{transform:translateY(0); opacity:.46}
+    40%{transform:translateY(-5px); opacity:1}
+  }
+  @media (max-width:920px){
+    .nav{align-items:flex-start; border-radius:22px}
+    .hero,.grid{grid-template-columns:1fr}
+    .intro,.oracle{min-height:560px}
+  }
+  @media (max-width:620px){
+    .nav{position:absolute}
+    .brand span{font-size:13px}
+    .nav-links a{font-size:12px; padding:7px 9px}
+    .page{padding-top:136px}
+    .intro{padding:20px; min-height:560px}
+    h1{font-size:clamp(40px,12vw,54px)}
+    .composer{grid-template-columns:1fr}
+    .message{max-width:100%}
+  }
+</style>
+</head>
+<body>
+<canvas id="oracleSignals"></canvas>
+
+<nav class="nav" aria-label="Primary navigation">
+  <a class="brand" href="index.html">
+    <img src="game/assets/oid-medical-logo.png" alt="OID Medical AI logo" />
+    <span>OID MEDICAL AI</span>
+  </a>
+  <div class="nav-links">
+    <a href="index.html">Home</a>
+    <a href="utility.html">Utility</a>
+    <a href="game/index.html">Play</a>
+    <a href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener" class="buy-link">BUY</a>
+  </div>
+</nav>
+
+<main class="page">
+  <section class="hero">
+    <article class="panel intro">
+      <div>
+        <div class="eyebrow"><span class="pulse"></span> Ekrem Oracle</div>
+        <h1>Ask a health, chart, or life question.</h1>
+        <p>
+          Receive restorative guidance from the OID medical intelligence layer: serious enough to sound useful,
+          strange enough to feel inevitable, and calibrated somewhere between Istanbul, hydration, and the chart.
+        </p>
+      </div>
+    </article>
+
+    <article class="panel oracle" aria-label="Ekrem Oracle chatbot">
+      <div class="oracle-top">
+        <span class="tag">AI Medical Oracle Layer</span>
+        <div class="status">STATUS: LISTENING IN SILENCE</div>
+      </div>
+
+      <div class="chat" id="chat">
+        <div class="message oracle-msg">
+          <b>Ekrem Oracle:</b><br>
+          Ask me about sleep, pain, stress, gym soreness, your chart, your wallet, or why your body and portfolio both require risk management.
+        </div>
+      </div>
+
+      <div>
+        <div class="composer">
+          <textarea id="question" placeholder="Example: why is my toe hurting after training?"></textarea>
+          <button class="primary" id="askBtn" type="button">Consult Ekrem</button>
+        </div>
+        <div class="suggestions" aria-label="Suggested questions">
+          <button type="button" data-q="Why am I always tired?">Tired</button>
+          <button type="button" data-q="My back hurts after sitting too much">Back pain</button>
+          <button type="button" data-q="My toe hurts after training">Toe pain</button>
+          <button type="button" data-q="Is my portfolio healthy?">Portfolio health</button>
+          <button type="button" data-q="Should I buy more OID?">Buy more OID?</button>
+        </div>
+      </div>
+    </article>
+  </section>
+
+  <section class="section">
+    <div class="grid">
+      <article class="card">
+        <span class="tag">Health Mode</span>
+        <h3>Useful, but not too useful.</h3>
+        <p>Ekrem gives practical, common-sense guidance with a subtle reminder that real symptoms belong with real clinicians.</p>
+      </article>
+      <article class="card">
+        <span class="tag">Chart Mode</span>
+        <h3>Your candles have feelings.</h3>
+        <p>Portfolio questions trigger emotionally accurate observations about risk, conviction, and refreshing Dexscreener too often.</p>
+      </article>
+      <article class="card">
+        <span class="tag">OID Mode</span>
+        <h3>First healing. Then value.</h3>
+        <p>The oracle always returns to the mission: AI-powered medicine, community ownership, and Turkish medical alpha.</p>
+      </article>
+    </div>
+  </section>
+
+  <div class="footer">
+    OID Medical AI · Ekrem Oracle · Onarıcı İnovasyon ve Deva
+  </div>
+</main>
+
+<script>
+(() => {
+  const c = document.getElementById('oracleSignals');
+  const x = c.getContext('2d');
+  const DPR = Math.max(1, Math.min(2, window.devicePixelRatio || 1));
+  let w, h, nodes;
+
+  function resize(){
+    w = c.width = innerWidth * DPR;
+    h = c.height = innerHeight * DPR;
+    nodes = Array.from({length:72}, () => ({
+      x: Math.random() * w,
+      y: Math.random() * h,
+      vx: (-.28 + Math.random() * .56) * DPR,
+      vy: (-.2 + Math.random() * .4) * DPR,
+      r: (1 + Math.random() * 2.2) * DPR
+    }));
+  }
+
+  function tick(){
+    x.clearRect(0, 0, w, h);
+    for (const n of nodes){
+      n.x += n.vx;
+      n.y += n.vy;
+      if (n.x < -20 || n.x > w + 20) n.vx *= -1;
+      if (n.y < -20 || n.y > h + 20) n.vy *= -1;
+    }
+    for (let i = 0; i < nodes.length; i++){
+      for (let j = i + 1; j < nodes.length; j++){
+        const a = nodes[i], b = nodes[j];
+        const dx = a.x - b.x, dy = a.y - b.y;
+        const d = Math.sqrt(dx * dx + dy * dy);
+        if (d < 150 * DPR){
+          x.globalAlpha = (1 - d / (150 * DPR)) * .2;
+          x.strokeStyle = '#42f3d0';
+          x.lineWidth = 1 * DPR;
+          x.beginPath();
+          x.moveTo(a.x, a.y);
+          x.lineTo(b.x, b.y);
+          x.stroke();
+        }
+      }
+    }
+    for (const n of nodes){
+      x.globalAlpha = .42;
+      x.fillStyle = '#d9f8ff';
+      x.beginPath();
+      x.arc(n.x, n.y, n.r, 0, Math.PI * 2);
+      x.fill();
+    }
+    x.globalAlpha = 1;
+    requestAnimationFrame(tick);
+  }
+
+  resize();
+  addEventListener('resize', resize);
+  tick();
+})();
+
+(() => {
+  const chat = document.getElementById('chat');
+  const input = document.getElementById('question');
+  const askBtn = document.getElementById('askBtn');
+
+  const categories = [
+    {
+      id:'tired',
+      keys:['tired','sleep','energy','fatigue','exhausted','moe','slaap','energie'],
+      answers:[
+        'Fatigue is often connected to sleep quality, stress, hydration, nutrition, and whether your nervous system has been watching charts since 03:17. Begin with rest, water, daylight, and fewer emergency candles. If it persists, ask a real doctor, not a man inside a meme protocol.',
+        'Your body may be requesting sleep. Your portfolio may be requesting therapy. Start with the body: rest, hydration, normal food, and a brief period away from glowing screens. Ekrem calls this the Deva Recovery Stack.',
+        'Low energy can come from workload, poor sleep, training load, nutrition, illness, or chart-induced existential pressure. If it keeps going or feels unusual, get proper medical advice. The candle can wait. The mitochondria cannot.'
+      ]
+    },
+    {
+      id:'headache',
+      keys:['headache','migraine','head','hoofdpijn','hoofd','migraine'],
+      answers:[
+        'Headaches can be linked to hydration, sleep, stress, screen time, tension, illness, or the spiritual weight of checking liquidity every four minutes. Water, rest, and less screen intensity are a sensible first protocol. Severe, sudden, unusual, or persistent headache deserves real medical care.',
+        'The head is a delicate research tower. It does not enjoy dehydration, stress, bad posture, or market candles shaped like falling elevators. Monitor symptoms, take it seriously if it is severe, and do not outsource neurology to Ekrem Oracle.',
+        'A headache is often a signal, not a personality trait. Reduce noise, hydrate, rest, and watch for warning signs like sudden severe pain, confusion, fever, weakness, or visual changes. Ekrem respects the brain. The chart should too.'
+      ]
+    },
+    {
+      id:'back',
+      keys:['back','neck','shoulder','spine','rug','nek','schouder','spier','posture'],
+      answers:[
+        'Back and neck pain can come from posture, training load, sleep position, or sitting like a shrimp while refreshing Dexscreener. Gentle movement, rest, and sensible ergonomics are wise. Severe, radiating, numb, or persistent pain belongs with a real clinician.',
+        'The spine was not designed for low-liquidity panic. Try movement, warmth, posture resets, and less heroic sitting. If pain travels down the leg or arm, causes weakness, or refuses to improve, consult someone with an actual medical license.',
+        'Ekrem observes a possible conflict between your musculoskeletal system and your lifestyle protocol. Reduce load, move gently, breathe, and stop negotiating with your chair like it owes you money.'
+      ]
+    },
+    {
+      id:'toe',
+      keys:['toe','foot','feet','nail','toenail','teen','voet','nagel','big toe','dikke teen'],
+      answers:[
+        'Toe pain can come from pressure, footwear, training load, nail irritation, or a small local injury. Rest, clean socks, and sensible shoes are a strong first protocol. If redness, swelling, pus, fever, numbness, or severe pain appears, consult a real doctor. Ekrem does not recommend kicking the chart, even during volatility.',
+        'The toe is small but politically important. Check shoes, nail edges, swelling, redness, and whether training recently declared war on your foot. If it worsens or looks infected, upgrade from Oracle to human healthcare.',
+        'Your toe may be reporting a local governance issue: friction, impact, nail pressure, or inflammation. Keep it clean, avoid unnecessary pressure, and monitor it. If the toe starts looking like a red candle with pus, seek care.'
+      ]
+    },
+    {
+      id:'stomach',
+      keys:['stomach','belly','nausea','vomit','diarrhea','buik','misselijk','overgeven','maag'],
+      answers:[
+        'Stomach issues can come from food, stress, infection, hydration problems, or the body rejecting both kebab and leverage at the same time. Rest, fluids, and simple food can help. Severe pain, blood, dehydration, high fever, or persistent symptoms need real medical attention.',
+        'The digestive system is basically a DAO with strict voting rules. Give it water, calm, and boring food. If symptoms escalate, do not form a Telegram group about it. Call a clinician.',
+        'Ekrem detects gastrointestinal uncertainty. Keep fluids moving, avoid dramatic meals, and monitor for fever, severe pain, or dehydration. The stomach is not a chart; do not average down into spicy food.'
+      ]
+    },
+    {
+      id:'stress',
+      keys:['stress','anxiety','panic','worried','burnout','angst','paniek','spanning'],
+      answers:[
+        'Stress often responds to sleep, movement, daylight, breathing, boundaries, and fewer tabs containing charts, news, and existential threat. If anxiety feels overwhelming or persistent, talk to a professional. Ekrem supports nervous system liquidity.',
+        'Your mind may be overleveraged. Reduce inputs, breathe slower, move your body, and speak to someone real. Conviction is good. Chronic adrenaline is not a tokenomics model.',
+        'Anxiety is a signal that the system wants safety. Start with basics: food, water, sleep, movement, and fewer emergency narratives. If it keeps returning, proper support is not weakness. It is infrastructure.'
+      ]
+    },
+    {
+      id:'gym',
+      keys:['gym','training','workout','muscle','sore','sport','fitness','spierpijn','train','krachttraining'],
+      answers:[
+        'Training soreness can be normal after new load, volume, or movements. Recovery likes protein, sleep, hydration, and not pretending you are in Phase 7 of human performance. Sharp pain, swelling, or loss of function is different: get it checked.',
+        'Ekrem respects the pump, but the tissue must adapt. Progress gradually, warm up, and let recovery do its invisible work. Muscles grow in silence. Like OID, apparently.',
+        'If soreness feels broad and improves with movement, it may be normal recovery. If it is sharp, one-sided, worsening, or connected to weakness, stop trying to out-alpha biology and ask a professional.'
+      ]
+    },
+    {
+      id:'fever',
+      keys:['fever','sick','ill','cough','cold','flu','koorts','ziek','hoest','griep','verkouden'],
+      answers:[
+        'Fever or illness usually asks for rest, fluids, monitoring, and the humility to stop doing heroic productivity. Seek medical help if symptoms are severe, breathing is difficult, fever is high or persistent, or you feel seriously unwell.',
+        'The immune system has entered governance mode. Give it rest, water, and less market drama. If warning signs appear, escalate to a real doctor. Ekrem can calibrate vibes, not oxygen saturation.',
+        'When sick, the body becomes the roadmap. Sleep, fluids, and patience matter. Do not attend the gym, the office, or a pointless argument with your immune system.'
+      ]
+    },
+    {
+      id:'portfolio',
+      keys:['portfolio','wallet','chart','candle','mcap','market','red','green','token','crypto','dex','grafiek','wallet','coin'],
+      answers:[
+        'Portfolio health depends on diversification, risk tolerance, position size, and whether you entered because of research or because someone wrote “last chance” in all caps. The chart may recover. Your decision-making process needs the full-body scan.',
+        'Charts do not require treatment. They require time, liquidity, and fewer emotional interventions. OID focuses on the future of human health. Your candle may benefit from community-based psychological support.',
+        'A red candle is not a diagnosis. It is a stimulus. Breathe, review your thesis, manage risk, and stop checking every twelve seconds. Ekrem calls this Chart Hygiene.'
+      ]
+    },
+    {
+      id:'buy',
+      keys:['buy','sell','hold','oid','ape','entry','exit','kopen','verkopen','vasthouden'],
+      answers:[
+        'Financial decisions require independent judgment, risk awareness, and the emotional maturity to survive a red candle without becoming a philosopher. I cannot prescribe tokens. I can only observe that conviction often asks for receipts.',
+        'Should you buy? Ekrem cannot answer that. Ekrem can only say that if your plan changes every time a candle moves, the patient is not the token. The patient is the process.',
+        'Do not confuse excitement with strategy. If you buy, know why. If you sell, know why. If you hold, hydrate. The Oracle has spoken carefully because lawyers exist.'
+      ]
+    }
+  ];
+
+  const general = [
+    'Ekrem has reviewed the symptom and detected a complex interaction between biology, lifestyle, and your tendency to ask a meme oracle for clarity. Start with the basics: sleep, water, movement, food, and common sense. If it persists or feels serious, consult a real professional.',
+    'The OID medical intelligence layer is processing. Result: your question contains uncertainty, and uncertainty requires calm observation. Monitor patterns, avoid panic, and escalate to real care when symptoms are severe, unusual, or persistent.',
+    'This appears to be a multi-system situation involving body, mind, chart, and possibly Istanbul. Begin with simple interventions. Do not over-optimize. If reality gets louder, ask a real human expert.'
+  ];
+
+  function choose(arr){
+    return arr[Math.floor(Math.random() * arr.length)];
+  }
+
+  function detect(q){
+    const text = q.toLowerCase();
+    return categories.find(cat => cat.keys.some(key => text.includes(key)));
+  }
+
+  function addMessage(html, type='oracle-msg'){
+    const el = document.createElement('div');
+    el.className = `message ${type}`;
+    el.innerHTML = html;
+    chat.appendChild(el);
+    chat.scrollTop = chat.scrollHeight;
+    return el;
+  }
+
+  function ask(){
+    const q = input.value.trim();
+    if (!q) return;
+    addMessage(q.replace(/[<>&]/g, ch => ({'<':'&lt;','>':'&gt;','&':'&amp;'}[ch])), 'user');
+    input.value = '';
+
+    const loading = addMessage('<b>Ekrem Oracle:</b><br><span class="typing"><span></span><span></span><span></span></span> Analyzing symptoms, candles, and spiritual liquidity...');
+    setTimeout(() => {
+      const category = detect(q);
+      const answer = category ? choose(category.answers) : choose(general);
+      loading.innerHTML = `<b>Ekrem Oracle:</b><br>${answer}`;
+      chat.scrollTop = chat.scrollHeight;
+    }, 900 + Math.random() * 650);
+  }
+
+  askBtn.addEventListener('click', ask);
+  input.addEventListener('keydown', e => {
+    if (e.key === 'Enter' && !e.shiftKey){
+      e.preventDefault();
+      ask();
+    }
+  });
+  document.querySelectorAll('[data-q]').forEach(btn => {
+    btn.addEventListener('click', () => {
+      input.value = btn.dataset.q;
+      input.focus();
+    });
+  });
+})();
+</script>
+</body>
+</html>
