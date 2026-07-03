@@ -3,35 +3,248 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1" />
-  <title>SPACE OID</title>
-  <meta name="theme-color" content="#070b14">
+  <title>OID Play To Live</title>
+  <meta name="theme-color" content="#061827">
   <link rel="manifest" href="manifest.webmanifest">
-  <link rel="apple-touch-icon" href="assets/cz-droid.png">
+  <link rel="apple-touch-icon" href="assets/oid-medical-logo.png">
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-app.js"></script>
   <script src="https://www.gstatic.com/firebasejs/8.10.1/firebase-firestore.js"></script>
   <style>
-    :root{--bg:#070b14; --fg:#e8f0ff; --accent:#6ee7ff; --accent2:#ffcc6e; --danger:#ff6e6e; --muted:#6b7280; --shadow:0 10px 30px rgba(0,0,0,.35);}html,body{height:100%;margin:0}body{background:radial-gradient(1200px 800px at 70% 20%, rgba(110,231,255,.06), transparent), var(--bg);color:var(--fg); font-family: system-ui, sans-serif; overflow:hidden;}#wrap{position:fixed; inset:0; display:grid; place-items:center}canvas{ width: min(100vw, 100vh*0.5625); height: min(100vh, 100vw/0.5625); max-width:100vw; max-height:100vh; box-shadow: var(--shadow); border-radius: 18px; background: transparent; }.hud{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center;}.panel{pointer-events:auto; position:absolute; top:24px; left:50%; transform:translateX(-50%); background: rgba(8,12,22,.6); border:1px solid rgba(255,255,255,.08); backdrop-filter: blur(6px); padding:10px 14px; border-radius:14px; display:flex; gap:18px; align-items:center}.panel .pill{background:rgba(255,255,255,.08); padding:6px 10px; border-radius:999px; font-weight:700; letter-spacing:.3px}.panel .sep{opacity:.3}.panel .brand{height:22px; width:22px; border-radius:50%;flex:0 0 22px; object-fit:cover;filter:drop-shadow(0 2px 4px rgba(0,0,0,.35));opacity:.95;}.panel .spacer{ flex:1 1 auto; }.panel .brand-right{ margin-left:-6px; }.btn{pointer-events:auto; position:absolute; bottom:24px; left:50%; transform:translateX(-50%); background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12));border:1px solid rgba(110,231,255,.4); color:var(--fg); font-weight:700; letter-spacing:.3px;padding:12px 18px; border-radius:14px; box-shadow: var(--shadow); text-decoration:none;}.hint{position:absolute; bottom:86px; left:50%; transform:translateX(-50%); color:var(--muted); font-size:14px}.title{position:absolute; top:50%; left:50%; transform:translate(-50%, -60%); text-align:center}h1{margin:0 0 6px 0; font-size: clamp(28px, 6vw, 48px)}.subtitle{opacity:.75}.toast{position:absolute; top:14px; right:14px; background:rgba(255,110,110,.12); border:1px solid rgba(255,110,110,.35); color:#ffd3d3; padding:8px 12px; border-radius:12px; font-size:12px}.stageOverlay{position:absolute; top:50%; left:50%; transform:translate(-50%,-50%);font-size:48px; font-weight:700; text-align:center;text-shadow:0 0 12px rgba(110,231,255,.8);opacity:0; transition:opacity 0.5s;pointer-events:none;}.stageOverlay.show{opacity:1;}.modal{position:fixed; inset:0; display:none; align-items:center; justify-content:center;background: rgba(6, 10, 18, .65); backdrop-filter: blur(6px); pointer-events:auto; z-index:5;}.modal.show{ display:flex; }.card{width:min(92vw, 480px); background:rgba(10,14,24,.92);border:1px solid rgba(255,255,255,.08); border-radius:16px; padding:18px;box-shadow: var(--shadow); text-align:center;}.cardHeader{display:flex; align-items:center; justify-content:center; gap:12px; margin:0 0 8px 0;}.badgeLogo{width:32px; height:32px; border-radius:50%; object-fit:cover;filter:drop-shadow(0 2px 6px rgba(0,0,0,.4));}.card h2{margin:0; font-size:28px}.scoreline{font-size:22px; margin:8px 0 14px; font-weight:800; letter-spacing:.4px}.nameRow{display:flex; gap:10px; margin:10px 0 14px}.input-wrapper { position: relative; flex: 1; }.input-icon {position: absolute;left: 12px;top: 50%;transform: translateY(-50%);width: 16px;height: 16px;fill: var(--muted);opacity: 0.7;}.nameRow input{flex:1; padding:10px 12px 10px 36px;border-radius:10px; border:1px solid rgba(255,255,255,.15);background:rgba(255,255,255,.06); color:var(--fg);}.input-hint {font-size: 12px;color: var(--muted);margin-top: -8px;margin-bottom: 12px;}.actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}.actions button{padding:10px 14px; border-radius:10px; border:1px solid rgba(110,231,255,.4);background:linear-gradient(180deg, rgba(110,231,255,.18), rgba(110,231,255,.12)); color:var(--fg); font-weight:700;}.card.clean .nameRow, .card.clean .input-hint { display:none; }.card.clean .scoreline { font-size:28px; margin:4px 0 4px; }.card.clean h2 { margin-bottom:8px; }.score-bar-container {width: 100%; background-color: rgba(255,255,255,0.1); border-radius: 4px;margin-top: 4px; height: 8px;}.score-bar {height: 100%; background-color: var(--accent); border-radius: 4px;transition: width 0.5s ease-out;}.leaderboard-entry {margin-bottom: 12px; border-bottom: 1px solid rgba(255,255,255,0.05);padding-bottom: 8px;}.leaderboard-entry.is-player {background-color: rgba(110, 231, 255, 0.1); padding: 8px; border-radius: 8px;margin-left: -8px; margin-right: -8px;}.rank-span { display: inline-block; width: 40px; font-weight: bold; }
+    :root{
+      --bg:#061827;
+      --bg2:#04111d;
+      --fg:#eef7ff;
+      --muted:#a8c4d6;
+      --soft:#d8efff;
+      --accent:#64fff0;
+      --accent2:#d8c06d;
+      --danger:#ff6e7a;
+      --panel:rgba(6,24,39,.76);
+      --line:rgba(174,230,255,.22);
+      --shadow:0 18px 60px rgba(0,0,0,.44);
+    }
+    *{box-sizing:border-box}
+    html,body{height:100%;margin:0}
+    body{
+      background:
+        radial-gradient(900px 620px at 72% 18%, rgba(100,255,240,.13), transparent 62%),
+        radial-gradient(720px 520px at 20% 76%, rgba(216,192,109,.08), transparent 60%),
+        linear-gradient(180deg,var(--bg),var(--bg2));
+      color:var(--fg);
+      font-family:Inter,ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial,sans-serif;
+      overflow:hidden;
+    }
+    #wrap{position:fixed; inset:0; display:grid; place-items:center; padding:10px}
+    canvas{
+      width:min(100vw, 100vh*0.5625);
+      height:min(100vh, 100vw/0.5625);
+      max-width:100vw;
+      max-height:100vh;
+      box-shadow:var(--shadow);
+      border:1px solid rgba(174,230,255,.14);
+      border-radius:18px;
+      background:transparent;
+    }
+    .hud{position:fixed; inset:0; pointer-events:none; display:flex; align-items:center; justify-content:center}
+    .panel{
+      pointer-events:auto;
+      position:absolute;
+      top:18px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(92vw,760px);
+      background:linear-gradient(180deg, rgba(9,33,54,.82), rgba(4,18,31,.72));
+      border:1px solid var(--line);
+      backdrop-filter:blur(10px);
+      padding:10px 12px;
+      border-radius:999px;
+      display:flex;
+      gap:10px;
+      align-items:center;
+      justify-content:center;
+      box-shadow:0 10px 34px rgba(0,0,0,.28);
+    }
+    .panel .pill{
+      background:rgba(255,255,255,.07);
+      border:1px solid rgba(255,255,255,.08);
+      padding:7px 11px;
+      border-radius:999px;
+      font-weight:800;
+      letter-spacing:.2px;
+      white-space:nowrap;
+    }
+    .panel .sep{opacity:.35}
+    .panel .brand{
+      height:26px;
+      width:26px;
+      border-radius:50%;
+      flex:0 0 26px;
+      object-fit:cover;
+      border:1px solid rgba(100,255,240,.28);
+      box-shadow:0 0 18px rgba(100,255,240,.18);
+    }
+    .panel .spacer{flex:1 1 auto}
+    .panel .brand-right{margin-left:-4px}
+    .btn{
+      pointer-events:auto;
+      position:absolute;
+      bottom:28px;
+      left:50%;
+      transform:translateX(-50%);
+      background:linear-gradient(180deg, rgba(100,255,240,.98), rgba(77,224,219,.9));
+      border:0;
+      color:#03141f;
+      font-weight:1000;
+      letter-spacing:.5px;
+      text-transform:uppercase;
+      padding:14px 22px;
+      border-radius:999px;
+      box-shadow:0 16px 40px rgba(38,234,223,.22);
+    }
+    .hint{
+      position:absolute;
+      bottom:92px;
+      left:50%;
+      transform:translateX(-50%);
+      width:min(88vw,560px);
+      color:var(--muted);
+      font-size:14px;
+      line-height:1.45;
+      text-align:center;
+    }
+    .title{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%, -62%);
+      text-align:center;
+      width:min(90vw,720px);
+      text-shadow:0 2px 22px rgba(0,0,0,.55);
+    }
+    h1{
+      margin:0 0 10px;
+      font-size:clamp(38px, 8vw, 72px);
+      line-height:.9;
+      letter-spacing:-.04em;
+      font-weight:1000;
+      text-transform:uppercase;
+    }
+    .subtitle{
+      display:inline-block;
+      max-width:620px;
+      color:var(--soft);
+      font-size:clamp(15px,2.2vw,19px);
+      line-height:1.45;
+      background:rgba(6,24,39,.58);
+      border:1px solid rgba(174,230,255,.16);
+      border-radius:16px;
+      padding:10px 14px;
+      backdrop-filter:blur(8px);
+    }
+    .toast{
+      position:absolute;
+      top:14px;
+      right:14px;
+      background:rgba(255,110,122,.12);
+      border:1px solid rgba(255,110,122,.35);
+      color:#ffd9dd;
+      padding:8px 12px;
+      border-radius:12px;
+      font-size:12px;
+    }
+    .stageOverlay{
+      position:absolute;
+      top:50%;
+      left:50%;
+      transform:translate(-50%,-50%);
+      width:min(88vw,680px);
+      padding:22px 28px;
+      border-radius:22px;
+      border:1px solid rgba(100,255,240,.28);
+      background:rgba(3,18,31,.72);
+      backdrop-filter:blur(10px);
+      font-size:clamp(26px,5vw,48px);
+      font-weight:1000;
+      text-align:center;
+      text-shadow:0 0 20px rgba(100,255,240,.7);
+      opacity:0;
+      transition:opacity .5s;
+      pointer-events:none;
+    }
+    .stageOverlay.show{opacity:1}
+    .modal{
+      position:fixed;
+      inset:0;
+      display:none;
+      align-items:center;
+      justify-content:center;
+      background:rgba(2,10,18,.72);
+      backdrop-filter:blur(8px);
+      pointer-events:auto;
+      z-index:5;
+      padding:18px;
+    }
+    .modal.show{display:flex}
+    .card{
+      width:min(92vw,520px);
+      background:linear-gradient(180deg, rgba(9,33,54,.96), rgba(4,18,31,.94));
+      border:1px solid var(--line);
+      border-radius:20px;
+      padding:20px;
+      box-shadow:var(--shadow);
+      text-align:center;
+    }
+    .cardHeader{display:flex; align-items:center; justify-content:center; gap:12px; margin:0 0 10px}
+    .badgeLogo{width:38px; height:38px; border-radius:50%; object-fit:cover; border:1px solid rgba(100,255,240,.28)}
+    .card h2{margin:0; font-size:30px; letter-spacing:-.03em}
+    .scoreline{font-size:20px; margin:10px 0 16px; font-weight:900; letter-spacing:.1px; color:var(--soft)}
+    .nameRow{display:flex; gap:10px; margin:10px 0 14px}
+    .input-wrapper{position:relative; flex:1}
+    .input-icon{position:absolute; left:12px; top:50%; transform:translateY(-50%); width:16px; height:16px; fill:var(--muted); opacity:.8}
+    .nameRow input{width:100%; padding:11px 12px 11px 36px; border-radius:12px; border:1px solid rgba(255,255,255,.16); background:rgba(255,255,255,.07); color:var(--fg)}
+    .input-hint{font-size:12px; color:var(--muted); margin-top:-6px; margin-bottom:14px}
+    .actions{display:flex; gap:10px; justify-content:center; flex-wrap:wrap}
+    .actions button{padding:11px 15px; border-radius:999px; border:1px solid rgba(100,255,240,.42); background:rgba(100,255,240,.12); color:var(--fg); font-weight:900}
+    .actions button:hover{background:rgba(100,255,240,.2)}
+    .card.clean .nameRow,.card.clean .input-hint{display:none}
+    .card.clean .scoreline{font-size:26px; margin:4px 0 8px}
+    .card.clean h2{margin-bottom:8px}
+    .score-bar-container{width:100%; background-color:rgba(255,255,255,.1); border-radius:999px; margin-top:6px; height:9px; overflow:hidden}
+    .score-bar{height:100%; background:linear-gradient(90deg,var(--accent),var(--accent2)); border-radius:999px; transition:width .5s ease-out}
+    .leaderboard-entry{margin-bottom:12px; border-bottom:1px solid rgba(255,255,255,.06); padding-bottom:10px; color:var(--soft)}
+    .leaderboard-entry.is-player{background:rgba(100,255,240,.12); padding:10px; border-radius:12px; margin-left:-8px; margin-right:-8px}
+    .rank-span{display:inline-block; width:42px; font-weight:1000; color:var(--accent)}
+    @media (max-width:640px){
+      .panel{top:10px; width:calc(100vw - 18px); gap:5px; padding:8px; font-size:12px}
+      .panel .pill{padding:6px 8px}
+      .panel .sep,.panel .brand-right{display:none}
+      .hint{bottom:86px; font-size:12px}
+      .btn{bottom:24px; padding:12px 18px}
+      .nameRow{flex-direction:column}
+      .title{transform:translate(-50%, -66%)}
+    }
+
   </style>
 </head>
 <body>
-  <div id="wrap"><canvas id="game" width="1280" height="720" aria-label="SPACE OID"></canvas></div>
+  <div id="wrap"><canvas id="game" width="1280" height="720" aria-label="OID Play To Live medical intelligence simulation"></canvas></div>
   <div class="hud" aria-live="polite">
-    <div class="panel" id="scorePanel" hidden><img class="brand" src="assets/aster.png" alt="$ASTER logo" aria-hidden="true"><span class="pill">Mcap $: <span id="score">0B</span></span><span class="sep">•</span><span class="pill">Best: <span id="best">0</span></span><span class="sep">•</span><span class="pill">Targets: <span id="targetsCollected">0</span></span><span class="spacer"></span><img class="brand brand-right" src="assets/four.png" alt="$4 logo"></div>
-    <div class="title" id="title"><h1>SPACE OID</h1><div class="subtitle">Tap/Click or press <strong>SPACE</strong> to boost</div></div>
-    <div class="hint" id="hint">Tip: stay centered, read the gaps, boost at the last moment.</div><button class="btn" id="startBtn" aria-label="Start game (or press space)">Start</button>
+    <div class="panel" id="scorePanel" hidden><img class="brand" src="assets/oid-medical-logo.png" alt="OID Medical AI" aria-hidden="true"><span class="pill">Health Credits: <span id="score">0 HC</span></span><span class="sep">•</span><span class="pill">Best Run: <span id="best">0 HC</span></span><span class="sep">•</span><span class="pill">Data Samples: <span id="targetsCollected">0</span></span><span class="spacer"></span><img class="brand brand-right" src="assets/ekrem-oid.png" alt="Ekrem OID"></div>
+    <div class="title" id="title"><h1>Play To Live</h1><div class="subtitle">Medical Intelligence Simulation<br>Train AI. Earn Health Credits. Prepare your chart for the future.</div></div>
+    <div class="hint" id="hint">Tap/click or press SPACE to boost through diagnostic gates.</div><button class="btn" id="startBtn" aria-label="Start simulation (or press space)">Start Simulation</button>
     <div class="toast" id="pauseToast" hidden>Game paused (tab not active)</div><div class="stageOverlay" id="stageOverlay"></div>
   </div>
   <div id="resultModal" class="modal" role="dialog" aria-modal="true" aria-labelledby="resTitle">
     <div id="resultCard" class="card">
-      <div class="cardHeader"><img class="badgeLogo" src="assets/aster.png" alt="$ASTER"><h2 id="resTitle">Game Over</h2><img class="badgeLogo" src="assets/cz-droid.png" alt="$OID"></div>
-      <div id="resLine" class="scoreline">Anonymous — Mcap $: 0B  •  $ASTER  $OID  $4</div>
+      <div class="cardHeader"><img class="badgeLogo" src="assets/oid-medical-logo.png" alt="OID"><h2 id="resTitle">Simulation Complete</h2><img class="badgeLogo" src="assets/ekrem-oid.png" alt="Ekrem OID"></div>
+      <div id="resLine" class="scoreline">Anonymous — 0 Health Credits • OID Medical AI</div>
       <div class="nameRow"><div class="input-wrapper"><svg class="input-icon" viewBox="0 0 24 24"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"></path></svg><input id="playerName" type="text" maxlength="24" placeholder="Your X / Twitter username"></div><button id="saveNameBtn" type="button">Save</button></div>
-      <div class="input-hint">Enter your X username to be eligible for prizes! 🏆</div>
+      <div class="input-hint">Enter your X username to save your Health Credits on the researcher board.</div>
       <div class="actions"><button id="shareBtn" type="button">Share to X</button><button id="closeResultBtn" type="button">Close</button></div>
     </div>
   </div>
   <div id="leaderboardModal" class="modal" role="dialog" aria-modal="true">
-    <div id="leaderboardCard" class="card"><h2>Leaderboard</h2><ul id="leaderboardList" style="list-style: none; padding: 0; margin: 20px 0; text-align: left;"></ul><div class="actions"><button id="closeLeaderboardBtn" type="button">Close</button></div></div>
+    <div id="leaderboardCard" class="card"><h2>Top Researchers</h2><ul id="leaderboardList" style="list-style: none; padding: 0; margin: 20px 0; text-align: left;"></ul><div class="actions"><button id="closeLeaderboardBtn" type="button">Close</button></div></div>
   </div>
 <script>
 (() => {
@@ -55,10 +268,10 @@
     if (state === 'start') { beginIntro(); return; }
     if (state === 'playing' && e.target === canvas) { player.flap(); }
   });
-  const SPRITE_SRC = 'assets/cz-droid.png'; const BADGE_SRC  = 'assets/asteroid-badge.png';
+  const SPRITE_SRC = 'assets/ekrem-oid.png'; const BADGE_SRC  = 'assets/oid-medical-logo.png';
   const spriteImg = new Image(); const badge = new Image();
   const fourLogoImg = new Image();
-  fourLogoImg.src = 'assets/four.png';
+  fourLogoImg.src = 'assets/oid-medical-logo.png';
   let spriteReady = false, spriteError = false, badgeReady  = false;
   spriteImg.onload = () => { spriteReady = true; }; spriteImg.onerror = () => { spriteError = true; };
   badge.onload = () => { badgeReady = true; };
@@ -75,10 +288,10 @@
 
   // --- STAGES LIJST AANGEPAST (20 LEVELS) ---
   const STAGES = [
-    "Orbit Entry", "Meme Belt", "Shitcoin Storm", "Liquidity Void", "Market Crash Zone",
-    "CZ’s Wrath", "Bear Market Abyss", "Asteroid Season", "To the Moon", "Cosmic Ascension",
-    "Galaxy's Edge", "Quantum Leap", "Black Hole Run", "Celestial Finale", "Infinite Beyond",
-    "Nebula Gauntlet", "Supernova Sprint", "Event Horizon", "Galactic Core", "Final CeaZon" // Nieuwe levels 16-20
+    "Istanbul Intake", "AI Triage", "Genome Scan", "Rare Case Review", "Biomarker Hunt",
+    "Diagnosis Layer", "Treatment Discovery", "Clinic Access", "Community Trial", "Global Health Network",
+    "Neural Scan", "Clinical Pathway", "Patient Data Stream", "Research Breakthrough", "Future Clinic",
+    "Deva Protocol", "Onarici Layer", "Medical Alpha", "World Health Grid", "Built by Community"
   ];
 
   let state='start'; let canRestart = true;
@@ -87,17 +300,94 @@
   let canFlap=true, currentStage=1, pipesPassed=0, targetsCollected=0;
   let overlayActive = false;
   const ui={scorePanel:document.getElementById('scorePanel'), score:document.getElementById('score'),best:document.getElementById('best'), targetsCollected:document.getElementById('targetsCollected'),startBtn:document.getElementById('startBtn'), title:document.getElementById('title'),hint:document.getElementById('hint'), pauseToast:document.getElementById('pauseToast'),titleH1:document.querySelector('#title h1'), stageOverlay:document.getElementById('stageOverlay')};
-  ui.best.textContent=best; ui.targetsCollected.textContent=targetsCollected;
+  function formatHC(value){ return `${value} HC`; }
+  ui.best.textContent=formatHC(best); ui.targetsCollected.textContent=targetsCollected;
   function setUI(){
     const isStartOrDead = state==='start' || state==='dead';
     ui.title.style.display = isStartOrDead ? '' : 'none'; ui.hint.style.display  = isStartOrDead ? '' : 'none'; ui.startBtn.style.display = isStartOrDead ? '' : 'none'; ui.scorePanel.hidden = !(state==='playing' || state==='dead');
-    if (state==='start') ui.titleH1.style.display='none'; else ui.titleH1.style.display='';
+    ui.titleH1.style.display='';
   }
   const stars = Array.from({length:160},()=>({x:Math.random()*canvas.width,y:Math.random()*canvas.height,z:0.3+Math.random()*.7,r:1.5 + Math.random() * 3.0}));
   const intro = { active:false, t0:0, dur:1800, from:{x:0,y:0,diam:0}, to:{x:AST.x,y:AST.y,diam:AST.r*2} };
   function easeInOutCubic(t){ return t<0.5 ? 4*t*t*t : 1 - Math.pow(-2*t+2,3)/2; }
   let glowStrength = 0;
-  const player = {x:AST.x, y:AST.y, r:AST.r, vy:0, rot:0,flap(){if(!canFlap || state!=='playing') return;this.vy=FLAP_VY;glowStrength = 1.0;canFlap=false; setTimeout(()=>canFlap=true,150);},update(dt){if(state!=='playing') return;this.vy=Math.min(this.vy+G*dt,MAX_DROP);this.y+=this.vy*dt;this.rot=Math.max(-0.6, Math.min(0.9, this.vy/900));glowStrength = Math.max(0, glowStrength - dt*1.5);},drawAt(x,y,diamPx){ctx.save();ctx.translate(x*DPR,y*DPR);if(state==='playing') ctx.rotate(this.rot);if (glowStrength > 0) {const g = ctx.createRadialGradient(0,0,this.r*DPR*0.5, 0,0,this.r*DPR*2.2);g.addColorStop(0, `rgba(110,231,255,${0.40*glowStrength})`);g.addColorStop(1, 'rgba(110,231,255,0)');ctx.fillStyle = g;ctx.beginPath();ctx.arc(0,0,this.r*DPR*2.2,0,Math.PI*2);ctx.fill();}if (spriteReady && spriteImg.naturalWidth){const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;const scale=Math.min((diamPx*DPR)/iw,(diamPx*DPR)/ih);const dw=iw*scale, dh=ih*scale;ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);} else {ctx.fillStyle='rgba(255,255,255,.15)';ctx.beginPath(); ctx.arc(0,0,(diamPx*DPR)/2,0,Math.PI*2); ctx.fill();ctx.font=`${12*DPR}px system-ui`; ctx.fillStyle='#e8f0ff';const msg = spriteError ? 'sprite not found' : 'loading…';ctx.fillText(msg, -40*DPR, 4*DPR);}ctx.restore();},draw(){ this.drawAt(this.x, this.y, this.r*2); }};
+  const player = {
+    x:AST.x,
+    y:AST.y,
+    r:AST.r,
+    vy:0,
+    rot:0,
+    flap(){
+      if(!canFlap || state!=='playing') return;
+      this.vy=FLAP_VY;
+      glowStrength = 1.0;
+      canFlap=false;
+      setTimeout(()=>canFlap=true,150);
+    },
+    update(dt){
+      if(state!=='playing') return;
+      this.vy=Math.min(this.vy+G*dt,MAX_DROP);
+      this.y+=this.vy*dt;
+      this.rot=Math.max(-0.42, Math.min(0.48, this.vy/1200));
+      glowStrength = Math.max(0, glowStrength - dt*1.5);
+    },
+    drawAt(x,y,diamPx){
+      const diam = diamPx*DPR;
+      const radius = diam/2;
+      ctx.save();
+      ctx.translate(x*DPR,y*DPR);
+      if(state==='playing') ctx.rotate(this.rot);
+
+      const pulse = 0.65 + Math.sin(performance.now()*0.006)*0.18;
+      const aura = ctx.createRadialGradient(0,0,radius*0.45,0,0,radius*2.15);
+      aura.addColorStop(0, `rgba(216,192,109,${0.16 + 0.14*glowStrength})`);
+      aura.addColorStop(.52, `rgba(100,255,240,${0.12 + 0.22*glowStrength})`);
+      aura.addColorStop(1, 'rgba(100,255,240,0)');
+      ctx.fillStyle = aura;
+      ctx.beginPath();
+      ctx.arc(0,0,radius*2.05,0,Math.PI*2);
+      ctx.fill();
+
+      ctx.beginPath();
+      ctx.arc(0,0,radius + 4*DPR,0,Math.PI*2);
+      ctx.fillStyle='rgba(3,14,22,.94)';
+      ctx.fill();
+      ctx.lineWidth=2.5*DPR;
+      ctx.strokeStyle=`rgba(216,192,109,${0.78 + pulse*.12})`;
+      ctx.stroke();
+      ctx.lineWidth=1.4*DPR;
+      ctx.strokeStyle=`rgba(100,255,240,${0.44 + glowStrength*.3})`;
+      ctx.stroke();
+
+      ctx.save();
+      ctx.beginPath();
+      ctx.arc(0,0,radius,0,Math.PI*2);
+      ctx.clip();
+      if (spriteReady && spriteImg.naturalWidth){
+        const iw=spriteImg.naturalWidth, ih=spriteImg.naturalHeight;
+        const scale=Math.max(diam/iw, diam/ih);
+        const dw=iw*scale, dh=ih*scale;
+        ctx.drawImage(spriteImg,-dw/2,-dh/2,dw,dh);
+      } else {
+        ctx.fillStyle='rgba(255,255,255,.12)';
+        ctx.fillRect(-radius,-radius,diam,diam);
+        ctx.font=`${10*DPR}px system-ui`;
+        ctx.fillStyle='#e8f0ff';
+        const msg = spriteError ? 'ekrem-oid missing' : 'loading';
+        ctx.fillText(msg, -radius*.72, 4*DPR);
+      }
+      ctx.restore();
+
+      ctx.beginPath();
+      ctx.arc(radius*.62,-radius*.62,3.2*DPR + glowStrength*2*DPR,0,Math.PI*2);
+      ctx.fillStyle='rgba(100,255,240,.95)';
+      ctx.shadowColor='rgba(100,255,240,.95)';
+      ctx.shadowBlur=10*DPR;
+      ctx.fill();
+      ctx.restore();
+    },
+    draw(){ this.drawAt(this.x, this.y, this.r*2.18); }
+  };
   const pipes=[], targets=[], explosions=[];
   const TARGET_CHANCE=0.2, TARGET_SIZE=22, TARGET_GAP=100, TARGET_SCORE_BONUS=5;
   function resetPipes(){ pipes.length=0; targets.length=0; explosions.length=0; pipesPassed=0; for(let i=0;i<8;i++) addObstacle(); }
@@ -107,24 +397,24 @@
   document.getElementById('startBtn').addEventListener('click', boost);
   document.addEventListener('visibilitychange', ()=>{ paused=document.hidden; document.getElementById('pauseToast').hidden=!paused; });
   const resultModal = document.getElementById('resultModal');const resultCard  = document.getElementById('resultCard');const resLine     = document.getElementById('resLine');const playerNameI = document.getElementById('playerName');const saveNameBtn = document.getElementById('saveNameBtn');const shareBtn    = document.getElementById('shareBtn');const closeResBtn = document.getElementById('closeResultBtn');
-  function openResultModal(finalScore){const savedName = localStorage.getItem('aster-username') || '';playerNameI.value = savedName;resLine.textContent = `${savedName || 'Anonymous'} — Mcap $: ${finalScore}B  •  $ASTER  $OID  $4`;resultModal.classList.add('show');resultCard.classList.remove('clean');}
-  function updateResLine(){const nm = playerNameI.value.trim() || 'Anonymous';resLine.textContent = `${nm} — Mcap $: ${score}B  •  $ASTER  $OID  $4`;}
+  function openResultModal(finalScore){const savedName = localStorage.getItem('aster-username') || '';playerNameI.value = savedName;resLine.textContent = `${savedName || 'Anonymous'} — ${finalScore} Health Credits • OID Medical AI`;resultModal.classList.add('show');resultCard.classList.remove('clean');}
+  function updateResLine(){const nm = playerNameI.value.trim() || 'Anonymous';resLine.textContent = `${nm} — ${score} Health Credits • OID Medical AI`;}
   function closeResultModal(){resultModal.classList.remove('show');document.getElementById('leaderboardModal').classList.remove('show');}
-  saveNameBtn.addEventListener('click', async () => {const nm = playerNameI.value.trim().slice(0, 24) || 'Anonymous';if(nm === '') return;const finalScore = score;saveNameBtn.disabled = true;localStorage.setItem('aster-username', nm);try {const scoresRef = db.collection('scores');const thresholdQuery = await scoresRef.orderBy('score', 'desc').limit(1000).get();let isHighEnough = false;if (thresholdQuery.size < 1000) {isHighEnough = true;} else {const thresholdScore = thresholdQuery.docs[thresholdQuery.size - 1].data().score;if (finalScore >= thresholdScore) {isHighEnough = true;}}updateResLine();resultCard.classList.add('clean');if (isHighEnough) {const docRef = await db.collection("scores").add({name: nm,score: finalScore,timestamp: firebase.firestore.FieldValue.serverTimestamp()});console.log("Score was high enough and has been saved with ID:", docRef.id);showLeaderboard(finalScore, nm, docRef.id);} else {alert("Sorry! Your score of " + finalScore + "B wasn't high enough for the Top 1000.");showLeaderboard(-1, nm);}} catch (error) {console.error("Error checking/saving score: ", error);alert("Could not check score. Please try again.");} finally {saveNameBtn.disabled = false;}});
+  saveNameBtn.addEventListener('click', async () => {const nm = playerNameI.value.trim().slice(0, 24) || 'Anonymous';if(nm === '') return;const finalScore = score;saveNameBtn.disabled = true;localStorage.setItem('aster-username', nm);try {const scoresRef = db.collection('scores');const thresholdQuery = await scoresRef.orderBy('score', 'desc').limit(1000).get();let isHighEnough = false;if (thresholdQuery.size < 1000) {isHighEnough = true;} else {const thresholdScore = thresholdQuery.docs[thresholdQuery.size - 1].data().score;if (finalScore >= thresholdScore) {isHighEnough = true;}}updateResLine();resultCard.classList.add('clean');if (isHighEnough) {const docRef = await db.collection("scores").add({name: nm,score: finalScore,timestamp: firebase.firestore.FieldValue.serverTimestamp()});console.log("Score was high enough and has been saved with ID:", docRef.id);showLeaderboard(finalScore, nm, docRef.id);} else {alert("Sorry! Your run of " + finalScore + " HC wasn't high enough for the Top 1000.");showLeaderboard(-1, nm);}} catch (error) {console.error("Error checking/saving score: ", error);alert("Could not check score. Please try again.");} finally {saveNameBtn.disabled = false;}});
   closeResBtn.addEventListener('click', closeResultModal);
-  shareBtn.addEventListener('click', ()=>{ const nm = (playerNameI.value.trim() || 'Anonymous'); const text = `${nm} just hit ${score}B Mcap piloting CZ!\n\nThink you can beat my score?\n\nPlay Pilot CZ now! Sharing scores *will* matter!\n$ASTER $OID $4 #ASTER #OID #BNB`; const url  = 'https://asteroidmeme.com/game/index.html'; const intent = new URL('https://twitter.com/intent/tweet'); intent.searchParams.set('text', text); intent.searchParams.set('url', url); window.open(intent.toString(), '_blank', 'noopener'); });
+  shareBtn.addEventListener('click', ()=>{ const nm = (playerNameI.value.trim() || 'Anonymous'); const text = `${nm} just earned ${score} Health Credits in OID Play To Live.\n\nAI-powered medicine. Built by #community.\n\nCan you beat my simulation score?\n$OID #OID #PlayToLive`; const url  = 'https://asteroidmeme.com/game/index.html'; const intent = new URL('https://twitter.com/intent/tweet'); intent.searchParams.set('text', text); intent.searchParams.set('url', url); window.open(intent.toString(), '_blank', 'noopener'); });
   resultModal.addEventListener('click', (e) => {if (e.target === resultModal && state === 'dead' && canRestart) { restart(); }});
   document.getElementById('leaderboardModal').addEventListener('click', (e) => {if (e.target.id === 'leaderboardModal' && state === 'dead' && canRestart) { restart(); }});
-  function beginIntro(){const cx = (canvas.width/DPR)*0.5;const cy = (canvas.height/DPR)*0.42;const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.45;intro.from = { x:cx, y:cy, diam:bigDiam };intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };intro.active = true; intro.t0 = performance.now(); state='intro';ui.titleH1.style.display='none';ui.startBtn.style.display='none';}
-  function startGame(){state='playing';score = 0;ui.score.textContent = 0;speed=SCROLL_SPEED; tPrev=0; currentStage=1;player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0;resetPipes(); setUI();showStageOverlay(currentStage);}
-  function gameOver(){state='dead';canRestart = false;setTimeout(() => { canRestart = true; }, 500);best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=best;ui.titleH1.textContent='Game Over'; ui.titleH1.style.display='';ui.hint.textContent='Press SPACE or tap to restart'; ui.startBtn.textContent='Restart'; setUI();openResultModal(score);}
-  function restart(){if (!canRestart) return;state='start';score = 0;ui.score.textContent = 0;ui.targetsCollected.textContent = 0;speed = SCROLL_SPEED; tPrev = 0; canFlap = true;pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;ui.titleH1.textContent='SPACE OID'; ui.startBtn.textContent='Start'; setUI();closeResultModal();resultCard.classList.remove('clean');}
-  function showStageOverlay(stageNum){if(stageNum<1 || stageNum>STAGES.length) return;const name = STAGES[stageNum-1];ui.stageOverlay.textContent = `Stage ${stageNum}: ${name}`;ui.stageOverlay.classList.add("show");overlayActive = true;setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);}
+  function beginIntro(){const cx = (canvas.width/DPR)*0.5;const cy = (canvas.height/DPR)*0.32;const bigDiam = Math.min(canvas.height/DPR, canvas.width/DPR) * 0.31;intro.from = { x:cx, y:cy, diam:bigDiam };intro.to   = { x:AST.x, y:AST.y, diam:AST.r*2 };intro.active = true; intro.t0 = performance.now(); state='intro';ui.titleH1.style.display='none';ui.startBtn.style.display='none';}
+  function startGame(){state='playing';score = 0;ui.score.textContent = formatHC(0);speed=SCROLL_SPEED; tPrev=0; currentStage=1;player.x=AST.x; player.y=AST.y; player.vy=0; canFlap=true;PIPE_GAP=290; targetsCollected=0; ui.targetsCollected.textContent=0;resetPipes(); setUI();showStageOverlay(currentStage);}
+  function gameOver(){state='dead';canRestart = false;setTimeout(() => { canRestart = true; }, 500);best=Math.max(best,score); localStorage.setItem('flappy-asteroid-best',best); ui.best.textContent=formatHC(best);ui.titleH1.textContent='Simulation Complete'; ui.titleH1.style.display='';ui.hint.textContent='Press SPACE or tap to run the simulation again'; ui.startBtn.textContent='Run Again'; setUI();openResultModal(score);}
+  function restart(){if (!canRestart) return;state='start';score = 0;ui.score.textContent = formatHC(0);ui.targetsCollected.textContent = 0;speed = SCROLL_SPEED; tPrev = 0; canFlap = true;pipes.length = 0; targets.length = 0; explosions.length = 0; pipesPassed = 0;ui.titleH1.textContent='Play To Live'; ui.startBtn.textContent='Start Simulation'; setUI();closeResultModal();resultCard.classList.remove('clean');}
+  function showStageOverlay(stageNum){if(stageNum<1 || stageNum>STAGES.length) return;const name = STAGES[stageNum-1];ui.stageOverlay.textContent = `Phase ${stageNum}: ${name}`;ui.stageOverlay.classList.add("show");overlayActive = true;setTimeout(()=>{ ui.stageOverlay.classList.remove("show"); overlayActive = false; }, 2000);}
   
   async function showLeaderboard(playerScore, playerName, playerId = null) {
     const leaderboardList = document.getElementById('leaderboardList');
     const leaderboardModal = document.getElementById('leaderboardModal');
-    leaderboardList.innerHTML = "<li>Laden...</li>";
+    leaderboardList.innerHTML = "<li>Loading researcher board...</li>";
     if (!resultModal.classList.contains('clean')) { resultModal.classList.remove('show'); }
     leaderboardModal.classList.add('show');
     try {
@@ -171,13 +461,13 @@
             const scorePercentage = (topScore > 0) ? (entry.score / topScore) * 100 : 0;
             return `
               <li class="leaderboard-entry ${isPlayer ? 'is-player' : ''}">
-                <div><span class="rank-span">#${entry.rank}</span><span>${entry.name} - <strong>${entry.score}B</strong></span></div>
+                <div><span class="rank-span">#${entry.rank}</span><span>${entry.name} - <strong>${entry.score} HC</strong></span></div>
                 <div class="score-bar-container"><div class="score-bar" style="width: ${scorePercentage}%;"></div></div>
               </li>`;
         }).join('');
     } catch (error) {
         console.error("Fout bij ophalen leaderboard: ", error);
-        leaderboardList.innerHTML = "<li>Kon het leaderboard niet laden.</li>";
+        leaderboardList.innerHTML = "<li>Could not load the researcher board.</li>";
     }
   }
 
@@ -218,7 +508,7 @@
         for(let i=0;i<pipes.length;i++){
           const p=pipes[i];
           if(!p.passed && player.x>p.x+PIPE_W/2){
-             p.passed=true; score++; pipesPassed++; ui.score.textContent=score;
+             p.passed=true; score++; pipesPassed++; ui.score.textContent=formatHC(score);
           }
           if(p.x+PIPE_W<-80){ pipes.shift(); addObstacle(); i--; }
         }
@@ -229,7 +519,7 @@
           t.x -= move;
           const dx=player.x-t.x, dy=player.y-t.y, d=Math.hypot(dx,dy);
           if(d<player.r+t.r && !t.hit){
-            t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=score; addExplosion(t.x,t.y);
+            t.hit=true; score+=TARGET_SCORE_BONUS; targetsCollected++; ui.targetsCollected.textContent=targetsCollected; ui.score.textContent=formatHC(score); addExplosion(t.x,t.y);
           }
           if(t.x+t.r<-80){ targets.splice(i,1); i--; }
         }
@@ -254,22 +544,77 @@
   }
   // --- EINDE AANGEPASTE UPDATE FUNCTIE ---
   
-  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height);
+  function drawMedicalGrid(){
+    ctx.save();
+    ctx.globalAlpha=.16;
+    ctx.strokeStyle='rgba(100,255,240,.18)';
+    ctx.lineWidth=1*DPR;
+    const step=96*DPR;
+    for(let x=(performance.now()*0.006)%step; x<canvas.width; x+=step){ctx.beginPath();ctx.moveTo(x,0);ctx.lineTo(x,canvas.height);ctx.stroke();}
+    for(let y=0; y<canvas.height; y+=step){ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(canvas.width,y);ctx.stroke();}
+    ctx.restore();
+  }
+
+  function draw(){ctx.clearRect(0,0,canvas.width,canvas.height);const g=ctx.createLinearGradient(0,0,0,canvas.height); g.addColorStop(0,'#091224'); g.addColorStop(1,'#05070f'); ctx.fillStyle=g; ctx.fillRect(0,0,canvas.width,canvas.height); drawMedicalGrid();
   
     for(const s of stars){
         const bgSpeed = (state==='start' || state==='intro') ? 30 : speed;
         s.x -= (bgSpeed * s.z * 0.08) * (1/60) * DPR;
         if(s.x < -10){ s.x=canvas.width+Math.random()*40; s.y=Math.random()*canvas.height; s.z=0.3+Math.random()*.7; }
-        
-        ctx.globalAlpha = 0.2 + s.z*0.4;
-        if (fourLogoImg.complete && fourLogoImg.naturalWidth > 0) {
-            const size = s.r * DPR * 2;
-            ctx.drawImage(fourLogoImg, s.x - size/2, s.y - size/2, size, size);
-        }
+        ctx.globalAlpha = 0.16 + s.z*0.35;
+        ctx.beginPath();
+        ctx.arc(s.x, s.y, Math.max(1.2, s.r*0.52)*DPR, 0, Math.PI*2);
+        ctx.fillStyle = s.z > .78 ? 'rgba(100,255,240,.9)' : 'rgba(216,239,255,.72)';
+        ctx.fill();
     }
 
-    ctx.globalAlpha=1;if ((state==='playing' || state==='dead') && !overlayActive){for(const p of pipes){const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;drawRockColumn(x,0,w,gy,true);drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);}const now=performance.now()*0.002;for(const t of targets){if(t.hit) continue;ctx.save();const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;ctx.translate(t.x*DPR, (t.y + wobble)*DPR);const img = t.img;if (img && img.complete && img.naturalWidth){const iw=img.naturalWidth, ih=img.naturalHeight;const target = t.r*2*DPR;const scale = Math.min(target/iw, target/ih);const dw = iw*scale, dh = ih*scale;ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;ctx.drawImage(img, -dw/2, -dh/2, dw, dh);}ctx.restore();}const timeNow=performance.now();for(let i=explosions.length-1;i>=0;i--){const e=explosions[i], el=(timeNow-e.startTime)/e.duration;if(el<1){ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }}}if (state==='start'){const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.42;const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.45;player.drawAt(cx, cy, bigDiam);} else if (state==='intro'){const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);const p = easeInOutCubic(tt);const ix = intro.from.x + (intro.to.x - intro.from.x)*p;const iy = intro.from.y + (intro.to.y - intro.from.y)*p;const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;player.drawAt(ix, iy, id);if (tt>=1){ intro.active=false; startGame(); }} else {player.draw();}if (state === 'dead'){ctx.save();const pad = 18 * DPR, s = 48 * DPR;const x = pad, y = canvas.height - s - pad;if (badgeReady){ctx.globalAlpha = 0.95;ctx.drawImage(badge, x, y, s, s);}ctx.globalAlpha=1;ctx.font=`${16*DPR}px system-ui, sans-serif`;ctx.fillStyle='rgba(232,240,255,.95)';ctx.fillText('$ASTER   $OID', x+s+(12*DPR), y+s-(12*DPR));ctx.restore();}}
-  function drawRockColumn(x,y,w,h,fromTop){ctx.save(); ctx.beginPath();const step=32*DPR, rough=18*DPR, start=y, end=y+h;ctx.moveTo(x,start);for(let yy=start; yy<=end; yy+=step){ const off=(Math.sin(yy*0.03)*0.5 + Math.random() * 0.5)*rough; ctx.lineTo(x + (fromTop?off:-off) + w, Math.min(yy+step,end)); }ctx.lineTo(x,end); ctx.closePath();const rock=ctx.createLinearGradient(x,y,x+w,y); rock.addColorStop(0,'#2a2f3e'); rock.addColorStop(1,'#101420');ctx.fillStyle=rock; ctx.fill(); ctx.strokeStyle='rgba(232,240,255,0.05)'; ctx.lineWidth=2*DPR; ctx.stroke(); ctx.restore();}
+    ctx.globalAlpha=1;if ((state==='playing' || state==='dead') && !overlayActive){for(const p of pipes){const x=p.x*DPR, w=PIPE_W*DPR, gy=p.gapY*DPR, gh=PIPE_GAP*DPR;drawRockColumn(x,0,w,gy,true);drawRockColumn(x,gy+gh,w,canvas.height-(gy+gh),false);}const now=performance.now()*0.002;for(const t of targets){if(t.hit) continue;ctx.save();const wobble = Math.sin(now + (t.wobbleSeed||0)) * 3;ctx.translate(t.x*DPR, (t.y + wobble)*DPR);const img = t.img;if (img && img.complete && img.naturalWidth){const iw=img.naturalWidth, ih=img.naturalHeight;const target = t.r*2*DPR;const scale = Math.min(target/iw, target/ih);const dw = iw*scale, dh = ih*scale;ctx.globalAlpha = 0.25; ctx.beginPath(); ctx.arc(0,0,(t.r+6)*DPR,0,Math.PI*2); ctx.fillStyle='#00e5ff'; ctx.fill(); ctx.globalAlpha = 1;ctx.drawImage(img, -dw/2, -dh/2, dw, dh);}ctx.restore();}const timeNow=performance.now();for(let i=explosions.length-1;i>=0;i--){const e=explosions[i], el=(timeNow-e.startTime)/e.duration;if(el<1){ const r=e.maxRadius*el, a=1-el; ctx.beginPath(); ctx.arc(e.x*DPR,e.y*DPR,r*DPR,0,Math.PI*2); ctx.fillStyle=`rgba(255,165,0,${a})`; ctx.fill(); }}}if (state==='start'){const cx=(canvas.width/DPR)*0.5, cy=(canvas.height/DPR)*0.32;const bigDiam=Math.min(canvas.height/DPR, canvas.width/DPR)*0.31;player.drawAt(cx, cy, bigDiam);} else if (state==='intro'){const tt = Math.min(1, (performance.now()-intro.t0)/intro.dur);const p = easeInOutCubic(tt);const ix = intro.from.x + (intro.to.x - intro.from.x)*p;const iy = intro.from.y + (intro.to.y - intro.from.y)*p;const id = intro.from.diam + (intro.to.diam - intro.from.diam)*p;player.drawAt(ix, iy, id);if (tt>=1){ intro.active=false; startGame(); }} else {player.draw();}if (state === 'dead'){ctx.save();const pad = 18 * DPR, s = 48 * DPR;const x = pad, y = canvas.height - s - pad;if (badgeReady){ctx.globalAlpha = 0.95;ctx.drawImage(badge, x, y, s, s);}ctx.globalAlpha=1;ctx.font=`${16*DPR}px system-ui, sans-serif`;ctx.fillStyle='rgba(232,240,255,.95)';ctx.fillText('OID MEDICAL AI   •   PLAY TO LIVE', x+s+(12*DPR), y+s-(12*DPR));ctx.restore();}}
+  function drawRockColumn(x,y,w,h,fromTop){
+    ctx.save();
+    const edge = fromTop ? y+h : y;
+    const grad = ctx.createLinearGradient(x,y,x+w,y);
+    grad.addColorStop(0,'rgba(7,34,55,.92)');
+    grad.addColorStop(.5,'rgba(17,65,92,.96)');
+    grad.addColorStop(1,'rgba(4,18,31,.92)');
+    ctx.fillStyle=grad;
+    roundRect(ctx,x,y,w,h,18*DPR);
+    ctx.fill();
+    ctx.lineWidth=2*DPR;
+    ctx.strokeStyle='rgba(100,255,240,.26)';
+    ctx.stroke();
+
+    const scanY = fromTop ? edge - 18*DPR : edge + 18*DPR;
+    ctx.beginPath();
+    ctx.moveTo(x+10*DPR, scanY);
+    ctx.lineTo(x+w-10*DPR, scanY);
+    ctx.strokeStyle='rgba(100,255,240,.9)';
+    ctx.lineWidth=3*DPR;
+    ctx.shadowColor='rgba(100,255,240,.9)';
+    ctx.shadowBlur=14*DPR;
+    ctx.stroke();
+    ctx.shadowBlur=0;
+
+    ctx.font=`${11*DPR}px system-ui, sans-serif`;
+    ctx.fillStyle='rgba(216,239,255,.68)';
+    ctx.textAlign='center';
+    ctx.save();
+    ctx.translate(x+w/2, y+h/2);
+    ctx.rotate(-Math.PI/2);
+    ctx.fillText('DIAGNOSTIC GATE', 0, 4*DPR);
+    ctx.restore();
+    ctx.restore();
+  }
+
+  function roundRect(c,x,y,w,h,r){
+    r=Math.min(r, Math.abs(w)/2, Math.abs(h)/2);
+    c.beginPath();
+    c.moveTo(x+r,y);
+    c.arcTo(x+w,y,x+w,y+h,r);
+    c.arcTo(x+w,y+h,x,y+h,r);
+    c.arcTo(x,y+h,x,y,r);
+    c.arcTo(x,y,x+w,y,r);
+    c.closePath();
+  }
   
   function loop(ts){
     // HIER ZAT DE EERSTE FOUT: 'TPrev' is nu 'tPrev'
