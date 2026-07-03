@@ -329,6 +329,22 @@
     color:var(--muted);
     line-height:1.55;
   }
+  .card-link{
+    color:inherit;
+    text-decoration:none;
+    transition:transform .16s ease, border-color .18s ease, background .18s ease;
+  }
+  .card-link:hover{
+    transform:translateY(-3px);
+    border-color:rgba(66,243,208,.46);
+    background:linear-gradient(180deg,rgba(8,35,55,.86),rgba(5,20,35,.74));
+  }
+  .utility-action{
+    margin-top:16px;
+    color:var(--cyan);
+    font-weight:850;
+    letter-spacing:.02em;
+  }
   .tag{
     display:inline-flex;
     width:max-content;
@@ -624,7 +640,7 @@
     <span>OID MEDICAL AI</span>
   </a>
   <div class="nav-links">
-    <a href="#utility">Utility</a>
+    <a href="utility.html">Utility</a>
     <a href="#founder">Founder</a>
     <a href="#play-to-live">Play To Live</a>
     <a href="https://dexscreener.com/bsc/0xc6d477719226e97ee6fcf48cf4d43be717b27fe2" target="_blank" rel="noopener">DEX</a>
@@ -647,7 +663,7 @@
         </p>
         <div class="cta-row">
           <a class="btn primary" href="https://pancakeswap.finance/swap?outputCurrency=0x5f992abF5BC1725f6B0dFD116031C31AeBb54444&chain=bsc" target="_blank" rel="noopener">BUY $OID</a>
-          <a class="btn" href="#utility">View Utility</a>
+          <a class="btn" href="utility.html">View Utility Engine</a>
           <a class="btn" href="#founder">Founder Vision</a>
           <a class="btn" href="game/index.html">Play To Live</a>
           <a class="btn" href="https://x.com/oid_bnb?s=21" target="_blank" rel="noopener">X</a>
@@ -705,21 +721,24 @@
       </p>
     </div>
     <div class="grid">
-      <article class="card">
+      <a class="card card-link" href="utility.html">
         <span class="tag">Clinic Model</span>
         <h3>Health Services First</h3>
         <p>OID imagines an international health clinic where AI-supported tests, diagnostics, and treatment access become the visible face of utility.</p>
-      </article>
-      <article class="card">
+        <div class="utility-action">Open Clinic Loop →</div>
+      </a>
+      <a class="card card-link" href="utility.html#burn">
         <span class="tag">Buy & Burn</span>
         <h3>The Burn Follows the Mission</h3>
         <p>Net profits from OID international health clinic activity are intended to buy and burn OID. First healing, then value.</p>
-      </article>
-      <article class="card">
+        <div class="utility-action">Run Burn Engine →</div>
+      </a>
+      <a class="card card-link" href="utility.html#community-alpha">
         <span class="tag">Community</span>
         <h3>Collective Medical Alpha</h3>
         <p>The community is positioned as a source of funding, force, faith, and awareness for medical intelligence infrastructure.</p>
-      </article>
+        <div class="utility-action">Scan Community Alpha →</div>
+      </a>
     </div>
   </section>
 
