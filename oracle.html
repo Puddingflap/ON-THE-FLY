@@ -131,9 +131,9 @@
     flex-direction:column;
     justify-content:flex-end;
     background:
-      linear-gradient(90deg, rgba(4,17,31,.88), rgba(4,17,31,.44) 54%, rgba(4,17,31,.18)),
-      linear-gradient(180deg, rgba(4,17,31,.05), rgba(4,17,31,.92)),
-      url("game/assets/ekrem-istanbul.jpg") 62% center/cover no-repeat;
+      linear-gradient(90deg, rgba(4,17,31,.70), rgba(4,17,31,.24) 54%, rgba(4,17,31,.08)),
+      linear-gradient(180deg, rgba(4,17,31,.02), rgba(4,17,31,.88) 74%, rgba(4,17,31,.98)),
+      url("game/assets/oid-ai-agent.jpg") center 30%/cover no-repeat;
     box-shadow:var(--shadow);
   }
   .intro::before{
@@ -354,7 +354,13 @@
     .brand span{font-size:13px}
     .nav-links a{font-size:12px; padding:7px 9px}
     .page{padding-top:136px}
-    .intro{padding:20px; min-height:560px}
+    .intro{
+      padding:20px;
+      min-height:560px;
+      background:
+        linear-gradient(180deg, rgba(4,17,31,.04), rgba(4,17,31,.76) 62%, rgba(4,17,31,.98)),
+        url("game/assets/oid-ai-agent.jpg") center 20%/cover no-repeat;
+    }
     h1{font-size:clamp(40px,12vw,54px)}
     .composer{grid-template-columns:1fr}
     .message{max-width:100%}
