@@ -359,16 +359,9 @@
   }
   .story{
     display:grid;
-    grid-template-columns:.82fr 1.18fr;
+    grid-template-columns:1fr;
     gap:18px;
     align-items:stretch;
-  }
-  .story-media{
-    min-height:420px;
-    border-radius:var(--radius);
-    border:1px solid var(--line);
-    background:url("game/assets/ekrem-istanbul.jpg") center/cover no-repeat;
-    box-shadow:var(--shadow);
   }
   .manifesto{
     background:linear-gradient(180deg,rgba(8,35,55,.9),rgba(4,17,31,.82));
@@ -605,7 +598,6 @@
     .grid{grid-template-columns:1fr}
     .section-head{display:block}
     .section-lede{margin-top:10px}
-    .story-media{min-height:300px}
     .media-frame img{height:auto; object-fit:contain}
     .campaign-split > .media-frame,
     .campaign-split > .card,
@@ -768,7 +760,6 @@
 
   <section class="section" id="founder">
     <div class="story">
-      <div class="story-media" aria-label="Ekrem Doğan in Istanbul"></div>
       <article class="card manifesto">
         <span class="tag">Founder</span>
         <p class="quote">Ekrem Doğan's vision begins with the future of human health.</p>
